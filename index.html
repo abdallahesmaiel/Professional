@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#1A0F07">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="بروفيشنال - متجر المنتجات الاحترافية | Professional Store">
   <title>بروفيشنال | متجر المنتجات الاحترافية - Professional Store</title>
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -37,6 +38,7 @@
       --gray-100: #f3f4f6;
       --gray-200: #e5e7eb;
       --gray-500: #6b7280;
+      --gray-700: #374151;
       --radius-sm: 10px;
       --radius-md: 16px;
       --radius-lg: 24px;
@@ -208,7 +210,7 @@
       box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35);
     }
 
-    /* ========== نظام الإشعارات المنبثقة الجديد ========== */
+    /* ========== نظام الإشعارات المنبثقة ========== */
     .notification-center {
       position: fixed;
       top: 20px;
@@ -232,7 +234,7 @@
       border-radius: var(--radius-md);
       box-shadow: var(--shadow-xl);
       pointer-events: auto;
-      animation: notifIn 0.45s cubic-bezier(0.68, -0.55, 0.265, 1.55), notifOut 0.35s ease 3s forwards;
+      animation: notifIn 0.45s cubic-bezier(0.68, -0.55, 0.265, 1.55), notifOut 0.35s ease 3.5s forwards;
       position: relative;
       overflow: hidden;
       border-right: 5px solid var(--primary);
@@ -245,7 +247,7 @@
       height: 3px;
       background: currentColor;
       opacity: 0.3;
-      animation: notifTimer 3s linear forwards;
+      animation: notifTimer 3.5s linear forwards;
       border-radius: 0 0 4px 0;
     }
 
@@ -352,7 +354,11 @@
       height: 100%;
     }
 
-    .product-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); border-color: rgba(201, 169, 110, 0.4); }
+    .product-card:hover { 
+      transform: translateY(-6px); 
+      box-shadow: var(--shadow-lg); 
+      border-color: rgba(201, 169, 110, 0.4); 
+    }
 
     .product-img-wrap {
       position: relative;
@@ -421,7 +427,7 @@
     .add-btn:disabled { background: #C4C4C4; cursor: not-allowed; box-shadow: none; transform: none; }
     .add-btn:active { transform: scale(0.94); }
 
-    /* ========== بقية التنسيقات (السلة، الطلبات، المودال، إلخ) ========== */
+    /* ========== السلة والطلبات ========== */
     .cart-page-container { max-width: 800px; margin: 0 auto; }
 
     .cart-section {
@@ -440,6 +446,14 @@
       background: linear-gradient(135deg, #FFFBF5 0%, #FFF8ED 100%);
       border-radius: var(--radius-lg); padding: 20px;
       border: 1px solid rgba(201, 169, 110, 0.3); margin-bottom: 12px;
+      position: relative;
+      transition: var(--transition);
+    }
+
+    .current-order-block.fade-out {
+      opacity: 0;
+      transform: scale(0.95);
+      transition: all 0.5s ease;
     }
 
     .status-badge-lg {
@@ -593,6 +607,28 @@
       color: #C1121F; font-size: 13px;
     }
 
+    .timer-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(217, 119, 6, 0.1);
+      color: var(--warning);
+      margin-top: 8px;
+    }
+
+    .timer-badge i {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
     /* ========== شريط التنقل السفلي ========== */
     .bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0;
@@ -661,8 +697,8 @@
     @media (max-width: 768px) {
       .products-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
       .brand-name .main { font-size: 18px; }
-      .logo-img { width: 50px; height: 50px; font-size: 24px; }
-      .logo-ring { width: 62px; height: 62px; }
+      .logo-img { width: 70px; height: 70px; font-size: 24px; }
+      .logo-ring { width: 82px; height: 82px; }
     }
 
     @media (max-width: 600px) {
@@ -674,9 +710,10 @@
       .cart-img { width: 50px; height: 50px; }
       .brand-name .main { font-size: 16px; }
       .brand-name .sub { font-size: 7px; }
-      .logo-img { width: 44px; height: 44px; }
-      .logo-ring { width: 56px; height: 56px; }
+      .logo-img { width: 55px; height: 55px; }
+      .logo-ring { width: 67px; height: 67px; }
       .cart-widget-top { font-size: 12px; padding: 6px 12px; }
+      .btn { padding: 12px 20px; font-size: 13px; }
     }
 
     @media (max-width: 400px) {
@@ -698,13 +735,13 @@
       </div>
 
       <div class="logo-ring"></div>
-      <div class="logo-area" id="logoArea">
+      <div class="logo-area" id="logoArea" title="الرئيسية">
         <div class="logo-img" id="logoDisplay">
           <i class="fas fa-gem" style="color: var(--accent);"></i>
         </div>
       </div>
 
-      <div class="cart-widget-top" id="cartWidgetTop" role="button" aria-label="السلة">
+      <div class="cart-widget-top" id="cartWidgetTop" role="button" aria-label="السلة" title="عرض السلة والطلبات">
         <span class="cart-count-badge-top" id="cartCountTop">0</span>
         <i class="fas fa-shopping-bag"></i>
         <span>السلة</span>
@@ -726,7 +763,7 @@
         <div class="search-wrapper">
           <i class="fa-solid fa-magnifying-glass search-icon"></i>
           <input type="text" class="search-input" id="searchInput" placeholder="🔍 ابحث عن منتج..." autocomplete="off">
-          <button class="search-clear" id="searchClear" title="مسح البحث">
+          <button class="search-clear" id="searchClear" title="مسح البحث" aria-label="مسح البحث">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
@@ -749,10 +786,10 @@
 
   <!-- ========== شريط سفلي ========== -->
   <nav class="bottom-nav">
-    <button class="nav-item active" data-page="home">
+    <button class="nav-item active" data-page="home" title="المتجر">
       <i class="fa-solid fa-store"></i><span>المتجر</span>
     </button>
-    <button class="nav-item" data-page="cart">
+    <button class="nav-item" data-page="cart" title="السلة">
       <i class="fa-solid fa-cart-shopping"></i><span>السلة</span>
       <span class="nav-cart-badge" id="bottomCartBadge">0</span>
     </button>
@@ -855,7 +892,7 @@
             <div class="notification-title">${title || this.titles[type] || 'إشعار'}</div>
             <div class="notification-message">${message}</div>
           </div>
-          <button class="notification-close" onclick="this.parentElement.remove()">
+          <button class="notification-close" aria-label="إغلاق الإشعار">
             <i class="fa-solid fa-xmark"></i>
           </button>
         `;
@@ -871,10 +908,13 @@
         }, duration);
 
         // زر الإغلاق اليدوي
-        notif.querySelector('.notification-close').addEventListener('click', () => {
-          clearTimeout(removeTimeout);
-          notif.remove();
-        });
+        const closeBtn = notif.querySelector('.notification-close');
+        if (closeBtn) {
+          closeBtn.addEventListener('click', () => {
+            clearTimeout(removeTimeout);
+            notif.remove();
+          });
+        }
 
         // حد أقصى 5 إشعارات
         const allNotifs = center.querySelectorAll('.notification');
@@ -886,6 +926,85 @@
       error(msg, title = null) { this.show(msg, 'error', title); },
       warning(msg, title = null) { this.show(msg, 'warning', title); },
       info(msg, title = null) { this.show(msg, 'info', title); }
+    };
+
+    // ========== نظام إدارة توقيت إخفاء الطلبات ==========
+    const OrderTimerManager = {
+      timers: new Map(),
+      
+      // بدء مؤقت للطلب المكتمل (يختفي بعد 10 دقائق)
+      startDeliveredTimer(orderId) {
+        this.clearTimer(orderId);
+        const timer = setTimeout(() => {
+          this.removeOrder(orderId, 'delivered');
+        }, 10 * 60 * 1000); // 10 دقائق
+        this.timers.set(orderId, { timeout: timer, type: 'delivered' });
+        console.log(`⏱️ مؤقت التسليم: الطلب #${orderId.slice(-8)} سيختفي بعد 10 دقائق`);
+      },
+
+      // بدء مؤقت للطلب المرفوض (يختفي بعد 24 ساعة)
+      startRejectedTimer(orderId) {
+        this.clearTimer(orderId);
+        const timer = setTimeout(() => {
+          this.removeOrder(orderId, 'rejected');
+        }, 24 * 60 * 60 * 1000); // 24 ساعة
+        this.timers.set(orderId, { timeout: timer, type: 'rejected' });
+        console.log(`⏱️ مؤقت الرفض: الطلب #${orderId.slice(-8)} سيختفي بعد 24 ساعة`);
+      },
+
+      // إلغاء مؤقت موجود
+      clearTimer(orderId) {
+        const existing = this.timers.get(orderId);
+        if (existing) {
+          clearTimeout(existing.timeout);
+          this.timers.delete(orderId);
+        }
+      },
+
+      // إزالة الطلب من القائمة
+      removeOrder(orderId, type) {
+        const idx = myOrders.findIndex(o => o.orderId === orderId);
+        if (idx >= 0) {
+          const order = myOrders[idx];
+          myOrders.splice(idx, 1);
+          saveOrders();
+          this.clearTimer(orderId);
+          
+          const msg = type === 'delivered' 
+            ? `تم إخفاء الطلب #${orderId.slice(-8)} تلقائياً بعد اكتمال التسليم.`
+            : `تم إخفاء الطلب #${orderId.slice(-8)} تلقائياً بعد 24 ساعة من الرفض.`;
+          
+          NotificationSystem.info(msg, 'إخفاء تلقائي');
+          
+          if ($('#cartPage')?.classList.contains('active-page')) {
+            renderCartPage();
+          }
+        }
+      },
+
+      // التحقق من الطلبات عند التحميل
+      checkExistingOrders() {
+        const now = Date.now();
+        myOrders.forEach(order => {
+          if (order.status === 'delivered' && order.deliveredAt) {
+            const elapsed = now - order.deliveredAt;
+            const remaining = (10 * 60 * 1000) - elapsed;
+            if (remaining <= 0) {
+              this.removeOrder(order.orderId, 'delivered');
+            } else {
+              this.startDeliveredTimer(order.orderId);
+            }
+          } else if (order.status === 'rejected' && order.rejectedAt) {
+            const elapsed = now - order.rejectedAt;
+            const remaining = (24 * 60 * 60 * 1000) - elapsed;
+            if (remaining <= 0) {
+              this.removeOrder(order.orderId, 'rejected');
+            } else {
+              this.startRejectedTimer(order.orderId);
+            }
+          }
+        });
+      }
     };
 
     // ========== تهيئة التطبيق ==========
@@ -978,8 +1097,18 @@
           if (snap.exists()) {
             const data = snap.val();
             if (data.status !== order.status) {
+              const oldStatus = order.status;
               order.status = data.status || 'pending';
               order.rejectionReason = data.rejectionReason || '';
+              
+              // إضافة الطوابع الزمنية عند تغير الحالة
+              if (order.status === 'delivered' && oldStatus !== 'delivered') {
+                order.deliveredAt = Date.now();
+              }
+              if (order.status === 'rejected' && oldStatus !== 'rejected') {
+                order.rejectedAt = Date.now();
+              }
+              
               changed = true;
             }
           }
@@ -990,6 +1119,8 @@
 
       if (changed) {
         saveOrders();
+        // بدء المؤقتات للطلبات التي تغيرت حالتها
+        OrderTimerManager.checkExistingOrders();
         if ($('#cartPage')?.classList.contains('active-page')) renderCartPage();
       }
     }
@@ -1041,8 +1172,24 @@
           const st = statusMap[order.status] || statusMap['pending'];
           const total = (order.items || []).reduce((s, i) => s + (i.price * i.quantity), 0);
           const date = order.createdAt ? new Date(order.createdAt).toLocaleString('ar-EG') : '';
+          
+          // حساب الوقت المتبقي للإخفاء
+          let timerHtml = '';
+          if (order.status === 'delivered' && order.deliveredAt) {
+            const remaining = Math.max(0, (10 * 60 * 1000) - (Date.now() - order.deliveredAt));
+            const minutes = Math.ceil(remaining / 60000);
+            if (minutes > 0) {
+              timerHtml = `<div class="timer-badge"><i class="fa-solid fa-clock"></i> سيختفي خلال ${minutes} دقيقة</div>`;
+            }
+          } else if (order.status === 'rejected' && order.rejectedAt) {
+            const remaining = Math.max(0, (24 * 60 * 60 * 1000) - (Date.now() - order.rejectedAt));
+            const hours = Math.ceil(remaining / 3600000);
+            if (hours > 0) {
+              timerHtml = `<div class="timer-badge"><i class="fa-solid fa-clock"></i> سيختفي خلال ${hours} ساعة</div>`;
+            }
+          }
 
-          html += `<div class="current-order-block">
+          html += `<div class="current-order-block" data-order-id="${order.orderId}">
             <div style="font-size:40px;">${st.icon}</div>
             <div class="status-badge-lg ${st.cls}">${st.text}</div>
             <p><strong>رقم الطلب:</strong> #${(order.orderId || '').slice(-8)}</p>
@@ -1050,6 +1197,8 @@
             <p><strong>الإجمالي:</strong> ${total} جنيه</p>
             ${order.recipientName ? `<p><strong>المستلم:</strong> ${order.recipientName}</p>` : ''}
             ${order.address ? `<p><strong>العنوان:</strong> ${order.address}</p>` : ''}
+            ${order.phone ? `<p><strong>الهاتف:</strong> ${order.phone}</p>` : ''}
+            ${timerHtml}
             <div class="order-items-preview"><small>المنتجات:</small>
               ${(order.items || []).map(i => `<div class="order-item-mini"><span>${i.name} × ${i.quantity}</span><span>${i.price * i.quantity} ج</span></div>`).join('')}
             </div>
@@ -1082,12 +1231,12 @@
             <img class="cart-img" src="${img}" alt="${item.name || ''}" loading="lazy" onerror="this.style.background='var(--foam)';this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect fill=%22%23E8DCD0%22 width=%22100%22 height=%22100%22/><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2240%22>📦</text></svg>';">
             <div class="cart-details"><strong>${item.name || ''}</strong><br><small>${item.price || 0} ج للوحدة</small></div>
             <div class="qty-wrapper">
-              <button class="qty-btn" data-qty-idx="${idx}" data-qty-delta="-1" ${(item.quantity||0) <= 1 ? 'disabled' : ''}>−</button>
+              <button class="qty-btn" data-qty-idx="${idx}" data-qty-delta="-1" ${(item.quantity||0) <= 1 ? 'disabled' : ''} aria-label="تقليل الكمية">−</button>
               <span class="qty-value">${item.quantity || 0}</span>
-              <button class="qty-btn" data-qty-idx="${idx}" data-qty-delta="1" ${(item.quantity||0) >= (item.maxQty || 99) ? 'disabled' : ''}>+</button>
+              <button class="qty-btn" data-qty-idx="${idx}" data-qty-delta="1" ${(item.quantity||0) >= (item.maxQty || 99) ? 'disabled' : ''} aria-label="زيادة الكمية">+</button>
             </div>
             <div class="cart-item-total">${itemTotal} ج</div>
-            <button class="delete-btn" data-remove-idx="${idx}"><i class="fa-solid fa-trash-can"></i></button>
+            <button class="delete-btn" data-remove-idx="${idx}" aria-label="حذف المنتج"><i class="fa-solid fa-trash-can"></i></button>
           </div>`;
         });
 
@@ -1130,7 +1279,12 @@
 
     function removeOrder(oid) {
       if (!confirm('هل تريد إخفاء هذا الطلب من قائمتك؟')) return;
+      const order = myOrders.find(o => o.orderId === oid);
       myOrders = myOrders.filter(o => o.orderId !== oid);
+      
+      // إلغاء المؤقت المرتبط
+      OrderTimerManager.clearTimer(oid);
+      
       saveOrders();
       renderCartPage();
       NotificationSystem.info('تم إخفاء الطلب من القائمة.', 'تم');
@@ -1194,7 +1348,10 @@
         overlay.classList.add('show');
         $('#checkoutForm')?.reset();
         const feedback = $('#checkoutFeedback');
-        if (feedback) feedback.style.display = 'none';
+        if (feedback) {
+          feedback.style.display = 'none';
+          feedback.textContent = '';
+        }
       }
     }
 
@@ -1210,10 +1367,16 @@
     $('#confirmOrder')?.addEventListener('click', async function(e) {
       e.preventDefault();
 
-      const name = $('#custName')?.value?.trim();
-      const address = $('#custAddress')?.value?.trim();
-      const phone = $('#custPhone')?.value?.trim();
+      const nameInput = $('#custName');
+      const addressInput = $('#custAddress');
+      const phoneInput = $('#custPhone');
       const feedback = $('#checkoutFeedback');
+
+      if (!nameInput || !addressInput || !phoneInput) return;
+
+      const name = nameInput.value.trim();
+      const address = addressInput.value.trim();
+      const phone = phoneInput.value.trim();
 
       // التحقق من الحقول
       if (!name || !address || !phone) {
@@ -1260,6 +1423,13 @@
         status: 'pending',
         createdAt: Date.now()
       };
+
+      // تعطيل الزر لمنع الإرسال المزدوج
+      const confirmBtn = $('#confirmOrder');
+      if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الإرسال...';
+      }
 
       // محاولة الحفظ في Firebase
       if (database) {
@@ -1316,6 +1486,12 @@
       NotificationSystem.success('تم حفظ طلبك محلياً. سيتم إرساله عند توفر الاتصال.', '🎉 تم الطلب!');
       renderCartPage();
       switchPage('cart');
+      
+      // إعادة تعيين الزر
+      if (confirmBtn) {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = '🚀 إرسال الطلب';
+      }
     });
 
     document.addEventListener('keydown', e => {
@@ -1436,7 +1612,7 @@
             <div class="product-desc">${p.description || ''}</div>
             <div class="price-row">
               <span class="price">${Number(p.price || 0).toFixed(2)} <small>جنيه</small></span>
-              <button class="add-btn" ${!available ? 'disabled' : ''} data-add-id="${p.id}">
+              <button class="add-btn" ${!available ? 'disabled' : ''} data-add-id="${p.id}" aria-label="أضف ${p.name || ''} للسلة">
                 <i class="fa-solid fa-cart-plus"></i> أضف للسلة
               </button>
             </div>
@@ -1499,7 +1675,7 @@
             const data = snap.val();
             let url = data.url ? getThumbnailUrl(data.url, 100) : (data.base64 || '');
             if (url) {
-              logo.innerHTML = `<img src="${url}" alt="شعار" style="width:100%;height:100%;object-fit:cover;" loading="lazy">`;
+              logo.innerHTML = `<img src="${url}" alt="شعار المتجر" style="width:100%;height:100%;object-fit:cover;" loading="lazy">`;
             }
           }
         });
@@ -1537,6 +1713,14 @@
       });
     }
 
+    // ========== تحديث دوري للطلبات ==========
+    function startPeriodicRefresh() {
+      // تحديث حالة الطلبات كل 30 ثانية
+      setInterval(() => {
+        refreshOrdersStatus();
+      }, 30000);
+    }
+
     // ========== التهيئة النهائية ==========
     function init() {
       ErrorHandler.init();
@@ -1544,8 +1728,17 @@
       loadLogo();
       updateBadges();
       setupSearch();
+      
+      // بدء المؤقتات للطلبات الموجودة
+      OrderTimerManager.checkExistingOrders();
+      
+      // بدء التحديث الدوري
+      startPeriodicRefresh();
+      
+      // تحديث أولي لحالة الطلبات
       refreshOrdersStatus();
 
+      // تعريض الدوال العامة
       window.switchPage = switchPage;
       window.addToCart = addToCart;
     }
