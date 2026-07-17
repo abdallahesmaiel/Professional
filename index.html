@@ -620,6 +620,11 @@
       margin-top: 8px;
     }
 
+    .timer-badge.danger {
+      background: rgba(220, 38, 38, 0.1);
+      color: var(--danger);
+    }
+
     .timer-badge i {
       animation: pulse 1.5s ease-in-out infinite;
     }
@@ -824,7 +829,7 @@
   <!-- ========== Firebase + Cloudinary + التطبيق ========== -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, onValue, push, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, onValue, push, set, get, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     // ========== إعدادات Firebase ==========
     const firebaseConfig = {
@@ -899,7 +904,6 @@
 
         center.appendChild(notif);
 
-        // إزالة تلقائية
         const removeTimeout = setTimeout(() => {
           if (notif.parentNode) {
             notif.style.animation = 'notifOut 0.35s ease forwards';
@@ -907,7 +911,6 @@
           }
         }, duration);
 
-        // زر الإغلاق اليدوي
         const closeBtn = notif.querySelector('.notification-close');
         if (closeBtn) {
           closeBtn.addEventListener('click', () => {
@@ -916,7 +919,6 @@
           });
         }
 
-        // حد أقصى 5 إشعارات
         const allNotifs = center.querySelectorAll('.notification');
         if (allNotifs.length > 5) {
           allNotifs[0].remove();
@@ -928,28 +930,28 @@
       info(msg, title = null) { this.show(msg, 'info', title); }
     };
 
-    // ========== نظام إدارة توقيت إخفاء الطلبات ==========
+    // ========== نظام إدارة توقيت وحذف الطلبات من قاعدة البيانات ==========
     const OrderTimerManager = {
       timers: new Map(),
       
-      // بدء مؤقت للطلب المكتمل (يختفي بعد 10 دقائق)
+      // بدء مؤقت للطلب المكتمل (يحذف نهائياً بعد 10 دقائق)
       startDeliveredTimer(orderId) {
         this.clearTimer(orderId);
         const timer = setTimeout(() => {
-          this.removeOrder(orderId, 'delivered');
+          this.deleteOrderPermanently(orderId, 'delivered');
         }, 10 * 60 * 1000); // 10 دقائق
         this.timers.set(orderId, { timeout: timer, type: 'delivered' });
-        console.log(`⏱️ مؤقت التسليم: الطلب #${orderId.slice(-8)} سيختفي بعد 10 دقائق`);
+        console.log(`⏱️ مؤقت الحذف: الطلب #${orderId.slice(-8)} سيحذف نهائياً بعد 10 دقائق`);
       },
 
-      // بدء مؤقت للطلب المرفوض (يختفي بعد 24 ساعة)
+      // بدء مؤقت للطلب المرفوض (يحذف نهائياً بعد 24 ساعة)
       startRejectedTimer(orderId) {
         this.clearTimer(orderId);
         const timer = setTimeout(() => {
-          this.removeOrder(orderId, 'rejected');
+          this.deleteOrderPermanently(orderId, 'rejected');
         }, 24 * 60 * 60 * 1000); // 24 ساعة
         this.timers.set(orderId, { timeout: timer, type: 'rejected' });
-        console.log(`⏱️ مؤقت الرفض: الطلب #${orderId.slice(-8)} سيختفي بعد 24 ساعة`);
+        console.log(`⏱️ مؤقت الحذف: الطلب #${orderId.slice(-8)} سيحذف نهائياً بعد 24 ساعة`);
       },
 
       // إلغاء مؤقت موجود
@@ -961,36 +963,53 @@
         }
       },
 
-      // إزالة الطلب من القائمة
-      removeOrder(orderId, type) {
+      // حذف الطلب نهائياً من Firebase و localStorage
+      async deleteOrderPermanently(orderId, type) {
+        console.log(`🗑️ جاري الحذف النهائي للطلب #${orderId.slice(-8)} (${type})...`);
+        
+        // 1. حذف من Firebase
+        if (database) {
+          try {
+            await remove(ref(database, `orders/${orderId}`));
+            console.log(`✅ تم حذف الطلب #${orderId.slice(-8)} من Firebase بنجاح`);
+          } catch (err) {
+            console.error(`❌ فشل حذف الطلب #${orderId.slice(-8)} من Firebase:`, err);
+          }
+        }
+
+        // 2. حذف من localStorage
         const idx = myOrders.findIndex(o => o.orderId === orderId);
         if (idx >= 0) {
-          const order = myOrders[idx];
           myOrders.splice(idx, 1);
           saveOrders();
-          this.clearTimer(orderId);
-          
-          const msg = type === 'delivered' 
-            ? `تم إخفاء الطلب #${orderId.slice(-8)} تلقائياً بعد اكتمال التسليم.`
-            : `تم إخفاء الطلب #${orderId.slice(-8)} تلقائياً بعد 24 ساعة من الرفض.`;
-          
-          NotificationSystem.info(msg, 'إخفاء تلقائي');
-          
-          if ($('#cartPage')?.classList.contains('active-page')) {
-            renderCartPage();
-          }
+        }
+        
+        // 3. إلغاء المؤقت
+        this.clearTimer(orderId);
+        
+        const msg = type === 'delivered' 
+          ? `تم حذف الطلب #${orderId.slice(-8)} نهائياً بعد اكتمال التسليم (10 دقائق).`
+          : `تم حذف الطلب #${orderId.slice(-8)} نهائياً بعد 24 ساعة من الرفض.`;
+        
+        NotificationSystem.info(msg, '🗑️ حذف نهائي');
+        
+        // 4. تحديث واجهة المستخدم
+        if ($('#cartPage')?.classList.contains('active-page')) {
+          renderCartPage();
         }
       },
 
       // التحقق من الطلبات عند التحميل
       checkExistingOrders() {
         const now = Date.now();
+        const ordersToDelete = [];
+        
         myOrders.forEach(order => {
           if (order.status === 'delivered' && order.deliveredAt) {
             const elapsed = now - order.deliveredAt;
             const remaining = (10 * 60 * 1000) - elapsed;
             if (remaining <= 0) {
-              this.removeOrder(order.orderId, 'delivered');
+              ordersToDelete.push({ id: order.orderId, type: 'delivered' });
             } else {
               this.startDeliveredTimer(order.orderId);
             }
@@ -998,12 +1017,25 @@
             const elapsed = now - order.rejectedAt;
             const remaining = (24 * 60 * 60 * 1000) - elapsed;
             if (remaining <= 0) {
-              this.removeOrder(order.orderId, 'rejected');
+              ordersToDelete.push({ id: order.orderId, type: 'rejected' });
             } else {
               this.startRejectedTimer(order.orderId);
             }
           }
         });
+
+        // حذف الطلبات منتهية الصلاحية فوراً
+        ordersToDelete.forEach(({ id, type }) => {
+          this.deleteOrderPermanently(id, type);
+        });
+      },
+
+      // إيقاف جميع المؤقتات (للاستخدام عند الحاجة)
+      destroyAllTimers() {
+        this.timers.forEach((value, key) => {
+          clearTimeout(value.timeout);
+        });
+        this.timers.clear();
       }
     };
 
@@ -1042,7 +1074,6 @@
     let cartItems = [];
     let myOrders = [];
 
-    // تحميل البيانات المحفوظة مع معالجة الأخطاء
     function loadFromStorage(key, fallback = []) {
       try {
         const data = localStorage.getItem(key);
@@ -1101,26 +1132,33 @@
               order.status = data.status || 'pending';
               order.rejectionReason = data.rejectionReason || '';
               
-              // إضافة الطوابع الزمنية عند تغير الحالة
               if (order.status === 'delivered' && oldStatus !== 'delivered') {
                 order.deliveredAt = Date.now();
+                // بدء مؤقت الحذف بعد 10 دقائق
+                OrderTimerManager.startDeliveredTimer(order.orderId);
               }
               if (order.status === 'rejected' && oldStatus !== 'rejected') {
                 order.rejectedAt = Date.now();
+                // بدء مؤقت الحذف بعد 24 ساعة
+                OrderTimerManager.startRejectedTimer(order.orderId);
               }
               
               changed = true;
             }
+          } else {
+            // الطلب غير موجود في Firebase (تم حذفه)
+            console.warn(`الطلب #${order.orderId.slice(-8)} غير موجود في Firebase، سيتم إزالته محلياً`);
+            OrderTimerManager.clearTimer(order.orderId);
+            myOrders = myOrders.filter(o => o.orderId !== order.orderId);
+            changed = true;
           }
         } catch (e) {
-          // فشل صامت - الطلب يحتفظ بحالته الحالية
+          // فشل صامت
         }
       }
 
       if (changed) {
         saveOrders();
-        // بدء المؤقتات للطلبات التي تغيرت حالتها
-        OrderTimerManager.checkExistingOrders();
         if ($('#cartPage')?.classList.contains('active-page')) renderCartPage();
       }
     }
@@ -1156,7 +1194,6 @@
       if (!container) return;
       let html = '';
 
-      // عرض الطلبات الحالية
       if (myOrders.length > 0) {
         html += `<div class="cart-section">
           <div class="cart-section-title"><i class="fa-solid fa-list-check"></i> طلباتي (${myOrders.length})</div>`;
@@ -1173,19 +1210,28 @@
           const total = (order.items || []).reduce((s, i) => s + (i.price * i.quantity), 0);
           const date = order.createdAt ? new Date(order.createdAt).toLocaleString('ar-EG') : '';
           
-          // حساب الوقت المتبقي للإخفاء
           let timerHtml = '';
           if (order.status === 'delivered' && order.deliveredAt) {
             const remaining = Math.max(0, (10 * 60 * 1000) - (Date.now() - order.deliveredAt));
             const minutes = Math.ceil(remaining / 60000);
-            if (minutes > 0) {
-              timerHtml = `<div class="timer-badge"><i class="fa-solid fa-clock"></i> سيختفي خلال ${minutes} دقيقة</div>`;
+            const seconds = Math.ceil(remaining / 1000);
+            if (remaining > 0) {
+              timerHtml = `<div class="timer-badge"><i class="fa-solid fa-clock"></i> سيتم الحذف النهائي خلال ${minutes} دقيقة</div>`;
+            } else {
+              timerHtml = `<div class="timer-badge danger"><i class="fa-solid fa-trash"></i> جاري الحذف النهائي...</div>`;
             }
           } else if (order.status === 'rejected' && order.rejectedAt) {
             const remaining = Math.max(0, (24 * 60 * 60 * 1000) - (Date.now() - order.rejectedAt));
             const hours = Math.ceil(remaining / 3600000);
-            if (hours > 0) {
-              timerHtml = `<div class="timer-badge"><i class="fa-solid fa-clock"></i> سيختفي خلال ${hours} ساعة</div>`;
+            const minutes = Math.ceil(remaining / 60000);
+            if (remaining > 0) {
+              if (hours >= 1) {
+                timerHtml = `<div class="timer-badge danger"><i class="fa-solid fa-clock"></i> سيتم الحذف النهائي خلال ${hours} ساعة</div>`;
+              } else {
+                timerHtml = `<div class="timer-badge danger"><i class="fa-solid fa-clock"></i> سيتم الحذف النهائي خلال ${minutes} دقيقة</div>`;
+              }
+            } else {
+              timerHtml = `<div class="timer-badge danger"><i class="fa-solid fa-trash"></i> جاري الحذف النهائي...</div>`;
             }
           }
 
@@ -1204,7 +1250,7 @@
             </div>
             ${order.rejectionReason ? `<div class="rejection-reason">❌ سبب الرفض: ${order.rejectionReason}</div>` : ''}
             <button class="btn btn-outline" style="margin-top:12px;font-size:12px;padding:8px 16px;" data-remove-order="${order.orderId}">
-              <i class="fa-solid fa-xmark"></i> إخفاء
+              <i class="fa-solid fa-xmark"></i> إخفاء الآن
             </button>
           </div>`;
         });
@@ -1212,7 +1258,6 @@
         html += '</div>';
       }
 
-      // عرض سلة التسوق
       html += `<div class="cart-section">
         <div class="cart-section-title"><i class="fa-solid fa-cart-shopping"></i> سلة التسوق (طلب جديد)</div>`;
 
@@ -1252,9 +1297,8 @@
       html += '</div>';
       container.innerHTML = html;
 
-      // ربط الأحداث
       container.querySelectorAll('[data-remove-order]').forEach(btn => {
-        btn.addEventListener('click', () => removeOrder(btn.getAttribute('data-remove-order')));
+        btn.addEventListener('click', () => removeOrderManually(btn.getAttribute('data-remove-order')));
       });
 
       container.querySelectorAll('[data-qty-idx]').forEach(btn => {
@@ -1277,17 +1321,28 @@
       $('#clearCartBtn')?.addEventListener('click', clearCart);
     }
 
-    function removeOrder(oid) {
-      if (!confirm('هل تريد إخفاء هذا الطلب من قائمتك؟')) return;
-      const order = myOrders.find(o => o.orderId === oid);
+    async function removeOrderManually(oid) {
+      if (!confirm('هل تريد حذف هذا الطلب نهائياً؟ (سيتم حذفه من قاعدة البيانات أيضاً)')) return;
+      
+      // حذف من Firebase
+      if (database) {
+        try {
+          await remove(ref(database, `orders/${oid}`));
+          console.log(`✅ تم حذف الطلب #${oid.slice(-8)} من Firebase (يدوياً)`);
+        } catch (err) {
+          console.error(`❌ فشل حذف الطلب #${oid.slice(-8)} من Firebase:`, err);
+        }
+      }
+      
+      // حذف من localStorage
       myOrders = myOrders.filter(o => o.orderId !== oid);
       
-      // إلغاء المؤقت المرتبط
+      // إلغاء المؤقت
       OrderTimerManager.clearTimer(oid);
       
       saveOrders();
       renderCartPage();
-      NotificationSystem.info('تم إخفاء الطلب من القائمة.', 'تم');
+      NotificationSystem.success('تم حذف الطلب نهائياً.', '🗑️ تم الحذف');
     }
 
     function changeQty(idx, delta) {
@@ -1378,7 +1433,6 @@
       const address = addressInput.value.trim();
       const phone = phoneInput.value.trim();
 
-      // التحقق من الحقول
       if (!name || !address || !phone) {
         if (feedback) {
           feedback.style.display = 'block';
@@ -1424,14 +1478,12 @@
         createdAt: Date.now()
       };
 
-      // تعطيل الزر لمنع الإرسال المزدوج
       const confirmBtn = $('#confirmOrder');
       if (confirmBtn) {
         confirmBtn.disabled = true;
         confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الإرسال...';
       }
 
-      // محاولة الحفظ في Firebase
       if (database) {
         try {
           const newRef = push(ref(database, 'orders'));
@@ -1457,6 +1509,11 @@
           NotificationSystem.success('تم إرسال طلبك بنجاح! سنقوم بمراجعته قريباً.', '🎉 تم الطلب!');
           renderCartPage();
           switchPage('cart');
+          
+          if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = '🚀 إرسال الطلب';
+          }
           return;
         } catch (err) {
           console.error('Firebase submit error:', err);
@@ -1464,7 +1521,6 @@
         }
       }
 
-      // حفظ محلي في حال فشل Firebase أو عدم توفره
       const localOrderId = 'LOCAL-' + Date.now().toString(36).toUpperCase().slice(-6);
       myOrders.unshift({
         orderId: localOrderId,
@@ -1487,7 +1543,6 @@
       renderCartPage();
       switchPage('cart');
       
-      // إعادة تعيين الزر
       if (confirmBtn) {
         confirmBtn.disabled = false;
         confirmBtn.innerHTML = '🚀 إرسال الطلب';
@@ -1620,7 +1675,6 @@
         </div>`;
       }).join('');
 
-      // ربط أزرار الإضافة
       grid.querySelectorAll('[data-add-id]').forEach(btn => {
         btn.addEventListener('click', () => addToCart(btn.getAttribute('data-add-id')));
       });
@@ -1715,7 +1769,6 @@
 
     // ========== تحديث دوري للطلبات ==========
     function startPeriodicRefresh() {
-      // تحديث حالة الطلبات كل 30 ثانية
       setInterval(() => {
         refreshOrdersStatus();
       }, 30000);
@@ -1729,7 +1782,7 @@
       updateBadges();
       setupSearch();
       
-      // بدء المؤقتات للطلبات الموجودة
+      // بدء المؤقتات للطلبات الموجودة (مع الحذف النهائي)
       OrderTimerManager.checkExistingOrders();
       
       // بدء التحديث الدوري
