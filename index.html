@@ -35,6 +35,8 @@
       --warning-light: #fef3c7;
       --info: #2563eb;
       --info-light: #dbeafe;
+      --discount: #e11d48;
+      --discount-light: #ffe4e6;
       --gray-100: #f3f4f6;
       --gray-200: #e5e7eb;
       --gray-500: #6b7280;
@@ -387,6 +389,23 @@
       filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
     }
 
+    /* شارة الخصم */
+    .discount-badge {
+      position: absolute;
+      top: 12px; left: 12px;
+      padding: 6px 12px;
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      font-weight: 800;
+      z-index: 2;
+      background: var(--discount);
+      color: white;
+      box-shadow: 0 2px 8px rgba(225, 29, 72, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
     .stock-badge {
       position: absolute;
       top: 12px; right: 12px;
@@ -409,10 +428,42 @@
       display: flex; justify-content: space-between; align-items: center;
       gap: 10px; padding-top: 14px;
       border-top: 1px solid rgba(74, 44, 23, 0.06);
+      flex-wrap: wrap;
+    }
+
+    .price-container {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
     }
 
     .price { font-size: 22px; font-weight: 900; color: var(--primary-medium); }
     .price small { font-size: 12px; font-weight: 500; color: var(--cream); }
+
+    /* تنسيقات السعر مع الخصم */
+    .original-price {
+      font-size: 14px;
+      color: var(--gray-500);
+      text-decoration: line-through;
+      font-weight: 500;
+    }
+
+    .discounted-price {
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--discount);
+    }
+
+    .discount-label {
+      font-size: 11px;
+      color: var(--discount);
+      font-weight: 700;
+      background: var(--discount-light);
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      display: inline-block;
+      margin-top: 2px;
+    }
 
     .add-btn {
       background: linear-gradient(135deg, var(--primary) 0%, var(--primary-medium) 100%);
@@ -497,6 +548,13 @@
     .cart-details { flex: 2; min-width: 120px; }
     .cart-details strong { color: var(--primary-dark); }
     .cart-details small { color: var(--primary-light); }
+
+    /* سعر مخفض في السلة */
+    .cart-discount-info {
+      font-size: 11px;
+      color: var(--discount);
+      font-weight: 700;
+    }
 
     .qty-wrapper {
       display: flex; align-items: center; gap: 6px;
@@ -710,6 +768,7 @@
       .products-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
       .product-name { font-size: 15px; }
       .price { font-size: 18px; }
+      .discounted-price { font-size: 18px; }
       .add-btn { padding: 8px 12px; font-size: 12px; }
       .cart-item { padding: 10px; gap: 10px; }
       .cart-img { width: 50px; height: 50px; }
@@ -843,6 +902,47 @@
       measurementId: "G-8SL2SY7X49"
     };
 
+    // ========== دوال حساب الخصم ==========
+    function calculateFinalPrice(basePrice, discountType, discountValue) {
+      if (!discountType || discountType === 'none' || !discountValue) return basePrice;
+      
+      const price = parseFloat(basePrice) || 0;
+      const value = parseFloat(discountValue) || 0;
+      
+      if (discountType === 'amount') {
+        return Math.max(0, price - value);
+      } else if (discountType === 'percent') {
+        const discountAmount = price * (Math.min(value, 100) / 100);
+        return Math.max(0, price - discountAmount);
+      }
+      
+      return price;
+    }
+
+    function getDiscountLabel(discountType, discountValue) {
+      if (!discountType || discountType === 'none' || !discountValue) return '';
+      if (discountType === 'amount') return `خصم ${parseFloat(discountValue).toFixed(2)} ج`;
+      if (discountType === 'percent') return `خصم ${parseFloat(discountValue)}%`;
+      return '';
+    }
+
+    function getEffectivePrice(product) {
+      const basePrice = Number(product.price || 0);
+      const discountType = product.discountType || 'none';
+      const discountValue = parseFloat(product.discountValue) || 0;
+      const finalPrice = calculateFinalPrice(basePrice, discountType, discountValue);
+      const hasDiscount = discountType !== 'none' && discountValue > 0 && finalPrice < basePrice;
+      
+      return {
+        basePrice,
+        finalPrice: hasDiscount ? finalPrice : basePrice,
+        hasDiscount,
+        discountType,
+        discountValue,
+        discountLabel: hasDiscount ? getDiscountLabel(discountType, discountValue) : ''
+      };
+    }
+
     // ========== معالج الأخطاء العام ==========
     const ErrorHandler = {
       init() {
@@ -930,31 +1030,26 @@
       info(msg, title = null) { this.show(msg, 'info', title); }
     };
 
-    // ========== نظام إدارة توقيت وحذف الطلبات من قاعدة البيانات ==========
+    // ========== نظام إدارة توقيت وحذف الطلبات ==========
     const OrderTimerManager = {
       timers: new Map(),
       
-      // بدء مؤقت للطلب المكتمل (يحذف نهائياً بعد 10 دقائق)
       startDeliveredTimer(orderId) {
         this.clearTimer(orderId);
         const timer = setTimeout(() => {
           this.deleteOrderPermanently(orderId, 'delivered');
-        }, 10 * 60 * 1000); // 10 دقائق
+        }, 10 * 60 * 1000);
         this.timers.set(orderId, { timeout: timer, type: 'delivered' });
-        console.log(`⏱️ مؤقت الحذف: الطلب #${orderId.slice(-8)} سيحذف نهائياً بعد 10 دقائق`);
       },
 
-      // بدء مؤقت للطلب المرفوض (يحذف نهائياً بعد 24 ساعة)
       startRejectedTimer(orderId) {
         this.clearTimer(orderId);
         const timer = setTimeout(() => {
           this.deleteOrderPermanently(orderId, 'rejected');
-        }, 24 * 60 * 60 * 1000); // 24 ساعة
+        }, 24 * 60 * 60 * 1000);
         this.timers.set(orderId, { timeout: timer, type: 'rejected' });
-        console.log(`⏱️ مؤقت الحذف: الطلب #${orderId.slice(-8)} سيحذف نهائياً بعد 24 ساعة`);
       },
 
-      // إلغاء مؤقت موجود
       clearTimer(orderId) {
         const existing = this.timers.get(orderId);
         if (existing) {
@@ -963,43 +1058,30 @@
         }
       },
 
-      // حذف الطلب نهائياً من Firebase و localStorage
       async deleteOrderPermanently(orderId, type) {
         console.log(`🗑️ جاري الحذف النهائي للطلب #${orderId.slice(-8)} (${type})...`);
         
-        // 1. حذف من Firebase
         if (database) {
           try {
             await remove(ref(database, `orders/${orderId}`));
-            console.log(`✅ تم حذف الطلب #${orderId.slice(-8)} من Firebase بنجاح`);
           } catch (err) {
-            console.error(`❌ فشل حذف الطلب #${orderId.slice(-8)} من Firebase:`, err);
+            console.error(`❌ فشل حذف الطلب من Firebase:`, err);
           }
         }
 
-        // 2. حذف من localStorage
         const idx = myOrders.findIndex(o => o.orderId === orderId);
         if (idx >= 0) {
           myOrders.splice(idx, 1);
           saveOrders();
         }
         
-        // 3. إلغاء المؤقت
         this.clearTimer(orderId);
         
-        const msg = type === 'delivered' 
-          ? `تم حذف الطلب #${orderId.slice(-8)} نهائياً بعد اكتمال التسليم (10 دقائق).`
-          : `تم حذف الطلب #${orderId.slice(-8)} نهائياً بعد 24 ساعة من الرفض.`;
-        
-        NotificationSystem.info(msg, '🗑️ حذف نهائي');
-        
-        // 4. تحديث واجهة المستخدم
         if ($('#cartPage')?.classList.contains('active-page')) {
           renderCartPage();
         }
       },
 
-      // التحقق من الطلبات عند التحميل
       checkExistingOrders() {
         const now = Date.now();
         const ordersToDelete = [];
@@ -1024,13 +1106,11 @@
           }
         });
 
-        // حذف الطلبات منتهية الصلاحية فوراً
         ordersToDelete.forEach(({ id, type }) => {
           this.deleteOrderPermanently(id, type);
         });
       },
 
-      // إيقاف جميع المؤقتات (للاستخدام عند الحاجة)
       destroyAllTimers() {
         this.timers.forEach((value, key) => {
           clearTimeout(value.timeout);
@@ -1134,19 +1214,16 @@
               
               if (order.status === 'delivered' && oldStatus !== 'delivered') {
                 order.deliveredAt = Date.now();
-                // بدء مؤقت الحذف بعد 10 دقائق
                 OrderTimerManager.startDeliveredTimer(order.orderId);
               }
               if (order.status === 'rejected' && oldStatus !== 'rejected') {
                 order.rejectedAt = Date.now();
-                // بدء مؤقت الحذف بعد 24 ساعة
                 OrderTimerManager.startRejectedTimer(order.orderId);
               }
               
               changed = true;
             }
           } else {
-            // الطلب غير موجود في Firebase (تم حذفه)
             console.warn(`الطلب #${order.orderId.slice(-8)} غير موجود في Firebase، سيتم إزالته محلياً`);
             OrderTimerManager.clearTimer(order.orderId);
             myOrders = myOrders.filter(o => o.orderId !== order.orderId);
@@ -1214,7 +1291,6 @@
           if (order.status === 'delivered' && order.deliveredAt) {
             const remaining = Math.max(0, (10 * 60 * 1000) - (Date.now() - order.deliveredAt));
             const minutes = Math.ceil(remaining / 60000);
-            const seconds = Math.ceil(remaining / 1000);
             if (remaining > 0) {
               timerHtml = `<div class="timer-badge"><i class="fa-solid fa-clock"></i> سيتم الحذف النهائي خلال ${minutes} دقيقة</div>`;
             } else {
@@ -1268,25 +1344,32 @@
         html += '<div class="cart-items-list">';
 
         cartItems.forEach((item, idx) => {
-          const itemTotal = (item.price || 0) * (item.quantity || 0);
+          // استخدام السعر المخفض إذا كان متوفراً
+          const effectivePrice = item.finalPrice || item.price || 0;
+          const itemTotal = effectivePrice * (item.quantity || 0);
           total += itemTotal;
           const img = getThumbnailUrl(item.image, 150);
 
           html += `<div class="cart-item">
             <img class="cart-img" src="${img}" alt="${item.name || ''}" loading="lazy" onerror="this.style.background='var(--foam)';this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect fill=%22%23E8DCD0%22 width=%22100%22 height=%22100%22/><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2240%22>📦</text></svg>';">
-            <div class="cart-details"><strong>${item.name || ''}</strong><br><small>${item.price || 0} ج للوحدة</small></div>
+            <div class="cart-details">
+              <strong>${item.name || ''}</strong><br>
+              ${item.hasDiscount ? `<small style="text-decoration:line-through;color:var(--gray-500);">${(item.originalPrice || item.price).toFixed(2)} ج للوحدة</small><br>` : ''}
+              <small>${effectivePrice.toFixed(2)} ج للوحدة</small>
+              ${item.hasDiscount ? `<div class="cart-discount-info">🏷️ ${item.discountLabel}</div>` : ''}
+            </div>
             <div class="qty-wrapper">
               <button class="qty-btn" data-qty-idx="${idx}" data-qty-delta="-1" ${(item.quantity||0) <= 1 ? 'disabled' : ''} aria-label="تقليل الكمية">−</button>
               <span class="qty-value">${item.quantity || 0}</span>
               <button class="qty-btn" data-qty-idx="${idx}" data-qty-delta="1" ${(item.quantity||0) >= (item.maxQty || 99) ? 'disabled' : ''} aria-label="زيادة الكمية">+</button>
             </div>
-            <div class="cart-item-total">${itemTotal} ج</div>
+            <div class="cart-item-total">${itemTotal.toFixed(2)} ج</div>
             <button class="delete-btn" data-remove-idx="${idx}" aria-label="حذف المنتج"><i class="fa-solid fa-trash-can"></i></button>
           </div>`;
         });
 
         html += `</div>
-        <div class="cart-total-row">الإجمالي: ${total} <small>جنيه مصري</small></div>
+        <div class="cart-total-row">الإجمالي: ${total.toFixed(2)} <small>جنيه مصري</small></div>
         <div class="action-buttons">
           <button class="btn btn-outline" id="continueShoppingBtn"><i class="fa-solid fa-plus"></i> متابعة التسوق</button>
           <button class="btn btn-primary" id="openCheckoutBtn"><i class="fa-solid fa-paper-plane"></i> تأكيد الطلب</button>
@@ -1324,20 +1407,15 @@
     async function removeOrderManually(oid) {
       if (!confirm('هل تريد حذف هذا الطلب نهائياً؟ (سيتم حذفه من قاعدة البيانات أيضاً)')) return;
       
-      // حذف من Firebase
       if (database) {
         try {
           await remove(ref(database, `orders/${oid}`));
-          console.log(`✅ تم حذف الطلب #${oid.slice(-8)} من Firebase (يدوياً)`);
         } catch (err) {
-          console.error(`❌ فشل حذف الطلب #${oid.slice(-8)} من Firebase:`, err);
+          console.error(`❌ فشل حذف الطلب من Firebase:`, err);
         }
       }
       
-      // حذف من localStorage
       myOrders = myOrders.filter(o => o.orderId !== oid);
-      
-      // إلغاء المؤقت
       OrderTimerManager.clearTimer(oid);
       
       saveOrders();
@@ -1461,12 +1539,12 @@
         return;
       }
 
-      const total = cartItems.reduce((s, i) => s + (i.price || 0) * (i.quantity || 0), 0);
+      const total = cartItems.reduce((s, i) => s + ((i.finalPrice || i.price || 0)) * (i.quantity || 0), 0);
       const orderData = {
         items: cartItems.map(i => ({
           productId: i.productId,
           name: i.name,
-          price: i.price,
+          price: i.finalPrice || i.price || 0,
           quantity: i.quantity,
           image: i.image || ''
         })),
@@ -1573,14 +1651,18 @@
                 img = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/${data.cloudinary_public_id}`;
               }
               img = optimizeCloudinaryUrl(img);
+              
               allProducts.push({
                 id: child.key,
                 name: data.name || 'منتج',
                 price: Number(data.price) || 0,
+                finalPrice: data.finalPrice ? Number(data.finalPrice) : null,
                 description: data.description || '',
                 icon: data.icon || 'fa-box',
                 image: img,
-                quantity: data.quantity ?? 10
+                quantity: data.quantity ?? 10,
+                discountType: data.discountType || 'none',
+                discountValue: parseFloat(data.discountValue) || 0
               });
             });
           }
@@ -1603,12 +1685,12 @@
 
     function loadDefaultProducts() {
       allProducts = [
-        { id: '1', name: 'حقيبة يد جلدية', price: 320, icon: 'fa-bag-shopping', description: 'تصميم أنيق وعصري', quantity: 10, image: '' },
-        { id: '2', name: 'ساعة كلاسيكية', price: 590, icon: 'fa-clock', description: 'هيكل فولاذي مقاوم', quantity: 8, image: '' },
-        { id: '3', name: 'حذاء رياضي', price: 475, icon: 'fa-shoe-prints', description: 'مريح للاستخدام اليومي', quantity: 15, image: '' },
-        { id: '4', name: 'نظارة شمسية', price: 260, icon: 'fa-glasses', description: 'حماية من الأشعة فوق البنفسجية', quantity: 20, image: '' },
-        { id: '5', name: 'محفظة جلد طبيعي', price: 180, icon: 'fa-wallet', description: 'جل طبيعي 100%', quantity: 12, image: '' },
-        { id: '6', name: 'سماعات لاسلكية', price: 399, icon: 'fa-headphones', description: 'صوت نقي وعازل للضوضاء', quantity: 6, image: '' }
+        { id: '1', name: 'حقيبة يد جلدية', price: 320, icon: 'fa-bag-shopping', description: 'تصميم أنيق وعصري', quantity: 10, image: '', discountType: 'none', discountValue: 0 },
+        { id: '2', name: 'ساعة كلاسيكية', price: 590, icon: 'fa-clock', description: 'هيكل فولاذي مقاوم', quantity: 8, image: '', discountType: 'none', discountValue: 0 },
+        { id: '3', name: 'حذاء رياضي', price: 475, icon: 'fa-shoe-prints', description: 'مريح للاستخدام اليومي', quantity: 15, image: '', discountType: 'none', discountValue: 0 },
+        { id: '4', name: 'نظارة شمسية', price: 260, icon: 'fa-glasses', description: 'حماية من الأشعة فوق البنفسجية', quantity: 20, image: '', discountType: 'none', discountValue: 0 },
+        { id: '5', name: 'محفظة جلد طبيعي', price: 180, icon: 'fa-wallet', description: 'جل طبيعي 100%', quantity: 12, image: '', discountType: 'none', discountValue: 0 },
+        { id: '6', name: 'سماعات لاسلكية', price: 399, icon: 'fa-headphones', description: 'صوت نقي وعازل للضوضاء', quantity: 6, image: '', discountType: 'none', discountValue: 0 }
       ];
       syncCartWithProducts();
       saveCart();
@@ -1619,9 +1701,15 @@
       cartItems.forEach(item => {
         const product = allProducts.find(p => p.id === item.productId);
         if (product) {
+          const priceInfo = getEffectivePrice(product);
+          
           item.maxQty = product.quantity;
-          item.price = product.price;
           item.name = product.name;
+          item.originalPrice = priceInfo.basePrice;
+          item.finalPrice = priceInfo.finalPrice;
+          item.hasDiscount = priceInfo.hasDiscount;
+          item.discountLabel = priceInfo.discountLabel;
+          
           if (product.image && product.image !== item.image) item.image = product.image;
         }
       });
@@ -1655,18 +1743,35 @@
         const available = (p.quantity || 0) > 0;
         const img = getThumbnailUrl(p.image, 400);
         const hasImg = p.image && p.image.length > 0;
+        
+        // حساب معلومات الخصم
+        const priceInfo = getEffectivePrice(p);
+
+        let priceHTML = '';
+        if (priceInfo.hasDiscount) {
+          priceHTML = `
+            <div class="price-container">
+              <span class="original-price">${priceInfo.basePrice.toFixed(2)} ج</span>
+              <span class="discounted-price">${priceInfo.finalPrice.toFixed(2)} <small>جنيه</small></span>
+              <span class="discount-label">🏷️ ${priceInfo.discountLabel}</span>
+            </div>
+          `;
+        } else {
+          priceHTML = `<span class="price">${priceInfo.basePrice.toFixed(2)} <small>جنيه</small></span>`;
+        }
 
         return `<div class="product-card">
           <div class="product-img-wrap">
             ${hasImg ? `<img src="${img}" alt="${p.name || ''}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">` : ''}
             <i class="fas ${p.icon || 'fa-box'} product-img-placeholder" style="${hasImg ? 'display:none;' : ''}"></i>
+            ${priceInfo.hasDiscount ? `<span class="discount-badge"><i class="fa-solid fa-tag"></i> ${priceInfo.discountLabel}</span>` : ''}
             <span class="stock-badge ${available ? 'stock-available' : 'stock-out'}">${available ? '✓ متوفر' : '✗ نفذ'}</span>
           </div>
           <div class="product-info">
             <div class="product-name">${p.name || ''}</div>
             <div class="product-desc">${p.description || ''}</div>
             <div class="price-row">
-              <span class="price">${Number(p.price || 0).toFixed(2)} <small>جنيه</small></span>
+              ${priceHTML}
               <button class="add-btn" ${!available ? 'disabled' : ''} data-add-id="${p.id}" aria-label="أضف ${p.name || ''} للسلة">
                 <i class="fa-solid fa-cart-plus"></i> أضف للسلة
               </button>
@@ -1692,11 +1797,19 @@
         return;
       }
 
+      const priceInfo = getEffectivePrice(product);
+
       const existingIdx = cartItems.findIndex(i => i.productId === productId);
       if (existingIdx >= 0) {
         const item = cartItems[existingIdx];
         if ((item.quantity || 0) < (product.quantity || 0)) {
           item.quantity = (item.quantity || 0) + 1;
+          // تحديث معلومات السعر
+          item.originalPrice = priceInfo.basePrice;
+          item.finalPrice = priceInfo.finalPrice;
+          item.hasDiscount = priceInfo.hasDiscount;
+          item.discountLabel = priceInfo.discountLabel;
+          
           saveCart();
           NotificationSystem.success(`تمت زيادة كمية "${product.name}" في السلة.`, 'تم التحديث');
         } else {
@@ -1706,7 +1819,11 @@
         cartItems.push({
           productId: product.id,
           name: product.name,
-          price: product.price || 0,
+          originalPrice: priceInfo.basePrice,
+          finalPrice: priceInfo.finalPrice,
+          price: priceInfo.finalPrice, // السعر الفعلي المستخدم
+          hasDiscount: priceInfo.hasDiscount,
+          discountLabel: priceInfo.discountLabel,
           image: product.image || '',
           icon: product.icon || 'fa-box',
           quantity: 1,
@@ -1782,16 +1899,10 @@
       updateBadges();
       setupSearch();
       
-      // بدء المؤقتات للطلبات الموجودة (مع الحذف النهائي)
       OrderTimerManager.checkExistingOrders();
-      
-      // بدء التحديث الدوري
       startPeriodicRefresh();
-      
-      // تحديث أولي لحالة الطلبات
       refreshOrdersStatus();
 
-      // تعريض الدوال العامة
       window.switchPage = switchPage;
       window.addToCart = addToCart;
     }
