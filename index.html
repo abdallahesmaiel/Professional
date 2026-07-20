@@ -235,7 +235,14 @@
   <main class="main-content">
     <div id="homePage" class="page active-page">
       <div style="text-align:center;padding:16px 0 8px;"><h1 class="page-title" style="justify-content:center;"><i class="fas fa-star" style="color:var(--accent);"></i> أحدث المنتجات</h1><p class="page-subtitle">اختر ما يناسب ذوقك الرفيع</p></div>
-      <div class="categories-section"><div class="categories-scroll" id="categoriesScroll"><button class="category-chip active" data-category="all"><i class="fa-solid fa-grid-2"></i> الكل</button><button class="category-chip" data-category="طعام"><i class="fa-solid fa-utensils"></i> طعام</button><button class="category-chip" data-category="أجهزة كهربائية"><i class="fa-solid fa-plug"></i> أجهزة كهربائية</button><button class="category-chip" data-category="أجهزة شخصية"><i class="fa-solid fa-mobile-screen"></i> أجهزة شخصية</button><button class="category-chip" data-category="عناية طبيعية"><i class="fa-solid fa-leaf"></i> عناية طبيعية</button></div></div>
+      <div class="categories-section"><div class="categories-scroll" id="categoriesScroll">
+        <button class="category-chip active" data-category="all"><i class="fa-solid fa-grid-2"></i> الكل</button>
+        <button class="category-chip" data-category="مستلزمات شخصية"><i class="fa-solid fa-user"></i> مستلزمات شخصية</button>
+        <button class="category-chip" data-category="أجهزة كهربائية"><i class="fa-solid fa-plug"></i> أجهزة كهربائية</button>
+        <button class="category-chip" data-category="أجهزة شخصية"><i class="fa-solid fa-mobile-screen"></i> أجهزة شخصية</button>
+        <button class="category-chip" data-category="عناية طبيعية"><i class="fa-solid fa-leaf"></i> عناية طبيعية</button>
+        <button class="category-chip" data-category="ملابس"><i class="fa-solid fa-shirt"></i> ملابس</button>
+      </div></div>
       <div class="search-container"><div class="search-wrapper"><i class="fa-solid fa-magnifying-glass search-icon"></i><input type="text" class="search-input" id="searchInput" placeholder="🔍 ابحث عن منتج..." autocomplete="off"><button class="search-clear" id="searchClear"><i class="fa-solid fa-xmark"></i></button></div></div>
       <div class="filter-bar"><span class="results-count" id="resultsCount">0 منتج</span><div class="filter-group"><span class="filter-label"><i class="fa-solid fa-sort"></i> ترتيب:</span><select class="filter-select" id="sortSelect"><option value="newest">الأحدث أولاً</option><option value="oldest">الأقدم أولاً</option><option value="price-asc">السعر: من الأقل إلى الأعلى</option><option value="price-desc">السعر: من الأعلى إلى الأقل</option><option value="name-asc">الاسم: أ - ي</option></select></div><div class="filter-group"><span class="filter-label"><i class="fa-solid fa-filter"></i> السعر:</span><input type="number" class="price-range-input" id="priceMin" placeholder="من" min="0"><span class="price-separator">-</span><input type="number" class="price-range-input" id="priceMax" placeholder="إلى" min="0"><button class="filter-apply-btn" id="applyPriceFilter">تطبيق</button><button class="filter-reset-btn" id="resetFilters">إعادة ضبط</button></div></div>
       <div class="products-grid" id="productsContainer"><div class="loading-spinner" style="grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i> جاري تحميل المنتجات...</div></div>
@@ -305,7 +312,14 @@
     let selectedPaymentMethod='cod',codFee=0,deliveryFee=5,isFirstOrder=true;
     let walletNumbers={vodafone:'01097570965',etisalat:'01152321199',we:'لا يوجد',visa:'0000-0000-0000-0000'};
     const PAYMENT_METHODS={cod:{name:'الدفع عند الاستلام',icon:'fa-hand-holding-dollar'},vodafone:{name:'فودافون كاش',icon:'fa-mobile-screen'},etisalat:{name:'اتصالات كاش',icon:'fa-mobile-screen'},we:{name:'وي بي',icon:'fa-building-columns'},visa:{name:'فيزا كارد',icon:'fa-cc-visa'}};
-    const CATEGORIES=[{id:'all',name:'الكل',icon:'fa-grid-2'},{id:'طعام',name:'طعام',icon:'fa-utensils'},{id:'أجهزة كهربائية',name:'أجهزة كهربائية',icon:'fa-plug'},{id:'أجهزة شخصية',name:'أجهزة شخصية',icon:'fa-mobile-screen'},{id:'عناية طبيعية',name:'عناية طبيعية',icon:'fa-leaf'}];
+    const CATEGORIES=[
+      {id:'all',name:'الكل',icon:'fa-grid-2'},
+      {id:'مستلزمات شخصية',name:'مستلزمات شخصية',icon:'fa-user'},
+      {id:'أجهزة كهربائية',name:'أجهزة كهربائية',icon:'fa-plug'},
+      {id:'أجهزة شخصية',name:'أجهزة شخصية',icon:'fa-mobile-screen'},
+      {id:'عناية طبيعية',name:'عناية طبيعية',icon:'fa-leaf'},
+      {id:'ملابس',name:'ملابس',icon:'fa-shirt'}
+    ];
 
     // ========== نظام التوصيل ==========
     function checkFirstOrder(){const used=localStorage.getItem('pro_ordered_before');isFirstOrder=used!=='true';}
@@ -381,12 +395,18 @@
     function loadDefaultProducts(){
         console.log('📦 تحميل المنتجات الافتراضية');
         allProducts=[
-            {id:'1',name:'حقيبة يد جلدية',price:320,icon:'fa-bag-shopping',description:'تصميم أنيق وعصري',quantity:10,image:'',discountType:'none',discountValue:0,category:'أجهزة شخصية',createdAt:Date.now()-500000},
-            {id:'2',name:'ساعة كلاسيكية',price:590,icon:'fa-clock',description:'هيكل فولاذي مقاوم',quantity:8,image:'',discountType:'none',discountValue:0,category:'أجهزة شخصية',createdAt:Date.now()-400000},
-            {id:'3',name:'حذاء رياضي',price:475,icon:'fa-shoe-prints',description:'مريح للاستخدام اليومي',quantity:15,image:'',discountType:'none',discountValue:0,category:'أجهزة شخصية',createdAt:Date.now()-300000},
-            {id:'4',name:'نظارة شمسية',price:260,icon:'fa-glasses',description:'حماية من الأشعة فوق البنفسجية',quantity:20,image:'',discountType:'none',discountValue:0,category:'أجهزة شخصية',createdAt:Date.now()-200000},
-            {id:'5',name:'محفظة جلد طبيعي',price:180,icon:'fa-wallet',description:'جل طبيعي 100%',quantity:12,image:'',discountType:'none',discountValue:0,category:'أجهزة شخصية',createdAt:Date.now()-100000},
-            {id:'6',name:'سماعات لاسلكية',price:399,icon:'fa-headphones',description:'صوت نقي وعازل للضوضاء',quantity:6,image:'',discountType:'none',discountValue:0,category:'أجهزة كهربائية',createdAt:Date.now()}
+            {id:'1',name:'مجموعة أدوات حلاقة احترافية',price:450,icon:'fa-cut',description:'مجموعة متكاملة للعناية الشخصية',quantity:15,image:'',discountType:'percent',discountValue:10,category:'مستلزمات شخصية',createdAt:Date.now()-500000},
+            {id:'2',name:'فرشاة أسنان كهربائية',price:320,icon:'fa-tooth',description:'تنظيف عميق مع 3 سرعات',quantity:20,image:'',discountType:'none',discountValue:0,category:'مستلزمات شخصية',createdAt:Date.now()-450000},
+            {id:'3',name:'جهاز قهوة اسبريسو',price:890,icon:'fa-mug-hot',description:'قهوة احترافية في المنزل',quantity:8,image:'',discountType:'none',discountValue:0,category:'أجهزة كهربائية',createdAt:Date.now()-400000},
+            {id:'4',name:'خلاط مطبخ متعدد الاستخدامات',price:550,icon:'fa-blender',description:'5 سرعات مع ملحقات',quantity:12,image:'',discountType:'percent',discountValue:15,category:'أجهزة كهربائية',createdAt:Date.now()-350000},
+            {id:'5',name:'هاتف ذكي 128GB',price:3200,icon:'fa-mobile-screen-button',description:'شاشة 6.7 بوصة، كاميرا 108MP',quantity:6,image:'',discountType:'none',discountValue:0,category:'أجهزة شخصية',createdAt:Date.now()-300000},
+            {id:'6',name:'سماعات لاسلكية',price:399,icon:'fa-headphones',description:'صوت نقي مع إلغاء الضوضاء',quantity:10,image:'',discountType:'percent',discountValue:20,category:'أجهزة شخصية',createdAt:Date.now()-250000},
+            {id:'7',name:'زيت أركان طبيعي',price:180,icon:'fa-flask',description:'زيت عضوي 100% للعناية بالبشرة',quantity:25,image:'',discountType:'none',discountValue:0,category:'عناية طبيعية',createdAt:Date.now()-200000},
+            {id:'8',name:'مجموعة كريمات عناية',price:280,icon:'fa-jar',description:'مجموعة متكاملة للبشرة',quantity:18,image:'',discountType:'percent',discountValue:10,category:'عناية طبيعية',createdAt:Date.now()-150000},
+            {id:'9',name:'قميص رسمي رجالي',price:450,icon:'fa-shirt',description:'قطن فاخر، مقاس M-XXL',quantity:30,image:'',discountType:'none',discountValue:0,category:'ملابس',createdAt:Date.now()-100000},
+            {id:'10',name:'جاكيت شتوي رجالي',price:750,icon:'fa-vest',description:'مقاوم للماء والرياح',quantity:15,image:'',discountType:'percent',discountValue:20,category:'ملابس',createdAt:Date.now()-50000},
+            {id:'11',name:'فستان سهرة أنيق',price:620,icon:'fa-dress',description:'تصميم عصري وفاخر',quantity:10,image:'',discountType:'none',discountValue:0,category:'ملابس',createdAt:Date.now()-30000},
+            {id:'12',name:'بنطلون جينز كلاسيك',price:380,icon:'fa-vest',description:'جينز مريح لمختلف المناسبات',quantity:25,image:'',discountType:'percent',discountValue:15,category:'ملابس',createdAt:Date.now()-10000}
         ];
         syncCartWithProducts();saveCart();
         if($('#homePage')?.classList.contains('active-page'))renderHomeProducts();
