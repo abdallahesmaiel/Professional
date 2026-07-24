@@ -1995,8 +1995,10 @@
   </div>
 
   <script type="module">
+    // ===== تحديث الاستيراد =====
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, onValue, push, set, get, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, onValue, push, set, get, remove, update, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    
     const firebaseConfig = { apiKey: "AIzaSyARX12v1lvgKaFhIoYWRtv1Nqxpt8zz8HE", authDomain: "rashfa-9d95d.firebaseapp.com", databaseURL: "https://rashfa-9d95d-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "rashfa-9d95d", storageBucket: "rashfa-9d95d.firebasestorage.app", messagingSenderId: "973516999258", appId: "1:973516999258:web:e71f8d42efd8e461e0a663" };
 
     // ===== Utils =====
@@ -2198,7 +2200,6 @@
     }
 
     // ===== Coupon System (محسّن مع دعم الكوبونات من Firebase) =====
-    // كوبونات افتراضية للاختبار
     const defaultCoupons = {
       'SAVE10': { type: 'percent', value: 10, description: 'خصم 10%', active: true },
       'SAVE20': { type: 'percent', value: 20, description: 'خصم 20%', active: true },
@@ -2248,6 +2249,43 @@
         console.warn('⚠️ خطأ في تحميل الكوبونات، استخدام الكوبونات الافتراضية:', e);
         activeCoupons = { ...defaultCoupons };
       }
+    }
+
+    // ===== دالة زيادة استخدام الكوبون (تمت إضافتها) =====
+    async function incrementCouponUsage(couponCode) {
+        if (!couponCode || !database) return { success: false, message: 'بيانات غير صالحة' };
+        try {
+            const snapshot = await get(ref(database, 'coupons'));
+            let couponId = null;
+            let couponData = null;
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                for (const key in data) {
+                    if (data.hasOwnProperty(key) && data[key].code === couponCode) {
+                        couponId = key;
+                        couponData = data[key];
+                        break;
+                    }
+                }
+            }
+            if (!couponId || !couponData) {
+                return { success: false, message: 'الكوبون غير موجود في قاعدة البيانات' };
+            }
+            const usedCount = couponData.usedCount || 0;
+            const maxUses = couponData.maxUses || null;
+            if (maxUses !== null && usedCount >= maxUses) {
+                return { success: false, message: 'تم استخدام الحد الأقصى لهذا الكوبون' };
+            }
+            await update(ref(database, `coupons/${couponId}`), {
+                usedCount: increment(1),
+                lastUsedAt: Date.now()
+            });
+            console.log(`✅ تم زيادة استخدام الكوبون ${couponCode} (${usedCount + 1}/${maxUses || '∞'})`);
+            return { success: true, message: `تم استخدام الكوبون (${usedCount + 1}/${maxUses || '∞'})` };
+        } catch (e) {
+            console.error('❌ فشل زيادة استخدام الكوبون:', e);
+            return { success: false, message: 'فشل تحديث استخدام الكوبون' };
+        }
     }
 
     function applyCoupon(code) {
@@ -2642,7 +2680,7 @@
     $('#cancelCheckout')?.addEventListener('click', closeCheckoutModal);
     $('#checkoutModalOverlay')?.addEventListener('click', function(e) { if (e.target === this) closeCheckoutModal(); });
 
-    // Coupon apply - محسّن مع رسائل واضحة
+    // Coupon apply
     $('#applyCouponBtn')?.addEventListener('click', function() {
       const input = document.getElementById('couponInput');
       if (!input) return;
@@ -2668,7 +2706,7 @@
       }
     });
 
-    // Confirm Order
+    // Confirm Order (مع إضافة زيادة استخدام الكوبون)
     $('#confirmOrder')?.addEventListener('click', async function(e) {
       e.preventDefault();
       const name = $('#custName')?.value.trim(),
@@ -2715,6 +2753,17 @@
         try {
           const nr = push(ref(database, 'orders'));
           await set(nr, orderData);
+          
+          // ===== إضافة زيادة استخدام الكوبون =====
+          if (appliedCoupon) {
+            const result = await incrementCouponUsage(appliedCoupon.code);
+            if (result.success) {
+              console.log('✅ تم تحديث استخدام الكوبون:', result.message);
+            } else {
+              console.warn('⚠️ فشل تحديث استخدام الكوبون:', result.message);
+            }
+          }
+          
           myOrders.unshift({ orderId: nr.key, ...orderData, rejectionReason: '' });
           cartItems = [];
           saveCart();
@@ -2907,7 +2956,7 @@
     }
 
     // ===== Flash Sale Timer =====
-    let flashSaleEndTime = Date.now() + 24 * 60 * 60 * 1000; // 2 hours
+    let flashSaleEndTime = Date.now() + 24 * 60 * 60 * 1000;
 
     function updateFlashSaleTimer() {
       const now = Date.now();
@@ -3010,7 +3059,6 @@
         `;
       }).join('');
 
-      // Event listeners
       g.querySelectorAll('[data-add-id]').forEach(b => b.addEventListener('click', () => addToCart(b.getAttribute('data-add-id'))));
       g.querySelectorAll('[data-wishlist-id]').forEach(b => b.addEventListener('click', () => toggleWishlist(b.getAttribute('data-wishlist-id'))));
     }
