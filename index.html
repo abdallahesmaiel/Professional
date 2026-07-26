@@ -2952,16 +2952,64 @@
     }
 
     // ===== Flash Sale =====
+    let flashSaleSettings = {
+      status: 'active',
+      count: 4,
+      endTime: Date.now() + 24 * 60 * 60 * 1000
+    };
+
     function renderFlashSale() {
       const container = document.getElementById('flashSaleProducts');
       if (!container) return;
+
+      // التحقق من حالة العروض من Firebase
+      if (database) {
+        onValue(ref(database, 'settings/flashSale'), (snap) => {
+          if (snap.exists()) {
+            const data = snap.val();
+            flashSaleSettings.status = data.status || 'active';
+            flashSaleSettings.count = data.count || 4;
+            flashSaleSettings.endTime = data.endTime || Date.now() + 24 * 60 * 60 * 1000;
+            updateFlashSaleTimer();
+            updateFlashSaleDisplay();
+          }
+        });
+      }
+
+      updateFlashSaleDisplay();
+    }
+
+    function updateFlashSaleDisplay() {
+      const container = document.getElementById('flashSaleProducts');
+      if (!container) return;
+
+      // التحقق من أن العروض مفعلة
+      if (flashSaleSettings.status === 'inactive') {
+        container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,0.6);padding:20px;">⏸️ العروض غير مفعلة حالياً</div>';
+        return;
+      }
+
+      // التحقق من انتهاء الوقت
+      if (Date.now() > flashSaleSettings.endTime) {
+        container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,0.6);padding:20px;">⏰ انتهت العروض</div>';
+        return;
+      }
+
+      const count = flashSaleSettings.count || 4;
       const saleProducts = allProducts
         .filter(p => (p.discountType !== 'none' && parseFloat(p.discountValue) > 0))
-        .slice(0, 4);
+        .sort((a, b) => {
+          const da = parseFloat(a.discountValue) || 0;
+          const db = parseFloat(b.discountValue) || 0;
+          return db - da;
+        })
+        .slice(0, count);
+
       if (saleProducts.length === 0) {
         container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,0.6);padding:20px;">لا توجد عروض حالياً</div>';
         return;
       }
+
       container.innerHTML = saleProducts.map(p => {
         const pi = getEffectivePrice(p);
         const img = getThumbnailUrl(p.image, 200);
@@ -2984,13 +3032,47 @@
           </div>
         `;
       }).join('');
+
       container.querySelectorAll('[data-add-id]').forEach(b => b.addEventListener('click', () => addToCart(b.getAttribute('data-add-id'))));
     }
 
-    // ===== Flash Sale Timer =====
+    function updateFlashSaleTimer() {
+      const timerEl = document.getElementById('flashSaleTimer');
+      if (!timerEl) return;
+
+      const now = Date.now();
+      const diff = Math.max(0, flashSaleSettings.endTime - now);
+      const hours = Math.floor(diff / 3600000);
+      const minutes = Math.floor((diff % 3600000) / 60000);
+      const seconds = Math.floor((diff % 60000) / 1000);
+
+      document.getElementById('fsHours').textContent = String(hours).padStart(2, '0');
+      document.getElementById('fsMinutes').textContent = String(minutes).padStart(2, '0');
+      document.getElementById('fsSeconds').textContent = String(seconds).padStart(2, '0');
+
+      // إذا انتهى الوقت وتم ضبط الإعادة التلقائية
+      if (diff <= 0 && flashSaleSettings.status === 'active') {
+        const autoReset = true; // يمكن جلبها من الإعدادات
+        if (autoReset) {
+          flashSaleSettings.endTime = Date.now() + 24 * 60 * 60 * 1000;
+          // حفظ الإعدادات في Firebase
+          if (database) {
+            update(ref(database, 'settings/flashSale'), {
+              endTime: flashSaleSettings.endTime,
+              lastReset: Date.now()
+            }).catch(() => {});
+          }
+        }
+      }
+    }
+
+    // ===== Flash Sale Timer Interval =====
+    setInterval(updateFlashSaleTimer, 1000);
+
+    // ===== Flash Sale Timer (الأصلي للتوافق) =====
     let flashSaleEndTime = Date.now() + 24 * 60 * 60 * 1000;
 
-    function updateFlashSaleTimer() {
+    function updateFlashSaleTimerLegacy() {
       const now = Date.now();
       let diff = Math.max(0, flashSaleEndTime - now);
       if (diff <= 0) {
@@ -3005,8 +3087,8 @@
       document.getElementById('fsSeconds').textContent = String(s).padStart(2, '0');
     }
 
+    // استخدام المؤقت المدمج مع نظام الإعدادات
     setInterval(updateFlashSaleTimer, 1000);
-    updateFlashSaleTimer();
 
     // ===== Filter & Sort =====
     function getFilteredAndSortedProducts() {
@@ -3270,7 +3352,7 @@
 
     // ===== Init =====
     function init() {
-      console.log('🚀 بدء تشغيل المتجر...');
+      console.log('🚀 بدء تشغيل المتجر مع نظام عروض الخصم السريع...');
       checkFirstOrder();
       loadProducts();
       loadLogo();
@@ -3288,12 +3370,26 @@
       startPeriodicRefresh();
       refreshOrdersStatus();
 
+      // تحميل إعدادات العروض السريعة
+      if (database) {
+        onValue(ref(database, 'settings/flashSale'), (snap) => {
+          if (snap.exists()) {
+            const data = snap.val();
+            flashSaleSettings.status = data.status || 'active';
+            flashSaleSettings.count = data.count || 4;
+            flashSaleSettings.endTime = data.endTime || Date.now() + 24 * 60 * 60 * 1000;
+            updateFlashSaleDisplay();
+            updateFlashSaleTimer();
+          }
+        });
+      }
+
       window.switchPage = switchPage;
       window.addToCart = addToCart;
       window.resetAllFilters = resetAllFilters;
       window.openProductDetail = openProductDetail;
       window.closeProductDetail = closeProductDetail;
-      console.log('✅ تم تشغيل المتجر بنجاح');
+      console.log('✅ تم تشغيل المتجر بنجاح مع نظام عروض الخصم السريع');
     }
 
     init();
