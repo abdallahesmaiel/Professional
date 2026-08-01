@@ -2108,7 +2108,7 @@
     // ===== State =====
     let allProducts = [], cartItems = [], myOrders = [], wishlist = [];
     let currentCategory = 'all', currentSort = 'newest', currentPriceMin = null, currentPriceMax = null, currentSearchQuery = '';
-    let selectedPaymentMethod = 'cod', codFee = 0, deliveryFee = 5, isFirstOrder = true;
+    let selectedPaymentMethod = 'cod', codFee = 0, deliveryFee = 5;
     let appliedCoupon = null, couponDiscount = 0;
     const walletNumbers = { vodafone: '01097570965', etisalat: '01152321199', we: 'لا يوجد', visa: '0000-0000-0000-0000' };
     const PAYMENT_METHODS = {
@@ -2161,16 +2161,8 @@
       }
     }
 
-    // ===== First Order =====
-    function checkFirstOrder() {
-      const used = localStorage.getItem('pro_ordered_before');
-      isFirstOrder = used !== 'true';
-    }
-    function markAsOrdered() {
-      localStorage.setItem('pro_ordered_before', 'true');
-      isFirstOrder = false;
-    }
-    function getDeliveryFee() { return isFirstOrder ? 0 : deliveryFee; }
+    // ===== رسوم التوصيل - تم إزالة الطلب الأول مجاني =====
+    function getDeliveryFee() { return deliveryFee; }
 
     // ===== Settings =====
     function loadCODFee() {
@@ -2251,7 +2243,7 @@
       }
     }
 
-    // ===== دالة زيادة استخدام الكوبون (محسّنة مع سجلات) =====
+    // ===== دالة زيادة استخدام الكوبون =====
     async function incrementCouponUsage(couponCode) {
         console.log('🔍 محاولة زيادة استخدام الكوبون:', couponCode);
         
@@ -2261,7 +2253,6 @@
         }
         
         try {
-            // البحث عن الكوبون في قاعدة البيانات
             const snapshot = await get(ref(database, 'coupons'));
             console.log('📦 بيانات الكوبونات:', snapshot.exists() ? 'موجودة' : 'غير موجودة');
             
@@ -2294,7 +2285,6 @@
                 return { success: false, message: 'تم استخدام الحد الأقصى لهذا الكوبون' };
             }
             
-            // تحديث عدد الاستخدامات
             await update(ref(database, `coupons/${couponId}`), {
                 usedCount: increment(1),
                 lastUsedAt: Date.now()
@@ -2786,20 +2776,16 @@
             const result = await incrementCouponUsage(appliedCoupon.code);
             if (result.success) {
               console.log('✅ تم تحديث استخدام الكوبون:', result.message);
-              // تحديث الكوبون في الطلب
               orderData.coupon.usedCount = result.usedCount;
             } else {
               console.warn('⚠️ فشل تحديث استخدام الكوبون:', result.message);
             }
-          } else {
-            console.log('ℹ️ لا يوجد كوبون مطبق لتحديث استخدامه');
           }
           
           myOrders.unshift({ orderId: nr.key, ...orderData, rejectionReason: '' });
           cartItems = [];
           saveCart();
           saveOrders();
-          markAsOrdered();
           removeCoupon();
           closeCheckoutModal();
           NotificationSystem.success('تم إرسال الطلب!', '🎉 تم!');
@@ -2819,7 +2805,6 @@
       cartItems = [];
       saveCart();
       saveOrders();
-      markAsOrdered();
       removeCoupon();
       closeCheckoutModal();
       NotificationSystem.success('تم الحفظ محلياً', '🎉 تم!');
@@ -3067,27 +3052,6 @@
     }
 
     // ===== Flash Sale Timer Interval =====
-    setInterval(updateFlashSaleTimer, 1000);
-
-    // ===== Flash Sale Timer (الأصلي للتوافق) =====
-    let flashSaleEndTime = Date.now() + 24 * 60 * 60 * 1000;
-
-    function updateFlashSaleTimerLegacy() {
-      const now = Date.now();
-      let diff = Math.max(0, flashSaleEndTime - now);
-      if (diff <= 0) {
-        flashSaleEndTime = Date.now() + 24 * 60 * 60 * 1000;
-        diff = 24 * 60 * 60 * 1000;
-      }
-      const h = Math.floor(diff / 3600000);
-      const m = Math.floor((diff % 3600000) / 60000);
-      const s = Math.floor((diff % 60000) / 1000);
-      document.getElementById('fsHours').textContent = String(h).padStart(2, '0');
-      document.getElementById('fsMinutes').textContent = String(m).padStart(2, '0');
-      document.getElementById('fsSeconds').textContent = String(s).padStart(2, '0');
-    }
-
-    // استخدام المؤقت المدمج مع نظام الإعدادات
     setInterval(updateFlashSaleTimer, 1000);
 
     // ===== Filter & Sort =====
@@ -3353,7 +3317,6 @@
     // ===== Init =====
     function init() {
       console.log('🚀 بدء تشغيل المتجر مع نظام عروض الخصم السريع...');
-      checkFirstOrder();
       loadProducts();
       loadLogo();
       loadWalletNumbers();
