@@ -2191,17 +2191,15 @@
       }
     }
 
-    // ===== Coupon System =====
+    // ===== ⭐ نظام الكوبونات المُحسّن بالكامل =====
     const defaultCoupons = {
-      'SAVE10': { type: 'percent', value: 10, description: 'خصم 10%', active: true },
-      'SAVE20': { type: 'percent', value: 20, description: 'خصم 20%', active: true },
-      'FREESHIP': { type: 'free_shipping', value: 0, description: 'شحن مجاني', active: true, freeShipping: true },
-      'WELCOME': { type: 'percent', value: 15, description: 'خصم 15% للعملاء الجدد', active: true }
+      'SAVE10': { type: 'percent', value: 10, description: 'خصم 10%', active: true, maxUses: 100, expiryDate: null },
+      'SAVE20': { type: 'percent', value: 20, description: 'خصم 20%', active: true, maxUses: 50, expiryDate: null },
+      'FREESHIP': { type: 'free_shipping', value: 0, description: 'شحن مجاني', active: true, freeShipping: true, maxUses: 200, expiryDate: null },
+      'WELCOME': { type: 'percent', value: 15, description: 'خصم 15% للعملاء الجدد', active: true, maxUses: 150, expiryDate: null }
     };
 
-    let activeCoupons = { ...defaultCoupons };
-
-    // تحميل الكوبونات من Firebase
+    // تحميل الكوبونات من Firebase مع جميع البيانات
     function loadCouponsFromFirebase() {
       if (!database) return;
       try {
@@ -2212,16 +2210,17 @@
             for (const key in data) {
               if (data.hasOwnProperty(key) && key !== '_init') {
                 const coupon = data[key];
-                if (coupon.active !== false) {
-                  loadedCoupons[coupon.code] = {
-                    type: coupon.type || 'percent',
-                    value: coupon.value || 0,
-                    description: coupon.description || '',
-                    freeShipping: coupon.type === 'free_shipping',
-                    active: true,
-                    id: key
-                  };
-                }
+                loadedCoupons[coupon.code] = {
+                  type: coupon.type || 'percent',
+                  value: coupon.value || 0,
+                  description: coupon.description || '',
+                  freeShipping: coupon.type === 'free_shipping',
+                  active: coupon.active !== false,
+                  maxUses: coupon.maxUses || null,
+                  usedCount: coupon.usedCount || 0,
+                  expiryDate: coupon.expiryDate || null,
+                  id: key
+                };
               }
             }
             if (Object.keys(loadedCoupons).length > 0) {
@@ -2243,81 +2242,133 @@
       }
     }
 
-    // ===== دالة زيادة استخدام الكوبون =====
-    async function incrementCouponUsage(couponCode) {
-        console.log('🔍 محاولة زيادة استخدام الكوبون:', couponCode);
-        
-        if (!couponCode || !database) {
-            console.error('❌ بيانات غير صالحة:', { couponCode, hasDatabase: !!database });
-            return { success: false, message: 'بيانات غير صالحة' };
+    let activeCoupons = { ...defaultCoupons };
+
+    // ===== دالة التحقق من صلاحية الكوبون =====
+    function validateCoupon(couponCode) {
+      const code = couponCode.toUpperCase().trim();
+      const coupon = activeCoupons[code];
+      
+      if (!coupon) {
+        return { valid: false, message: '❌ كود غير صحيح' };
+      }
+      
+      // التحقق من حالة الكوبون (مفعل/غير مفعل)
+      if (coupon.active === false) {
+        return { valid: false, message: '❌ هذا الكوبون غير مفعل حالياً' };
+      }
+      
+      // التحقق من صلاحية الكوبون (تاريخ الانتهاء)
+      if (coupon.expiryDate) {
+        const expiry = new Date(coupon.expiryDate);
+        if (expiry < new Date()) {
+          return { valid: false, message: '❌ انتهت صلاحية الكوبون' };
         }
-        
-        try {
-            const snapshot = await get(ref(database, 'coupons'));
-            console.log('📦 بيانات الكوبونات:', snapshot.exists() ? 'موجودة' : 'غير موجودة');
-            
-            let couponId = null;
-            let couponData = null;
-            
-            if (snapshot.exists()) {
-                const data = snapshot.val();
-                for (const key in data) {
-                    if (data.hasOwnProperty(key) && data[key].code === couponCode) {
-                        couponId = key;
-                        couponData = data[key];
-                        break;
-                    }
-                }
-            }
-            
-            if (!couponId || !couponData) {
-                console.error('❌ الكوبون غير موجود:', couponCode);
-                return { success: false, message: 'الكوبون غير موجود في قاعدة البيانات' };
-            }
-            
-            console.log('✅ تم العثور على الكوبون:', { couponId, couponData });
-            
-            const usedCount = couponData.usedCount || 0;
-            const maxUses = couponData.maxUses || null;
-            
-            if (maxUses !== null && usedCount >= maxUses) {
-                console.warn('⚠️ تم استخدام الحد الأقصى:', { usedCount, maxUses });
-                return { success: false, message: 'تم استخدام الحد الأقصى لهذا الكوبون' };
-            }
-            
-            await update(ref(database, `coupons/${couponId}`), {
-                usedCount: increment(1),
-                lastUsedAt: Date.now()
-            });
-            
-            console.log(`✅ تم زيادة استخدام الكوبون ${couponCode} (${usedCount + 1}/${maxUses || '∞'})`);
-            return { 
-                success: true, 
-                message: `تم استخدام الكوبون (${usedCount + 1}/${maxUses || '∞'})`,
-                usedCount: usedCount + 1,
-                maxUses: maxUses
-            };
-        } catch (e) {
-            console.error('❌ فشل زيادة استخدام الكوبون:', e);
-            return { success: false, message: 'فشل تحديث استخدام الكوبون: ' + e.message };
-        }
+      }
+      
+      // التحقق من عدد الاستخدامات
+      if (coupon.maxUses !== null && coupon.usedCount >= coupon.maxUses) {
+        return { valid: false, message: `❌ تم استخدام الحد الأقصى للكوبون (${coupon.maxUses})` };
+      }
+      
+      return { valid: true, coupon: coupon };
     }
 
+    // ===== دالة تطبيق الكوبون =====
     function applyCoupon(code) {
-      const c = activeCoupons[code.toUpperCase().trim()];
-      if (!c) {
-        return { success: false, message: '❌ كود غير صالح أو منتهي الصلاحية' };
+      const validation = validateCoupon(code);
+      
+      if (!validation.valid) {
+        return { success: false, message: validation.message };
       }
+      
+      const coupon = validation.coupon;
+      
+      // التحقق من عدم تكرار الكوبون
       if (appliedCoupon && appliedCoupon.code === code.toUpperCase().trim()) {
         return { success: false, message: '⚠️ الكود مفعل بالفعل' };
       }
-      if (c.active === false) {
-        return { success: false, message: '❌ هذا الكوبون غير مفعل حالياً' };
-      }
-      appliedCoupon = { code: code.toUpperCase().trim(), ...c };
+      
+      appliedCoupon = { 
+        code: code.toUpperCase().trim(), 
+        ...coupon,
+        // إضافة بيانات إضافية للاستخدام
+        maxUses: coupon.maxUses,
+        usedCount: coupon.usedCount
+      };
       couponDiscount = 0;
+      
+      // تحديث واجهة المستخدم
+      const statusEl = document.getElementById('couponStatus');
+      if (statusEl) {
+        statusEl.innerHTML = `<span class="coupon-applied"><i class="fa-solid fa-check"></i> تم تطبيق ${coupon.description}</span>`;
+      }
+      
       updateTotalSummary();
-      return { success: true, message: `✅ تم تطبيق ${c.description}` };
+      return { success: true, message: `✅ تم تطبيق ${coupon.description}` };
+    }
+
+    // ===== دالة زيادة استخدام الكوبون في Firebase =====
+    async function incrementCouponUsage(couponCode) {
+      console.log('🔍 محاولة زيادة استخدام الكوبون:', couponCode);
+      
+      if (!couponCode || !database) {
+        console.error('❌ بيانات غير صالحة:', { couponCode, hasDatabase: !!database });
+        return { success: false, message: 'بيانات غير صالحة' };
+      }
+      
+      try {
+        // البحث عن الكوبون في قاعدة البيانات
+        const snapshot = await get(ref(database, 'coupons'));
+        console.log('📦 بيانات الكوبونات:', snapshot.exists() ? 'موجودة' : 'غير موجودة');
+        
+        let couponId = null;
+        let couponData = null;
+        
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          for (const key in data) {
+            if (data.hasOwnProperty(key) && data[key].code === couponCode) {
+              couponId = key;
+              couponData = data[key];
+              break;
+            }
+          }
+        }
+        
+        if (!couponId || !couponData) {
+          console.error('❌ الكوبون غير موجود:', couponCode);
+          return { success: false, message: 'الكوبون غير موجود في قاعدة البيانات' };
+        }
+        
+        console.log('✅ تم العثور على الكوبون:', { couponId, couponData });
+        
+        const usedCount = couponData.usedCount || 0;
+        const maxUses = couponData.maxUses || null;
+        
+        // التحقق من الحد الأقصى مرة أخرى
+        if (maxUses !== null && usedCount >= maxUses) {
+          console.warn('⚠️ تم استخدام الحد الأقصى:', { usedCount, maxUses });
+          return { success: false, message: 'تم استخدام الحد الأقصى لهذا الكوبون' };
+        }
+        
+        // تحديث عدد الاستخدامات باستخدام increment
+        await update(ref(database, `coupons/${couponId}`), {
+          usedCount: increment(1),
+          lastUsedAt: Date.now()
+        });
+        
+        console.log(`✅ تم زيادة استخدام الكوبون ${couponCode} (${usedCount + 1}/${maxUses || '∞'})`);
+        return { 
+          success: true, 
+          message: `تم استخدام الكوبون (${usedCount + 1}/${maxUses || '∞'})`,
+          usedCount: usedCount + 1,
+          maxUses: maxUses
+        };
+      } catch (e) {
+        console.error('❌ فشل زيادة استخدام الكوبون:', e);
+        return { success: false, message: 'فشل تحديث استخدام الكوبون: ' + e.message };
+      }
     }
 
     function removeCoupon() {
@@ -2381,13 +2432,6 @@
 
       if (dr) { dr.classList.toggle('free', df === 0); dr.style.display = 'flex'; }
       if (cr) cr.style.display = (cod > 0) ? 'flex' : 'none';
-
-      const stStatus = $('#couponStatus');
-      if (stStatus && appliedCoupon) {
-        stStatus.innerHTML = `<span class="coupon-applied"><i class="fa-solid fa-check"></i> ${appliedCoupon.description}</span>`;
-      } else if (stStatus) {
-        stStatus.textContent = '';
-      }
     }
 
     // ===== Wallets =====
@@ -2695,20 +2739,21 @@
     $('#cancelCheckout')?.addEventListener('click', closeCheckoutModal);
     $('#checkoutModalOverlay')?.addEventListener('click', function(e) { if (e.target === this) closeCheckoutModal(); });
 
-    // Coupon apply
+    // Coupon apply with validation
     $('#applyCouponBtn')?.addEventListener('click', function() {
       const input = document.getElementById('couponInput');
       if (!input) return;
       const code = input.value.trim();
-      if (!code) { NotificationSystem.warning('⚠️ أدخل كود الخصم'); return; }
+      if (!code) { 
+        NotificationSystem.warning('⚠️ أدخل كود الخصم'); 
+        return; 
+      }
+      
+      // استخدام دالة applyCoupon المُحسّنة
       const result = applyCoupon(code);
       if (result.success) {
         NotificationSystem.success(result.message);
         updateTotalSummary();
-        const statusEl = document.getElementById('couponStatus');
-        if (statusEl) {
-          statusEl.innerHTML = `<span class="coupon-applied"><i class="fa-solid fa-check"></i> ${result.message}</span>`;
-        }
       } else {
         NotificationSystem.error(result.message);
         const statusEl = document.getElementById('couponStatus');
@@ -2721,7 +2766,7 @@
       }
     });
 
-    // ===== Confirm Order (مع إضافة زيادة استخدام الكوبون) =====
+    // ===== Confirm Order (مع زيادة استخدام الكوبون) =====
     $('#confirmOrder')?.addEventListener('click', async function(e) {
       e.preventDefault();
       const name = $('#custName')?.value.trim(),
