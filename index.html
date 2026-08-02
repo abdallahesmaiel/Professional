@@ -2191,7 +2191,7 @@
       }
     }
 
-    // ===== ⭐ نظام الكوبونات المُحسّن بالكامل =====
+    // ===== ⭐ نظام الكوبونات المُحسّن بالكامل مع تحديث فوري =====
     const defaultCoupons = {
       'SAVE10': { type: 'percent', value: 10, description: 'خصم 10%', active: true, maxUses: 100, expiryDate: null },
       'SAVE20': { type: 'percent', value: 20, description: 'خصم 20%', active: true, maxUses: 50, expiryDate: null },
@@ -2199,14 +2199,24 @@
       'WELCOME': { type: 'percent', value: 15, description: 'خصم 15% للعملاء الجدد', active: true, maxUses: 150, expiryDate: null }
     };
 
-    // تحميل الكوبونات من Firebase مع جميع البيانات
+    let activeCoupons = { ...defaultCoupons };
+    let couponListenerActive = false;
+
+    // ===== تحميل الكوبونات من Firebase مع استماع مباشر =====
     function loadCouponsFromFirebase() {
       if (!database) return;
+      if (couponListenerActive) return;
+      couponListenerActive = true;
+      
       try {
-        onValue(ref(database, 'coupons'), (snap) => {
+        const couponsRef = ref(database, 'coupons');
+        
+        // استماع مباشر للتحديثات من Firebase
+        onValue(couponsRef, (snap) => {
           if (snap.exists()) {
             const data = snap.val();
             const loadedCoupons = {};
+            
             for (const key in data) {
               if (data.hasOwnProperty(key) && key !== '_init') {
                 const coupon = data[key];
@@ -2216,33 +2226,39 @@
                   description: coupon.description || '',
                   freeShipping: coupon.type === 'free_shipping',
                   active: coupon.active !== false,
-                  maxUses: coupon.maxUses || null,
+                  maxUses: coupon.maxUses !== undefined ? coupon.maxUses : null,
                   usedCount: coupon.usedCount || 0,
                   expiryDate: coupon.expiryDate || null,
                   id: key
                 };
               }
             }
+            
+            // دمج الكوبونات المحملة مع الافتراضية
             if (Object.keys(loadedCoupons).length > 0) {
               activeCoupons = { ...defaultCoupons, ...loadedCoupons };
             } else {
               activeCoupons = { ...defaultCoupons };
             }
-            console.log('✅ تم تحميل الكوبونات:', Object.keys(activeCoupons));
+            
+            console.log('✅ تم تحديث الكوبونات:', Object.keys(activeCoupons));
+            
+            // التحقق من الكوبون المطبق حالياً
+            checkAppliedCouponValidity();
+            
           } else {
             activeCoupons = { ...defaultCoupons };
           }
         }, (error) => {
-          console.warn('⚠️ فشل تحميل الكوبونات من Firebase، استخدام الكوبونات الافتراضية:', error);
+          console.warn('⚠️ فشل تحميل الكوبونات من Firebase:', error);
           activeCoupons = { ...defaultCoupons };
         });
+        
       } catch (e) {
-        console.warn('⚠️ خطأ في تحميل الكوبونات، استخدام الكوبونات الافتراضية:', e);
+        console.warn('⚠️ خطأ في تحميل الكوبونات:', e);
         activeCoupons = { ...defaultCoupons };
       }
     }
-
-    let activeCoupons = { ...defaultCoupons };
 
     // ===== دالة التحقق من صلاحية الكوبون =====
     function validateCoupon(couponCode) {
@@ -2261,7 +2277,8 @@
       // التحقق من صلاحية الكوبون (تاريخ الانتهاء)
       if (coupon.expiryDate) {
         const expiry = new Date(coupon.expiryDate);
-        if (expiry < new Date()) {
+        const now = new Date();
+        if (expiry < now) {
           return { valid: false, message: '❌ انتهت صلاحية الكوبون' };
         }
       }
@@ -2272,6 +2289,21 @@
       }
       
       return { valid: true, coupon: coupon };
+    }
+
+    // ===== دالة التحقق من صلاحية الكوبون المطبق حالياً =====
+    function checkAppliedCouponValidity() {
+      if (!appliedCoupon) return;
+      
+      const validation = validateCoupon(appliedCoupon.code);
+      
+      if (!validation.valid) {
+        // الكوبون أصبح غير صالح، قم بإلغائه
+        console.warn('⚠️ الكوبون المطبق أصبح غير صالح:', validation.message);
+        const oldCoupon = appliedCoupon.code;
+        removeCoupon();
+        NotificationSystem.warning(`⚠️ تم إلغاء الكوبون ${oldCoupon}: ${validation.message}`);
+      }
     }
 
     // ===== دالة تطبيق الكوبون =====
@@ -2292,7 +2324,6 @@
       appliedCoupon = { 
         code: code.toUpperCase().trim(), 
         ...coupon,
-        // إضافة بيانات إضافية للاستخدام
         maxUses: coupon.maxUses,
         usedCount: coupon.usedCount
       };
@@ -2320,7 +2351,6 @@
       try {
         // البحث عن الكوبون في قاعدة البيانات
         const snapshot = await get(ref(database, 'coupons'));
-        console.log('📦 بيانات الكوبونات:', snapshot.exists() ? 'موجودة' : 'غير موجودة');
         
         let couponId = null;
         let couponData = null;
@@ -2341,10 +2371,8 @@
           return { success: false, message: 'الكوبون غير موجود في قاعدة البيانات' };
         }
         
-        console.log('✅ تم العثور على الكوبون:', { couponId, couponData });
-        
         const usedCount = couponData.usedCount || 0;
-        const maxUses = couponData.maxUses || null;
+        const maxUses = couponData.maxUses !== undefined ? couponData.maxUses : null;
         
         // التحقق من الحد الأقصى مرة أخرى
         if (maxUses !== null && usedCount >= maxUses) {
@@ -2749,7 +2777,6 @@
         return; 
       }
       
-      // استخدام دالة applyCoupon المُحسّنة
       const result = applyCoupon(code);
       if (result.success) {
         NotificationSystem.success(result.message);
@@ -2789,6 +2816,16 @@
         return;
       }
       if (cartItems.length === 0) { closeCheckoutModal(); return; }
+
+      // التحقق من صلاحية الكوبون قبل إنشاء الطلب
+      if (appliedCoupon) {
+        const validation = validateCoupon(appliedCoupon.code);
+        if (!validation.valid) {
+          NotificationSystem.error(`⚠️ ${validation.message}`);
+          removeCoupon();
+          return;
+        }
+      }
 
       const subtotal = cartItems.reduce((s, i) => s + ((i.finalPrice || i.price || 0)) * (i.quantity || 0), 0);
       const fs = isFreeShipping();
@@ -2992,7 +3029,6 @@
       const container = document.getElementById('flashSaleProducts');
       if (!container) return;
 
-      // التحقق من حالة العروض من Firebase
       if (database) {
         onValue(ref(database, 'settings/flashSale'), (snap) => {
           if (snap.exists()) {
@@ -3013,13 +3049,11 @@
       const container = document.getElementById('flashSaleProducts');
       if (!container) return;
 
-      // التحقق من أن العروض مفعلة
       if (flashSaleSettings.status === 'inactive') {
         container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,0.6);padding:20px;">⏸️ العروض غير مفعلة حالياً</div>';
         return;
       }
 
-      // التحقق من انتهاء الوقت
       if (Date.now() > flashSaleSettings.endTime) {
         container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,0.6);padding:20px;">⏰ انتهت العروض</div>';
         return;
@@ -3080,12 +3114,10 @@
       document.getElementById('fsMinutes').textContent = String(minutes).padStart(2, '0');
       document.getElementById('fsSeconds').textContent = String(seconds).padStart(2, '0');
 
-      // إذا انتهى الوقت وتم ضبط الإعادة التلقائية
       if (diff <= 0 && flashSaleSettings.status === 'active') {
-        const autoReset = true; // يمكن جلبها من الإعدادات
+        const autoReset = true;
         if (autoReset) {
           flashSaleSettings.endTime = Date.now() + 24 * 60 * 60 * 1000;
-          // حفظ الإعدادات في Firebase
           if (database) {
             update(ref(database, 'settings/flashSale'), {
               endTime: flashSaleSettings.endTime,
@@ -3096,7 +3128,6 @@
       }
     }
 
-    // ===== Flash Sale Timer Interval =====
     setInterval(updateFlashSaleTimer, 1000);
 
     // ===== Filter & Sort =====
@@ -3357,6 +3388,8 @@
     // ===== Periodic Refresh =====
     function startPeriodicRefresh() {
       setInterval(() => refreshOrdersStatus(), 30000);
+      // التحقق الدوري من صلاحية الكوبون المطبق (كل 30 ثانية)
+      setInterval(() => checkAppliedCouponValidity(), 30000);
     }
 
     // ===== Init =====
@@ -3378,7 +3411,6 @@
       startPeriodicRefresh();
       refreshOrdersStatus();
 
-      // تحميل إعدادات العروض السريعة
       if (database) {
         onValue(ref(database, 'settings/flashSale'), (snap) => {
           if (snap.exists()) {
