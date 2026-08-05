@@ -153,11 +153,9 @@
       line-height: 1.2;
       z-index: 3;
     }
-        .brand-name .main { font-size: clamp(20px,4vw,24px); font-weight: 900; color: var(--primary-dark); letter-spacing: -0.5px; }
-    .brand-name .main .highlight {
-      color: var(--accent);
-    }
-        .brand-name .sub { font-size: clamp(8px,1.5vw,10px); font-weight: 700; color: var(--primary-medium); letter-spacing: 2.5px; text-transform: uppercase; }
+    .brand-name .main { font-size: clamp(20px,4vw,24px); font-weight: 900; color: var(--primary-dark); letter-spacing: -0.5px; }
+    .brand-name .main .highlight { color: var(--accent); }
+    .brand-name .sub { font-size: clamp(8px,1.5vw,10px); font-weight: 700; color: var(--primary-medium); letter-spacing: 2.5px; text-transform: uppercase; }
     .brand-name .sub-en {
       font-size: clamp(7px,1.2vw,9px);
       font-weight: 600;
@@ -299,9 +297,7 @@
       border-color: var(--accent);
     }
     .cart-widget-top:active { transform: scale(0.94); }
-    .cart-widget-top .cart-label {
-      display: inline;
-    }
+    .cart-widget-top .cart-label { display: inline; }
     .cart-count-badge-top {
       background: var(--danger);
       color: white;
@@ -611,9 +607,7 @@
       align-items: center;
       gap: 10px;
     }
-    .section-title .icon {
-      color: var(--accent);
-    }
+    .section-title .icon { color: var(--accent); }
     .section-link {
       color: var(--primary-light);
       font-weight: 700;
@@ -1035,6 +1029,11 @@
       color: white;
       position: relative;
       overflow: hidden;
+      display: none; /* مخفي افتراضياً، يظهر فقط عند تفعيل العروض */
+    }
+    .flash-sale-section.active {
+      display: block;
+      animation: fadeInUp 0.5s ease;
     }
     .flash-sale-section::before {
       content: '⚡';
@@ -1062,32 +1061,53 @@
     }
     .flash-sale-timer {
       display: flex;
-      gap: 8px;
+      gap: 12px;
       font-weight: 700;
-      font-size: 20px;
-      background: rgba(0,0,0,0.2);
-      padding: 8px 20px;
+      font-size: 18px;
+      background: rgba(0,0,0,0.25);
+      padding: 10px 24px;
       border-radius: var(--radius-full);
       backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.1);
+      flex-wrap: wrap;
+      justify-content: center;
     }
     .flash-sale-timer .time-unit {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 2px;
+      min-width: 50px;
     }
     .flash-sale-timer .time-unit .num {
-      font-size: 24px;
+      font-size: 26px;
       font-weight: 900;
-      min-width: 30px;
+      min-width: 40px;
       text-align: center;
+      background: rgba(0,0,0,0.2);
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      font-variant-numeric: tabular-nums;
     }
     .flash-sale-timer .time-unit .label {
       font-size: 10px;
-      opacity: 0.7;
-      font-weight: 500;
+      opacity: 0.8;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
-    .flash-sale-timer .separator { opacity: 0.5; padding: 0 2px; }
+    .flash-sale-timer .separator {
+      opacity: 0.4;
+      font-size: 24px;
+      font-weight: 300;
+      display: flex;
+      align-items: center;
+    }
+    .flash-sale-timer .time-label {
+      font-size: 11px;
+      opacity: 0.7;
+      font-weight: 600;
+    }
 
     /* ===== Cart Page ===== */
     .cart-page-container { max-width: 800px; margin: 0 auto; }
@@ -1642,8 +1662,10 @@
       .filter-bar { flex-direction: column; gap: 12px; }
       .filter-group { width: 100%; }
       .price-range-input { width: 70px; }
-      .flash-sale-timer { font-size: 16px; padding: 6px 14px; }
-      .flash-sale-timer .time-unit .num { font-size: 18px; min-width: 24px; }
+      .flash-sale-timer { font-size: 14px; padding: 8px 14px; gap: 8px; }
+      .flash-sale-timer .time-unit { min-width: 40px; }
+      .flash-sale-timer .time-unit .num { font-size: 20px; min-width: 30px; padding: 2px 6px; }
+      .flash-sale-timer .separator { font-size: 18px; }
     }
     @media (max-width: 600px) {
       .products-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
@@ -1658,11 +1680,21 @@
       .payment-methods-grid { grid-template-columns: repeat(2, 1fr); }
       .cart-section { padding: 16px; }
       .modal-card { padding: 20px 16px; }
+      .flash-sale-timer { font-size: 12px; padding: 6px 10px; gap: 4px; }
+      .flash-sale-timer .time-unit { min-width: 30px; }
+      .flash-sale-timer .time-unit .num { font-size: 16px; min-width: 24px; padding: 2px 4px; }
+      .flash-sale-timer .time-unit .label { font-size: 8px; }
+      .flash-sale-timer .separator { font-size: 14px; }
     }
     @media (max-width: 400px) {
       .products-grid { grid-template-columns: 1fr; gap: 16px; }
       .hero-banner { min-height: 150px; padding: 20px 16px; }
       .hero-title { font-size: 22px; }
+      .flash-sale-timer { gap: 2px; }
+      .flash-sale-timer .time-unit { min-width: 24px; }
+      .flash-sale-timer .time-unit .num { font-size: 12px; min-width: 18px; padding: 1px 3px; }
+      .flash-sale-timer .time-unit .label { font-size: 7px; }
+      .flash-sale-timer .separator { font-size: 10px; }
     }
     @media (min-width: 769px) {
       .bottom-nav { display: none; }
@@ -1778,6 +1810,31 @@
       .lang-switcher { padding: 1px; }
       .lang-btn { font-size: 7px; padding: 1px 3px; }
     }
+
+    /* ===== Wishlist Page Styles ===== */
+    .wishlist-empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--primary-light);
+    }
+    .wishlist-empty .empty-icon {
+      font-size: 80px;
+      display: block;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+    .wishlist-empty h3 {
+      font-size: 24px;
+      color: var(--primary-dark);
+      margin-bottom: 10px;
+    }
+    .wishlist-empty p {
+      font-size: 16px;
+      color: var(--cream);
+    }
+    .wishlist-empty .btn {
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
@@ -1841,15 +1898,29 @@
       </div>
 
       <!-- Flash Sale -->
-      <div class="flash-sale-section">
+      <div class="flash-sale-section" id="flashSaleSection">
         <div class="flash-sale-header">
           <div class="flash-sale-title">⚡ عروض الخصم السريع</div>
           <div class="flash-sale-timer" id="flashSaleTimer">
-            <div class="time-unit"><span class="num" id="fsHours">00</span><span class="label">ساعات</span></div>
+            <div class="time-unit">
+              <span class="num" id="fsDays">00</span>
+              <span class="label">أيام</span>
+            </div>
             <span class="separator">:</span>
-            <div class="time-unit"><span class="num" id="fsMinutes">00</span><span class="label">دقائق</span></div>
+            <div class="time-unit">
+              <span class="num" id="fsHours">00</span>
+              <span class="label">ساعات</span>
+            </div>
             <span class="separator">:</span>
-            <div class="time-unit"><span class="num" id="fsSeconds">00</span><span class="label">ثواني</span></div>
+            <div class="time-unit">
+              <span class="num" id="fsMinutes">00</span>
+              <span class="label">دقائق</span>
+            </div>
+            <span class="separator">:</span>
+            <div class="time-unit">
+              <span class="num" id="fsSeconds">00</span>
+              <span class="label">ثواني</span>
+            </div>
           </div>
         </div>
         <div class="products-grid" id="flashSaleProducts" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;"></div>
@@ -1910,6 +1981,18 @@
       </div>
     </div>
 
+    <!-- Wishlist Page -->
+    <div id="wishlistPage" class="page">
+      <div class="section-header">
+        <div class="section-title"><span class="icon">❤️</span> المفضلة</div>
+      </div>
+      <div class="products-grid" id="wishlistContainer">
+        <div class="loading-spinner" style="grid-column:1/-1;">
+          <i class="fa-solid fa-spinner fa-spin"></i> جاري التحميل...
+        </div>
+      </div>
+    </div>
+
     <!-- Cart Page -->
     <div id="cartPage" class="page">
       <h2 class="page-title"><i class="fas fa-shopping-cart"></i> سلة التسوق والطلبات</h2>
@@ -1920,6 +2003,7 @@
   <!-- Bottom Navigation -->
   <nav class="bottom-nav">
     <button class="nav-item active" data-page="home"><i class="fa-solid fa-store"></i><span>المتجر</span></button>
+    <button class="nav-item" data-page="wishlist"><i class="fa-solid fa-heart"></i><span>المفضلة</span></button>
     <button class="nav-item" data-page="cart"><i class="fa-solid fa-cart-shopping"></i><span>السلة</span><span class="nav-cart-badge" id="bottomCartBadge">0</span></button>
   </nav>
 
@@ -1948,7 +2032,7 @@
             <div class="payment-method-option selected" data-payment="cod"><i class="fa-solid fa-hand-holding-dollar"></i><span class="method-name">الدفع عند الاستلام</span><span class="method-desc">نقداً عند التوصيل</span><span class="cod-fee-badge" id="codFeeBadge">+رسوم</span></div>
             <div class="payment-method-option" data-payment="vodafone"><i class="fa-solid fa-mobile-screen"></i><span class="method-name">فودافون كاش</span><span class="method-desc">تحويل فوري</span></div>
             <div class="payment-method-option" data-payment="etisalat"><i class="fa-solid fa-mobile-screen"></i><span class="method-name">اتصالات كاش</span><span class="method-desc">تحويل فوري</span></div>
-            <div class="payment-method-option" data-payment="we"><i class="fa-solid fa-building-columns"></i><span class="method-name">وي بي</span><span class="method-desc">تحويل فوري</span></div>
+            <div class="payment-method-option" data-payment="we"><i class="fa-solid fa-mobile-screen"></i><span class="method-name">وي بي</span><span class="method-desc">تحويل فوري</span></div>
             <div class="payment-method-option" data-payment="visa"><i class="fa-brands fa-cc-visa"></i><span class="method-name">فيزا كارد</span><span class="method-desc">بطاقة ائتمان</span></div>
           </div>
           <div class="wallet-info-box" id="walletInfoBox">
@@ -2147,6 +2231,7 @@
     function saveWishlist() {
       try { localStorage.setItem('professional_wishlist_v4', JSON.stringify(wishlist)); } catch (e) {}
       updateWishlistBadge();
+      renderWishlistPage();
     }
 
     function updateBadges() {
@@ -2163,7 +2248,7 @@
       }
     }
 
-    // ===== رسوم التوصيل - تم إزالة الطلب الأول مجاني =====
+    // ===== رسوم التوصيل =====
     function getDeliveryFee() { return deliveryFee; }
 
     // ===== Settings =====
@@ -2193,7 +2278,7 @@
       }
     }
 
-    // ===== ⭐ نظام الكوبونات المُحسّن بالكامل مع تحديث فوري =====
+    // ===== ⭐ نظام الكوبونات =====
     const defaultCoupons = {
       'SAVE10': { type: 'percent', value: 10, description: 'خصم 10%', active: true, maxUses: 100, expiryDate: null },
       'SAVE20': { type: 'percent', value: 20, description: 'خصم 20%', active: true, maxUses: 50, expiryDate: null },
@@ -2204,7 +2289,6 @@
     let activeCoupons = { ...defaultCoupons };
     let couponListenerActive = false;
 
-    // ===== تحميل الكوبونات من Firebase مع استماع مباشر =====
     function loadCouponsFromFirebase() {
       if (!database) return;
       if (couponListenerActive) return;
@@ -2212,13 +2296,10 @@
       
       try {
         const couponsRef = ref(database, 'coupons');
-        
-        // استماع مباشر للتحديثات من Firebase
         onValue(couponsRef, (snap) => {
           if (snap.exists()) {
             const data = snap.val();
             const loadedCoupons = {};
-            
             for (const key in data) {
               if (data.hasOwnProperty(key) && key !== '_init') {
                 const coupon = data[key];
@@ -2235,19 +2316,12 @@
                 };
               }
             }
-            
-            // دمج الكوبونات المحملة مع الافتراضية
             if (Object.keys(loadedCoupons).length > 0) {
               activeCoupons = { ...defaultCoupons, ...loadedCoupons };
             } else {
               activeCoupons = { ...defaultCoupons };
             }
-            
-            console.log('✅ تم تحديث الكوبونات:', Object.keys(activeCoupons));
-            
-            // التحقق من الكوبون المطبق حالياً
             checkAppliedCouponValidity();
-            
           } else {
             activeCoupons = { ...defaultCoupons };
           }
@@ -2255,74 +2329,45 @@
           console.warn('⚠️ فشل تحميل الكوبونات من Firebase:', error);
           activeCoupons = { ...defaultCoupons };
         });
-        
       } catch (e) {
         console.warn('⚠️ خطأ في تحميل الكوبونات:', e);
         activeCoupons = { ...defaultCoupons };
       }
     }
 
-    // ===== دالة التحقق من صلاحية الكوبون =====
     function validateCoupon(couponCode) {
       const code = couponCode.toUpperCase().trim();
       const coupon = activeCoupons[code];
-      
-      if (!coupon) {
-        return { valid: false, message: '❌ كود غير صحيح' };
-      }
-      
-      // التحقق من حالة الكوبون (مفعل/غير مفعل)
-      if (coupon.active === false) {
-        return { valid: false, message: '❌ هذا الكوبون غير مفعل حالياً' };
-      }
-      
-      // التحقق من صلاحية الكوبون (تاريخ الانتهاء)
+      if (!coupon) return { valid: false, message: '❌ كود غير صحيح' };
+      if (coupon.active === false) return { valid: false, message: '❌ هذا الكوبون غير مفعل حالياً' };
       if (coupon.expiryDate) {
         const expiry = new Date(coupon.expiryDate);
         const now = new Date();
-        if (expiry < now) {
-          return { valid: false, message: '❌ انتهت صلاحية الكوبون' };
-        }
+        if (expiry < now) return { valid: false, message: '❌ انتهت صلاحية الكوبون' };
       }
-      
-      // التحقق من عدد الاستخدامات
       if (coupon.maxUses !== null && coupon.usedCount >= coupon.maxUses) {
         return { valid: false, message: `❌ تم استخدام الحد الأقصى للكوبون (${coupon.maxUses})` };
       }
-      
       return { valid: true, coupon: coupon };
     }
 
-    // ===== دالة التحقق من صلاحية الكوبون المطبق حالياً =====
     function checkAppliedCouponValidity() {
       if (!appliedCoupon) return;
-      
       const validation = validateCoupon(appliedCoupon.code);
-      
       if (!validation.valid) {
-        // الكوبون أصبح غير صالح، قم بإلغائه
-        console.warn('⚠️ الكوبون المطبق أصبح غير صالح:', validation.message);
         const oldCoupon = appliedCoupon.code;
         removeCoupon();
         NotificationSystem.warning(`⚠️ تم إلغاء الكوبون ${oldCoupon}: ${validation.message}`);
       }
     }
 
-    // ===== دالة تطبيق الكوبون =====
     function applyCoupon(code) {
       const validation = validateCoupon(code);
-      
-      if (!validation.valid) {
-        return { success: false, message: validation.message };
-      }
-      
+      if (!validation.valid) return { success: false, message: validation.message };
       const coupon = validation.coupon;
-      
-      // التحقق من عدم تكرار الكوبون
       if (appliedCoupon && appliedCoupon.code === code.toUpperCase().trim()) {
         return { success: false, message: '⚠️ الكود مفعل بالفعل' };
       }
-      
       appliedCoupon = { 
         code: code.toUpperCase().trim(), 
         ...coupon,
@@ -2330,33 +2375,19 @@
         usedCount: coupon.usedCount
       };
       couponDiscount = 0;
-      
-      // تحديث واجهة المستخدم
       const statusEl = document.getElementById('couponStatus');
       if (statusEl) {
         statusEl.innerHTML = `<span class="coupon-applied"><i class="fa-solid fa-check"></i> تم تطبيق ${coupon.description}</span>`;
       }
-      
       updateTotalSummary();
       return { success: true, message: `✅ تم تطبيق ${coupon.description}` };
     }
 
-    // ===== دالة زيادة استخدام الكوبون في Firebase =====
     async function incrementCouponUsage(couponCode) {
-      console.log('🔍 محاولة زيادة استخدام الكوبون:', couponCode);
-      
-      if (!couponCode || !database) {
-        console.error('❌ بيانات غير صالحة:', { couponCode, hasDatabase: !!database });
-        return { success: false, message: 'بيانات غير صالحة' };
-      }
-      
+      if (!couponCode || !database) return { success: false, message: 'بيانات غير صالحة' };
       try {
-        // البحث عن الكوبون في قاعدة البيانات
         const snapshot = await get(ref(database, 'coupons'));
-        
-        let couponId = null;
-        let couponData = null;
-        
+        let couponId = null, couponData = null;
         if (snapshot.exists()) {
           const data = snapshot.val();
           for (const key in data) {
@@ -2367,37 +2398,18 @@
             }
           }
         }
-        
-        if (!couponId || !couponData) {
-          console.error('❌ الكوبون غير موجود:', couponCode);
-          return { success: false, message: 'الكوبون غير موجود في قاعدة البيانات' };
-        }
-        
+        if (!couponId || !couponData) return { success: false, message: 'الكوبون غير موجود' };
         const usedCount = couponData.usedCount || 0;
         const maxUses = couponData.maxUses !== undefined ? couponData.maxUses : null;
-        
-        // التحقق من الحد الأقصى مرة أخرى
-        if (maxUses !== null && usedCount >= maxUses) {
-          console.warn('⚠️ تم استخدام الحد الأقصى:', { usedCount, maxUses });
-          return { success: false, message: 'تم استخدام الحد الأقصى لهذا الكوبون' };
-        }
-        
-        // تحديث عدد الاستخدامات باستخدام increment
+        if (maxUses !== null && usedCount >= maxUses) return { success: false, message: 'تم استخدام الحد الأقصى' };
         await update(ref(database, `coupons/${couponId}`), {
           usedCount: increment(1),
           lastUsedAt: Date.now()
         });
-        
-        console.log(`✅ تم زيادة استخدام الكوبون ${couponCode} (${usedCount + 1}/${maxUses || '∞'})`);
-        return { 
-          success: true, 
-          message: `تم استخدام الكوبون (${usedCount + 1}/${maxUses || '∞'})`,
-          usedCount: usedCount + 1,
-          maxUses: maxUses
-        };
+        return { success: true, message: `تم استخدام الكوبون (${usedCount + 1}/${maxUses || '∞'})`, usedCount: usedCount + 1, maxUses: maxUses };
       } catch (e) {
         console.error('❌ فشل زيادة استخدام الكوبون:', e);
-        return { success: false, message: 'فشل تحديث استخدام الكوبون: ' + e.message };
+        return { success: false, message: 'فشل تحديث استخدام الكوبون' };
       }
     }
 
@@ -2411,13 +2423,9 @@
 
     function calculateCouponDiscount(subtotal) {
       if (!appliedCoupon) return 0;
-      if (appliedCoupon.type === 'percent') {
-        return subtotal * (appliedCoupon.value / 100);
-      } else if (appliedCoupon.type === 'free_shipping') {
-        return 0;
-      } else if (appliedCoupon.type === 'fixed') {
-        return Math.min(appliedCoupon.value, subtotal);
-      }
+      if (appliedCoupon.type === 'percent') return subtotal * (appliedCoupon.value / 100);
+      if (appliedCoupon.type === 'free_shipping') return 0;
+      if (appliedCoupon.type === 'fixed') return Math.min(appliedCoupon.value, subtotal);
       return 0;
     }
 
@@ -2459,7 +2467,6 @@
       }
 
       ge.textContent = Math.max(0, gt).toFixed(2) + ' ج';
-
       if (dr) { dr.classList.toggle('free', df === 0); dr.style.display = 'flex'; }
       if (cr) cr.style.display = (cod > 0) ? 'flex' : 'none';
     }
@@ -2535,6 +2542,10 @@
         $('#homePage')?.classList.add('active-page');
         document.querySelector('[data-page="home"]')?.classList.add('active');
         renderHomeProducts();
+      } else if (p === 'wishlist') {
+        $('#wishlistPage')?.classList.add('active-page');
+        document.querySelector('[data-page="wishlist"]')?.classList.add('active');
+        renderWishlistPage();
       } else if (p === 'cart') {
         $('#cartPage')?.classList.add('active-page');
         document.querySelector('[data-page="cart"]')?.classList.add('active');
@@ -2545,6 +2556,7 @@
 
     $$('.nav-item').forEach(i => i.addEventListener('click', () => switchPage(i.getAttribute('data-page'))));
     $('#cartWidgetTop')?.addEventListener('click', () => switchPage('cart'));
+    $('#wishlistBtn')?.addEventListener('click', () => switchPage('wishlist'));
     $('#logoArea')?.addEventListener('click', () => switchPage('home'));
 
     // ===== Refresh Orders =====
@@ -2575,6 +2587,81 @@
         } catch (e) {}
       }
       if (c) { saveOrders(); if ($('#cartPage')?.classList.contains('active-page')) renderCartPage(); }
+    }
+
+    // ===== Render Wishlist =====
+    function renderWishlistPage() {
+      const container = document.getElementById('wishlistContainer');
+      if (!container) return;
+
+      if (wishlist.length === 0) {
+        container.innerHTML = `
+          <div style="grid-column:1/-1;">
+            <div class="wishlist-empty">
+              <span class="empty-icon">💔</span>
+              <h3>لا توجد منتجات في المفضلة</h3>
+              <p>استعرض المنتجات وأضف ما يعجبك إلى المفضلة ❤️</p>
+              <button class="btn btn-primary" onclick="switchPage('home')">🛍️ تسوق الآن</button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const wishlistProducts = allProducts.filter(p => wishlist.includes(p.id));
+      
+      if (wishlistProducts.length === 0) {
+        container.innerHTML = `
+          <div style="grid-column:1/-1;">
+            <div class="wishlist-empty">
+              <span class="empty-icon">🔍</span>
+              <h3>المنتجات غير متوفرة</h3>
+              <p>بعض المنتجات التي أضفتها قد تكون غير متوفرة حالياً</p>
+              <button class="btn btn-primary" onclick="switchPage('home')">🛍️ تصفح المنتجات</button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = wishlistProducts.map(p => {
+        const av = (p.quantity || 0) > 0,
+          img = getThumbnailUrl(p.image, 400),
+          hi = p.image && p.image.length > 0,
+          pi = getEffectivePrice(p),
+          cn = p.category || 'أجهزة شخصية',
+          ci = CATEGORIES.find(c => c.id === cn)?.icon || 'fa-box';
+        const inWishlist = wishlist.includes(p.id);
+        const rating = p.rating || { average: 0, count: 0 };
+        const stars = '★'.repeat(Math.round(rating.average)) + '☆'.repeat(5 - Math.round(rating.average));
+        let ph = pi.hasDiscount ?
+          `<div class="price-container"><span class="original-price">${pi.basePrice.toFixed(2)} ج</span><span class="discounted-price">${pi.finalPrice.toFixed(2)} <small>ج</small></span><span class="discount-label">🏷️ ${pi.discountLabel}</span></div>` :
+          `<span class="price">${pi.basePrice.toFixed(2)} <small>ج</small></span>`;
+        return `
+          <div class="product-card">
+            <button class="wishlist-btn active" data-wishlist-id="${p.id}"><i class="fa-solid fa-heart"></i></button>
+            <div class="product-img-wrap" onclick="window.openProductDetail('${p.id}')">
+              ${hi ? `<img src="${img}" alt="${p.name || ''}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">` : ''}
+              <i class="fas ${p.icon || 'fa-box'} product-img-placeholder" style="${hi ? 'display:none;' : ''}"></i>
+              ${pi.hasDiscount ? `<span class="discount-badge"><i class="fa-solid fa-tag"></i> ${pi.discountLabel}</span>` : ''}
+              <span class="category-badge"><i class="fa-solid ${ci}"></i> ${cn}</span>
+              <span class="stock-badge ${av ? 'stock-available' : 'stock-out'}">${av ? '✓ متوفر' : '✗ نفذ'}</span>
+            </div>
+            <div class="product-info">
+              <div class="product-name">${p.name || ''}</div>
+              <div class="product-rating"><span class="stars">${stars}</span> (${rating.count})</div>
+              <div class="product-desc">${p.description || ''}</div>
+              <div class="price-row">
+                ${ph}
+                <button class="add-btn" ${!av ? 'disabled' : ''} data-add-id="${p.id}"><i class="fa-solid fa-cart-plus"></i> أضف</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.querySelectorAll('[data-add-id]').forEach(b => b.addEventListener('click', () => addToCart(b.getAttribute('data-add-id'))));
+      container.querySelectorAll('[data-wishlist-id]').forEach(b => b.addEventListener('click', () => toggleWishlist(b.getAttribute('data-wishlist-id'))));
     }
 
     // ===== Render Cart =====
@@ -2769,16 +2856,11 @@
     $('#cancelCheckout')?.addEventListener('click', closeCheckoutModal);
     $('#checkoutModalOverlay')?.addEventListener('click', function(e) { if (e.target === this) closeCheckoutModal(); });
 
-    // Coupon apply with validation
     $('#applyCouponBtn')?.addEventListener('click', function() {
       const input = document.getElementById('couponInput');
       if (!input) return;
       const code = input.value.trim();
-      if (!code) { 
-        NotificationSystem.warning('⚠️ أدخل كود الخصم'); 
-        return; 
-      }
-      
+      if (!code) { NotificationSystem.warning('⚠️ أدخل كود الخصم'); return; }
       const result = applyCoupon(code);
       if (result.success) {
         NotificationSystem.success(result.message);
@@ -2788,14 +2870,12 @@
         const statusEl = document.getElementById('couponStatus');
         if (statusEl) {
           statusEl.innerHTML = `<span style="color:var(--danger);font-weight:700;">${result.message}</span>`;
-          setTimeout(() => {
-            if (statusEl) statusEl.textContent = '';
-          }, 4000);
+          setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 4000);
         }
       }
     });
 
-    // ===== Confirm Order (مع زيادة استخدام الكوبون) =====
+    // ===== Confirm Order =====
     $('#confirmOrder')?.addEventListener('click', async function(e) {
       e.preventDefault();
       const name = $('#custName')?.value.trim(),
@@ -2819,7 +2899,6 @@
       }
       if (cartItems.length === 0) { closeCheckoutModal(); return; }
 
-      // التحقق من صلاحية الكوبون قبل إنشاء الطلب
       if (appliedCoupon) {
         const validation = validateCoupon(appliedCoupon.code);
         if (!validation.valid) {
@@ -2853,19 +2932,10 @@
         try {
           const nr = push(ref(database, 'orders'));
           await set(nr, orderData);
-          
-          // ===== ⭐ زيادة استخدام الكوبون بعد إنشاء الطلب =====
           if (appliedCoupon) {
-            console.log('🔄 جاري زيادة استخدام الكوبون:', appliedCoupon.code);
             const result = await incrementCouponUsage(appliedCoupon.code);
-            if (result.success) {
-              console.log('✅ تم تحديث استخدام الكوبون:', result.message);
-              orderData.coupon.usedCount = result.usedCount;
-            } else {
-              console.warn('⚠️ فشل تحديث استخدام الكوبون:', result.message);
-            }
+            if (result.success) orderData.coupon.usedCount = result.usedCount;
           }
-          
           myOrders.unshift({ orderId: nr.key, ...orderData, rejectionReason: '' });
           cartItems = [];
           saveCart();
@@ -2975,6 +3045,7 @@
           syncCartWithProducts();
           saveCart();
           renderFlashSale();
+          renderWishlistPage();
           if ($('#homePage')?.classList.contains('active-page')) renderHomeProducts();
         }, (err) => { console.error('❌ خطأ Firebase:', err);
           loadDefaultProducts(); });
@@ -3001,6 +3072,7 @@
       syncCartWithProducts();
       saveCart();
       renderFlashSale();
+      renderWishlistPage();
       if ($('#homePage')?.classList.contains('active-page')) renderHomeProducts();
     }
 
@@ -3022,46 +3094,64 @@
 
     // ===== Flash Sale =====
     let flashSaleSettings = {
-      status: 'active',
+      status: 'inactive',
       count: 4,
       endTime: Date.now() + 24 * 60 * 60 * 1000
     };
 
     function renderFlashSale() {
       const container = document.getElementById('flashSaleProducts');
-      if (!container) return;
+      const section = document.getElementById('flashSaleSection');
+      if (!container || !section) return;
 
+      // الاستماع المباشر لتغييرات قاعدة البيانات
       if (database) {
         onValue(ref(database, 'settings/flashSale'), (snap) => {
           if (snap.exists()) {
             const data = snap.val();
-            flashSaleSettings.status = data.status || 'active';
+            flashSaleSettings.status = data.status || 'inactive';
             flashSaleSettings.count = data.count || 4;
             flashSaleSettings.endTime = data.endTime || Date.now() + 24 * 60 * 60 * 1000;
-            updateFlashSaleTimer();
-            updateFlashSaleDisplay();
+          } else {
+            flashSaleSettings = {
+              status: 'inactive',
+              count: 4,
+              endTime: Date.now() + 24 * 60 * 60 * 1000
+            };
           }
+          // تحديث العرض بناءً على الإعدادات الجديدة
+          updateFlashSaleDisplay();
+          updateFlashSaleTimer();
         });
       }
 
+      // عرض فوري
       updateFlashSaleDisplay();
+      updateFlashSaleTimer();
     }
 
     function updateFlashSaleDisplay() {
       const container = document.getElementById('flashSaleProducts');
-      if (!container) return;
+      const section = document.getElementById('flashSaleSection');
+      if (!container || !section) return;
 
-      if (flashSaleSettings.status === 'inactive') {
-        container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,0.6);padding:20px;">⏸️ العروض غير مفعلة حالياً</div>';
-        return;
-      }
+      // التحقق من حالة العروض
+      const isActive = flashSaleSettings.status === 'active';
+      const isExpired = Date.now() > flashSaleSettings.endTime;
+      const hasProducts = allProducts.some(p => p.discountType !== 'none' && parseFloat(p.discountValue) > 0);
 
-      if (Date.now() > flashSaleSettings.endTime) {
-        container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,0.6);padding:20px;">⏰ انتهت العروض</div>';
+      // إظهار أو إخفاء القسم بالكامل
+      if (isActive && !isExpired && hasProducts) {
+        section.classList.add('active');
+        section.style.display = 'block';
+      } else {
+        section.classList.remove('active');
+        section.style.display = 'none';
         return;
       }
 
       const count = flashSaleSettings.count || 4;
+      // اختيار المنتجات التي عليها خصم
       const saleProducts = allProducts
         .filter(p => (p.discountType !== 'none' && parseFloat(p.discountValue) > 0))
         .sort((a, b) => {
@@ -3072,7 +3162,7 @@
         .slice(0, count);
 
       if (saleProducts.length === 0) {
-        container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,0.6);padding:20px;">لا توجد عروض حالياً</div>';
+        container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,0.7);padding:20px;">لا توجد عروض حالياً</div>';
         return;
       }
 
@@ -3108,28 +3198,33 @@
 
       const now = Date.now();
       const diff = Math.max(0, flashSaleSettings.endTime - now);
-      const hours = Math.floor(diff / 3600000);
+      
+      // حساب الأيام والساعات والدقائق والثواني
+      const days = Math.floor(diff / 86400000);
+      const hours = Math.floor((diff % 86400000) / 3600000);
       const minutes = Math.floor((diff % 3600000) / 60000);
       const seconds = Math.floor((diff % 60000) / 1000);
 
+      document.getElementById('fsDays').textContent = String(days).padStart(2, '0');
       document.getElementById('fsHours').textContent = String(hours).padStart(2, '0');
       document.getElementById('fsMinutes').textContent = String(minutes).padStart(2, '0');
       document.getElementById('fsSeconds').textContent = String(seconds).padStart(2, '0');
 
+      // إعادة تعيين تلقائي عند انتهاء الوقت
       if (diff <= 0 && flashSaleSettings.status === 'active') {
-        const autoReset = true;
-        if (autoReset) {
-          flashSaleSettings.endTime = Date.now() + 24 * 60 * 60 * 1000;
-          if (database) {
-            update(ref(database, 'settings/flashSale'), {
-              endTime: flashSaleSettings.endTime,
-              lastReset: Date.now()
-            }).catch(() => {});
-          }
+        // إعادة تعيين الوقت ليوم واحد إضافي
+        flashSaleSettings.endTime = Date.now() + 24 * 60 * 60 * 1000;
+        if (database) {
+          update(ref(database, 'settings/flashSale'), {
+            endTime: flashSaleSettings.endTime,
+            lastReset: Date.now()
+          }).catch(() => {});
         }
+        updateFlashSaleDisplay();
       }
     }
 
+    // تحديث المؤقت كل ثانية
     setInterval(updateFlashSaleTimer, 1000);
 
     // ===== Filter & Sort =====
@@ -3390,13 +3485,12 @@
     // ===== Periodic Refresh =====
     function startPeriodicRefresh() {
       setInterval(() => refreshOrdersStatus(), 30000);
-      // التحقق الدوري من صلاحية الكوبون المطبق (كل 30 ثانية)
       setInterval(() => checkAppliedCouponValidity(), 30000);
     }
 
     // ===== Init =====
     function init() {
-      console.log('🚀 بدء تشغيل المتجر مع نظام عروض الخصم السريع...');
+      console.log('🚀 بدء تشغيل المتجر مع نظام عروض الخصم السريع والمفضلة...');
       loadProducts();
       loadLogo();
       loadWalletNumbers();
@@ -3417,9 +3511,17 @@
         onValue(ref(database, 'settings/flashSale'), (snap) => {
           if (snap.exists()) {
             const data = snap.val();
-            flashSaleSettings.status = data.status || 'active';
+            flashSaleSettings.status = data.status || 'inactive';
             flashSaleSettings.count = data.count || 4;
             flashSaleSettings.endTime = data.endTime || Date.now() + 24 * 60 * 60 * 1000;
+            updateFlashSaleDisplay();
+            updateFlashSaleTimer();
+          } else {
+            flashSaleSettings = {
+              status: 'inactive',
+              count: 4,
+              endTime: Date.now() + 24 * 60 * 60 * 1000
+            };
             updateFlashSaleDisplay();
             updateFlashSaleTimer();
           }
@@ -3431,7 +3533,7 @@
       window.resetAllFilters = resetAllFilters;
       window.openProductDetail = openProductDetail;
       window.closeProductDetail = closeProductDetail;
-      console.log('✅ تم تشغيل المتجر بنجاح مع نظام عروض الخصم السريع');
+      console.log('✅ تم تشغيل المتجر بنجاح مع نظام عروض الخصم السريع والمفضلة');
     }
 
     init();
