@@ -1686,7 +1686,7 @@ body::before {
 .timer-badge i { animation: pulse 1.5s ease-in-out infinite; }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-/* ===== Bottom Nav ===== */
+/* ===== Bottom Nav - تم الإصلاح ===== */
 .bottom-nav {
   position: fixed;
   bottom: 0;
@@ -1694,31 +1694,40 @@ body::before {
   right: 0;
   background: rgba(255,255,255,0.95);
   backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   display: flex;
   justify-content: space-around;
-  padding: 8px 16px;
-  padding-bottom: max(8px, env(safe-area-inset-bottom));
+  align-items: center;
+  padding: 6px 8px;
+  padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
   border-top: 1px solid rgba(74,44,23,0.08);
   z-index: 99;
+  min-height: 56px;
+  max-height: 64px;
+  height: auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 .nav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
   background: none;
   border: none;
   font-family: 'Cairo',sans-serif;
   font-weight: 600;
   color: var(--cream);
   cursor: pointer;
-  font-size: 12px;
-  padding: 8px 18px;
+  font-size: 10px;
+  padding: 4px 12px;
   border-radius: var(--radius-full);
   transition: all 0.3s ease;
   position: relative;
+  flex-shrink: 0;
+  min-width: 50px;
 }
-.nav-item i { font-size: 22px; }
+.nav-item i { font-size: 18px; }
 .nav-item.active { color: var(--primary); background: rgba(74,44,23,0.06); }
 .nav-cart-badge {
   position: absolute;
@@ -1726,10 +1735,10 @@ body::before {
   right: 8px;
   background: var(--danger);
   color: white;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 800;
-  min-width: 20px;
-  height: 20px;
+  min-width: 18px;
+  height: 18px;
   border-radius: 50%;
   display: none;
   align-items: center;
@@ -1768,6 +1777,9 @@ body::before {
   .flash-sale-timer .time-unit { min-width: 40px; }
   .flash-sale-timer .time-unit .num { font-size: 20px; min-width: 30px; padding: 2px 6px; }
   .flash-sale-timer .separator { font-size: 18px; }
+  .bottom-nav { min-height: 50px; max-height: 56px; padding: 4px 6px; }
+  .nav-item { font-size: 9px; padding: 3px 8px; min-width: 40px; }
+  .nav-item i { font-size: 16px; }
 }
 @media (max-width: 600px) {
   .products-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
@@ -1787,6 +1799,10 @@ body::before {
   .flash-sale-timer .time-unit .num { font-size: 16px; min-width: 24px; padding: 2px 4px; }
   .flash-sale-timer .time-unit .label { font-size: 8px; }
   .flash-sale-timer .separator { font-size: 14px; }
+  .bottom-nav { min-height: 46px; max-height: 50px; padding: 3px 4px; }
+  .nav-item { font-size: 8px; padding: 2px 6px; min-width: 34px; gap: 1px; }
+  .nav-item i { font-size: 14px; }
+  .nav-cart-badge { min-width: 16px; height: 16px; font-size: 8px; top: -2px; right: 4px; }
 }
 @media (max-width: 400px) {
   .products-grid { grid-template-columns: 1fr; gap: 16px; }
@@ -1797,11 +1813,19 @@ body::before {
   .flash-sale-timer .time-unit .num { font-size: 12px; min-width: 18px; padding: 1px 3px; }
   .flash-sale-timer .time-unit .label { font-size: 7px; }
   .flash-sale-timer .separator { font-size: 10px; }
+  .bottom-nav { min-height: 42px; max-height: 46px; padding: 2px 2px; }
+  .nav-item { font-size: 7px; padding: 2px 4px; min-width: 28px; gap: 0px; }
+  .nav-item i { font-size: 12px; }
+  .nav-cart-badge { min-width: 14px; height: 14px; font-size: 7px; top: -2px; right: 2px; }
 }
 @media (max-width: 768px) {
-  body { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+  body { padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (min-width: 769px) {
+  .bottom-nav { display: none; }
 }
 
+/* ===== Product Detail Modal ===== */
 .product-detail-modal .modal-card {
   max-width: 800px;
   padding: 0;
@@ -1965,7 +1989,7 @@ body::before {
   margin-bottom: 14px;
 }
 
-/* ===== Contact Us Page ===== */
+/* ===== Contact Us Page - تم الإصلاح ===== */
 .contact-page-container {
   max-width: 700px;
   margin: 0 auto;
@@ -1985,12 +2009,15 @@ body::before {
   padding: 30px;
   border: 1px solid rgba(74,44,23,0.06);
   box-shadow: var(--shadow-md);
+  overflow: hidden;
+  max-width: 100%;
 }
 .contact-info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 16px;
   margin-bottom: 24px;
+  max-width: 100%;
 }
 .contact-info-item {
   display: flex;
@@ -2004,6 +2031,8 @@ body::before {
   cursor: pointer;
   text-decoration: none;
   color: var(--primary-dark);
+  min-width: 0;
+  overflow: hidden;
 }
 .contact-info-item:hover {
   border-color: var(--accent);
@@ -2015,16 +2044,26 @@ body::before {
   color: var(--accent);
   width: 36px;
   text-align: center;
+  flex-shrink: 0;
+}
+.contact-info-item .contact-text {
+  min-width: 0;
+  flex: 1;
 }
 .contact-info-item .info-label {
   font-size: 11px;
   color: var(--cream);
   font-weight: 600;
+  display: block;
 }
 .contact-info-item .info-value {
   font-size: 15px;
   font-weight: 700;
   color: var(--primary-dark);
+  word-break: break-all;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  display: block;
 }
 .contact-form-area {
   margin-top: 20px;
@@ -2252,8 +2291,8 @@ body::before {
   </div>
 </main>
 
-<!-- Bottom Navigation -->
-<nav class="bottom-nav">
+<!-- Bottom Navigation - تم الإصلاح -->
+<nav class="bottom-nav" id="bottomNav">
   <button class="nav-item active" data-page="home"><i class="fa-solid fa-store"></i><span>المتجر</span></button>
   <button class="nav-item" data-page="wishlist"><i class="fa-solid fa-heart"></i><span>المفضلة</span></button>
   <button class="nav-item" data-page="cart"><i class="fa-solid fa-cart-shopping"></i><span>السلة</span><span class="nav-cart-badge" id="bottomCartBadge">0</span></button>
@@ -2333,7 +2372,7 @@ body::before {
 
 <script type="module">
 // ============================================================
-// الجزء 2: جافا سكريبت كامل
+// جافا سكريبت كامل
 // ============================================================
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, onValue, push, set, get, remove, update, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -2892,19 +2931,31 @@ function renderContactPage() {
         grid.innerHTML = `
           <a href="tel:${data.phone || ''}" class="contact-info-item">
             <i class="fa-solid fa-phone"></i>
-            <div><div class="info-label">📞 هاتف</div><div class="info-value">${data.phone || 'غير متوفر'}</div></div>
+            <div class="contact-text">
+              <div class="info-label">📞 هاتف</div>
+              <div class="info-value">${data.phone || 'غير متوفر'}</div>
+            </div>
           </a>
           <a href="https://wa.me/${(data.whatsapp || '').replace(/[^0-9]/g, '')}" target="_blank" class="contact-info-item">
             <i class="fa-brands fa-whatsapp" style="color:#25D366;"></i>
-            <div><div class="info-label">💬 واتساب</div><div class="info-value">${data.whatsapp || 'غير متوفر'}</div></div>
+            <div class="contact-text">
+              <div class="info-label">💬 واتساب</div>
+              <div class="info-value">${data.whatsapp || 'غير متوفر'}</div>
+            </div>
           </a>
           <a href="${data.facebook || '#'}" target="_blank" class="contact-info-item">
             <i class="fa-brands fa-facebook" style="color:#1877F2;"></i>
-            <div><div class="info-label">📘 فيسبوك</div><div class="info-value">${data.facebook ? 'صفحتنا على فيسبوك' : 'غير متوفر'}</div></div>
+            <div class="contact-text">
+              <div class="info-label">📘 فيسبوك</div>
+              <div class="info-value">${data.facebook ? 'صفحتنا على فيسبوك' : 'غير متوفر'}</div>
+            </div>
           </a>
           <a href="mailto:${data.email || ''}" class="contact-info-item">
             <i class="fa-solid fa-envelope"></i>
-            <div><div class="info-label">✉️ بريد إلكتروني</div><div class="info-value">${data.email || 'غير متوفر'}</div></div>
+            <div class="contact-text">
+              <div class="info-label">✉️ بريد إلكتروني</div>
+              <div class="info-value">${data.email || 'غير متوفر'}</div>
+            </div>
           </a>
         `;
       } else {
