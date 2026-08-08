@@ -1686,7 +1686,7 @@ body::before {
 .timer-badge i { animation: pulse 1.5s ease-in-out infinite; }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-/* ===== Bottom Nav - يظهر في جميع الشاشات ===== */
+/* ===== Bottom Nav - مُحسّن بالكامل ===== */
 .bottom-nav {
   position: fixed;
   bottom: 0;
@@ -1698,74 +1698,215 @@ body::before {
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding: 8px 12px;
-  padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  padding: 10px 16px;
+  padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
   border-top: 1px solid rgba(74,44,23,0.08);
   z-index: 99;
-  min-height: 60px;
-  max-height: 70px;
+  min-height: 72px;
   height: auto;
   width: 100%;
   box-sizing: border-box;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
 }
+
 .nav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  justify-content: center;
+  gap: 4px;
   background: none;
   border: none;
-  font-family: 'Cairo',sans-serif;
-  font-weight: 600;
+  font-family: 'Cairo', sans-serif;
+  font-weight: 700;
   color: var(--cream);
   cursor: pointer;
-  font-size: 11px;
-  padding: 4px 12px;
+  font-size: 12px;
+  padding: 6px 16px;
   border-radius: var(--radius-full);
   transition: all 0.3s ease;
   position: relative;
   flex-shrink: 0;
-  min-width: 50px;
+  min-width: 56px;
+  min-height: 44px;
+  text-decoration: none;
 }
-.nav-item i { font-size: 20px; }
-.nav-item.active { color: var(--primary); background: rgba(74,44,23,0.06); }
+
+.nav-item i {
+  font-size: 22px;
+  transition: transform 0.2s ease;
+}
+
+.nav-item span {
+  font-size: 11px;
+  letter-spacing: 0.3px;
+}
+
+.nav-item.active {
+  color: var(--primary);
+  background: rgba(74,44,23,0.08);
+}
+
+.nav-item.active i {
+  transform: translateY(-2px);
+}
+
+.nav-item:hover:not(.active) {
+  color: var(--primary);
+  background: rgba(74,44,23,0.04);
+}
+
+.nav-item:active {
+  transform: scale(0.92);
+}
+
 .nav-cart-badge {
   position: absolute;
-  top: -2px;
+  top: 0px;
   right: 4px;
   background: var(--danger);
   color: white;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 800;
-  min-width: 18px;
-  height: 18px;
+  min-width: 20px;
+  height: 20px;
   border-radius: 50%;
   display: none;
   align-items: center;
   justify-content: center;
   border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(220,38,38,0.35);
+  line-height: 1;
 }
-.nav-cart-badge.show { display: flex; }
 
+.nav-cart-badge.show {
+  display: flex;
+}
+
+/* ===== استجابة البار السفلي ===== */
 @media (max-width: 768px) {
-  .bottom-nav { min-height: 56px; max-height: 64px; padding: 6px 10px; }
-  .nav-item { font-size: 10px; padding: 4px 10px; min-width: 44px; }
-  .nav-item i { font-size: 18px; }
+  .bottom-nav {
+    min-height: 64px;
+    padding: 8px 12px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  }
+  .nav-item {
+    font-size: 11px;
+    padding: 4px 12px;
+    min-width: 48px;
+    min-height: 38px;
+  }
+  .nav-item i {
+    font-size: 20px;
+  }
+  .nav-item span {
+    font-size: 10px;
+  }
+  .nav-cart-badge {
+    min-width: 18px;
+    height: 18px;
+    font-size: 9px;
+    top: -2px;
+    right: 2px;
+  }
+}
+
+@media (max-width: 600px) {
+  .bottom-nav {
+    min-height: 58px;
+    padding: 6px 8px;
+    padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
+  }
+  .nav-item {
+    font-size: 10px;
+    padding: 3px 8px;
+    min-width: 42px;
+    min-height: 34px;
+    gap: 2px;
+  }
+  .nav-item i {
+    font-size: 18px;
+  }
+  .nav-item span {
+    font-size: 9px;
+  }
+  .nav-cart-badge {
+    min-width: 16px;
+    height: 16px;
+    font-size: 8px;
+    top: -4px;
+    right: 0px;
+  }
+}
+
+@media (max-width: 400px) {
+  .bottom-nav {
+    min-height: 52px;
+    padding: 4px 6px;
+    padding-bottom: max(4px, env(safe-area-inset-bottom, 0px));
+  }
+  .nav-item {
+    font-size: 9px;
+    padding: 2px 6px;
+    min-width: 36px;
+    min-height: 30px;
+    gap: 1px;
+  }
+  .nav-item i {
+    font-size: 16px;
+  }
+  .nav-item span {
+    font-size: 8px;
+  }
+  .nav-cart-badge {
+    min-width: 14px;
+    height: 14px;
+    font-size: 7px;
+    top: -6px;
+    right: -2px;
+    border-width: 1.5px;
+  }
+}
+
+/* ===== دعم الشاشات الصغيرة جداً (اقل من 320px) ===== */
+@media (max-width: 340px) {
+  .bottom-nav {
+    min-height: 46px;
+    padding: 2px 4px;
+    padding-bottom: max(2px, env(safe-area-inset-bottom, 0px));
+  }
+  .nav-item {
+    font-size: 8px;
+    padding: 1px 4px;
+    min-width: 30px;
+    min-height: 26px;
+    gap: 0px;
+  }
+  .nav-item i {
+    font-size: 14px;
+  }
+  .nav-item span {
+    font-size: 7px;
+  }
+  .nav-cart-badge {
+    min-width: 12px;
+    height: 12px;
+    font-size: 6px;
+    top: -8px;
+    right: -4px;
+    border-width: 1px;
+  }
+}
+
+/* ===== باقي الأنماط ===== */
+@media (max-width: 768px) {
+  body { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
 }
 @media (max-width: 600px) {
-  .bottom-nav { min-height: 52px; max-height: 58px; padding: 4px 8px; }
-  .nav-item { font-size: 9px; padding: 3px 8px; min-width: 38px; gap: 1px; }
-  .nav-item i { font-size: 16px; }
-  .nav-cart-badge { min-width: 16px; height: 16px; font-size: 8px; }
+  body { padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px)); }
 }
 @media (max-width: 400px) {
-  .bottom-nav { min-height: 48px; max-height: 52px; padding: 3px 6px; }
-  .nav-item { font-size: 8px; padding: 2px 6px; min-width: 32px; }
-  .nav-item i { font-size: 14px; }
-  .nav-cart-badge { min-width: 14px; height: 14px; font-size: 7px; }
-}
-@media (max-width: 768px) {
-  body { padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
+  body { padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
 }
 
 .loading-spinner {
@@ -1992,7 +2133,7 @@ body::before {
   margin-bottom: 14px;
 }
 
-/* ===== Contact Us Page - تم الإصلاح ===== */
+/* ===== Contact Us Page ===== */
 .contact-page-container {
   max-width: 700px;
   margin: 0 auto;
@@ -2294,11 +2435,21 @@ body::before {
   </div>
 </main>
 
-<!-- Bottom Navigation - يظهر في جميع الشاشات -->
+<!-- Bottom Navigation - مُحسّن بالكامل -->
 <nav class="bottom-nav" id="bottomNav">
-  <button class="nav-item active" data-page="home"><i class="fa-solid fa-store"></i><span>المتجر</span></button>
-  <button class="nav-item" data-page="wishlist"><i class="fa-solid fa-heart"></i><span>المفضلة</span></button>
-  <button class="nav-item" data-page="cart"><i class="fa-solid fa-cart-shopping"></i><span>السلة</span><span class="nav-cart-badge" id="bottomCartBadge">0</span></button>
+  <button class="nav-item active" data-page="home">
+    <i class="fa-solid fa-store"></i>
+    <span>المتجر</span>
+  </button>
+  <button class="nav-item" data-page="wishlist">
+    <i class="fa-solid fa-heart"></i>
+    <span>المفضلة</span>
+  </button>
+  <button class="nav-item" data-page="cart">
+    <i class="fa-solid fa-cart-shopping"></i>
+    <span>السلة</span>
+    <span class="nav-cart-badge" id="bottomCartBadge">0</span>
+  </button>
 </nav>
 
 <!-- Checkout Modal -->
