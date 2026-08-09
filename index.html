@@ -1443,7 +1443,7 @@ body::before {
 }
 .empty-state .empty-icon { font-size: 70px; display: block; margin-bottom: 16px; opacity: 0.6; }
 
-/* ===== Payment ===== */
+/* ===== Payment - متكامل مع جميع طرق الدفع المصرية ===== */
 .payment-methods-section { margin-bottom: 20px; }
 .payment-methods-title {
   font-weight: 700;
@@ -1456,7 +1456,7 @@ body::before {
 }
 .payment-methods-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 10px;
 }
 .payment-method-option {
@@ -2471,13 +2471,57 @@ body::before {
       </div>
 
       <div class="payment-methods-section">
-        <div class="payment-methods-title"><i class="fa-solid fa-credit-card"></i> طريقة الدفع</div>
+        <div class="payment-methods-title"><i class="fa-solid fa-credit-card"></i> طرق الدفع</div>
         <div class="payment-methods-grid" id="paymentMethodsGrid">
-          <div class="payment-method-option selected" data-payment="cod"><i class="fa-solid fa-hand-holding-dollar"></i><span class="method-name">الدفع عند الاستلام</span><span class="method-desc">نقداً عند التوصيل</span><span class="cod-fee-badge" id="codFeeBadge">+رسوم</span></div>
-          <div class="payment-method-option" data-payment="vodafone"><i class="fa-solid fa-mobile-screen"></i><span class="method-name">فودافون كاش</span><span class="method-desc">تحويل فوري</span></div>
-          <div class="payment-method-option" data-payment="etisalat"><i class="fa-solid fa-mobile-screen"></i><span class="method-name">اتصالات كاش</span><span class="method-desc">تحويل فوري</span></div>
-          <div class="payment-method-option" data-payment="we"><i class="fa-solid fa-building-columns"></i><span class="method-name">وي بي</span><span class="method-desc">تحويل فوري</span></div>
-          <div class="payment-method-option" data-payment="visa"><i class="fa-brands fa-cc-visa"></i><span class="method-name">فيزا كارد</span><span class="method-desc">بطاقة ائتمان</span></div>
+          <!-- الدفع عند الاستلام -->
+          <div class="payment-method-option selected" data-payment="cod">
+            <i class="fa-solid fa-hand-holding-dollar"></i>
+            <span class="method-name">الدفع عند الاستلام</span>
+            <span class="method-desc">نقداً عند التوصيل</span>
+            <span class="cod-fee-badge" id="codFeeBadge">+رسوم</span>
+          </div>
+          <!-- فودافون كاش -->
+          <div class="payment-method-option" data-payment="vodafone">
+            <i class="fa-solid fa-mobile-screen" style="color:#E60000;"></i>
+            <span class="method-name">فودافون كاش</span>
+            <span class="method-desc">تحويل فوري</span>
+          </div>
+          <!-- اتصالات كاش -->
+          <div class="payment-method-option" data-payment="etisalat">
+            <i class="fa-solid fa-mobile-screen" style="color:#10a600;"></i>
+            <span class="method-name">اتصالات كاش</span>
+            <span class="method-desc">تحويل فوري</span>
+          </div>
+          <!-- أورنج كاش -->
+          <div class="payment-method-option" data-payment="orange">
+            <i class="fa-solid fa-mobile-screen" style="color:#FF6600;"></i>
+            <span class="method-name">أورنج كاش</span>
+            <span class="method-desc">تحويل فوري</span>
+          </div>
+          <!-- وي بي -->
+          <div class="payment-method-option" data-payment="we">
+            <i class="fa-solid fa-mobile-screen" style="color:#7B3FAF;"></i>
+            <span class="method-name">وي بي</span>
+            <span class="method-desc">تحويل فوري</span>
+          </div>
+          <!-- إنستا باي -->
+          <div class="payment-method-option" data-payment="instapay">
+            <i class="fa-solid fa-bolt" style="color:#00BFA5;"></i>
+            <span class="method-name">إنستا باي</span>
+            <span class="method-desc">تحويل فوري</span>
+          </div>
+          <!-- تحويل بنكي -->
+          <div class="payment-method-option" data-payment="bank">
+            <i class="fa-solid fa-university" style="color:#2E7D32;"></i>
+            <span class="method-name">تحويل بنكي</span>
+            <span class="method-desc">تحويل حسابي</span>
+          </div>
+          <!-- فيزا كارد -->
+          <div class="payment-method-option" data-payment="visa">
+            <i class="fa-brands fa-cc-visa" style="color:#1A1F71;"></i>
+            <span class="method-name">فيزا كارد</span>
+            <span class="method-desc">بطاقة ائتمان</span>
+          </div>
         </div>
         <div class="wallet-info-box" id="walletInfoBox">
           <div class="wallet-label" id="walletLabel"></div>
@@ -2526,7 +2570,7 @@ body::before {
 
 <script type="module">
 // ============================================================
-// جافا سكريبت كامل
+// جافا سكريبت كامل مع دعم جميع طرق الدفع المصرية
 // ============================================================
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, onValue, push, set, get, remove, update, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -2650,14 +2694,29 @@ let allProducts = [], cartItems = [], myOrders = [], wishlist = [];
 let currentCategory = 'all', currentSort = 'newest', currentPriceMin = null, currentPriceMax = null, currentSearchQuery = '';
 let selectedPaymentMethod = 'cod', codFee = 0, deliveryFee = 5;
 let appliedCoupon = null, couponDiscount = 0;
-const walletNumbers = { vodafone: '01097570965', etisalat: '01152321199', we: 'لا يوجد', visa: '0000-0000-0000-0000' };
-const PAYMENT_METHODS = {
-  cod: { name: 'الدفع عند الاستلام', icon: 'fa-hand-holding-dollar' },
-  vodafone: { name: 'فودافون كاش', icon: 'fa-mobile-screen' },
-  etisalat: { name: 'اتصالات كاش', icon: 'fa-mobile-screen' },
-  we: { name: 'وي بي', icon: 'fa-building-columns' },
-  visa: { name: 'فيزا كارد', icon: 'fa-cc-visa' }
+
+// ===== طرق الدفع المصرية =====
+const walletNumbers = {
+  vodafone: '01097570965',
+  etisalat: '01152321199',
+  orange: '01234567890',
+  we: '01012345678',
+  instapay: '01098765432',
+  bank: 'EG28 1234 5678 9012 3456 7890',
+  visa: '0000-0000-0000-0000'
 };
+
+const PAYMENT_METHODS = {
+  cod: { name: 'الدفع عند الاستلام', icon: 'fa-hand-holding-dollar', color: '' },
+  vodafone: { name: 'فودافون كاش', icon: 'fa-mobile-screen', color: '#E60000' },
+  etisalat: { name: 'اتصالات كاش', icon: 'fa-mobile-screen', color: '#0054A6' },
+  orange: { name: 'أورنج كاش', icon: 'fa-mobile-screen', color: '#FF6600' },
+  we: { name: 'وي بي', icon: 'fa-building-columns', color: '#7B3FAF' },
+  instapay: { name: 'إنستا باي', icon: 'fa-bolt', color: '#00BFA5' },
+  bank: { name: 'تحويل بنكي', icon: 'fa-university', color: '#2E7D32' },
+  visa: { name: 'فيزا كارد', icon: 'fa-cc-visa', color: '#1A1F71' }
+};
+
 const CATEGORIES = [
   { id: 'all', name: 'الكل', icon: 'fa-grid-2' },
   { id: 'مستلزمات شخصية', name: 'مستلزمات شخصية', icon: 'fa-user' },
@@ -2952,18 +3011,23 @@ function setupPaymentMethods() {
 function updateWalletInfoBox() {
   const wb = document.getElementById('walletInfoBox'), wl = document.getElementById('walletLabel'), wn = document.getElementById('walletNumber');
   if (!wb || !wl || !wn) return;
-  const cfg = {
+  
+  const paymentConfig = {
     cod: { show: false },
     vodafone: { show: true, label: '📱 رقم فودافون كاش', number: walletNumbers.vodafone },
     etisalat: { show: true, label: '📱 رقم اتصالات كاش', number: walletNumbers.etisalat },
+    orange: { show: true, label: '📱 رقم أورنج كاش', number: walletNumbers.orange },
     we: { show: true, label: '🏦 رقم وي بي', number: walletNumbers.we },
+    instapay: { show: true, label: '⚡ رقم إنستا باي', number: walletNumbers.instapay },
+    bank: { show: true, label: '🏦 رقم الحساب البنكي', number: walletNumbers.bank },
     visa: { show: true, label: '💳 رقم الفيزا', number: walletNumbers.visa }
   };
-  const c = cfg[selectedPaymentMethod] || cfg['cod'];
-  if (c.show) {
+  
+  const config = paymentConfig[selectedPaymentMethod] || paymentConfig['cod'];
+  if (config.show) {
     wb.classList.add('show');
-    wl.textContent = c.label;
-    wn.textContent = c.number || '****';
+    wl.textContent = config.label;
+    wn.textContent = config.number || '****';
   } else {
     wb.classList.remove('show');
   }
@@ -3164,7 +3228,6 @@ document.getElementById('sendContactBtn')?.addEventListener('click', async funct
       document.getElementById('contactSubject').value = '';
       document.getElementById('contactMessage').value = '';
     } else {
-      // Local storage fallback
       const messages = JSON.parse(localStorage.getItem('contact_messages') || '[]');
       messages.push({ email, subject, message, createdAt: Date.now() });
       localStorage.setItem('contact_messages', JSON.stringify(messages));
@@ -3207,7 +3270,8 @@ async function refreshOrdersStatus() {
   }
   if (c) { saveOrders(); if ($('#cartPage')?.classList.contains('active-page')) renderCartPage(); }
 }
-  // ===== Render Wishlist =====
+
+// ===== Render Wishlist =====
 function renderWishlistPage() {
   const container = document.getElementById('wishlistContainer');
   if (!container) return;
@@ -3303,7 +3367,7 @@ function renderCartPage() {
       };
       const st = sm[o.status] || sm['pending'];
       const date = o.createdAt ? new Date(o.createdAt).toLocaleString('ar-EG') : '';
-      const pi = PAYMENT_METHODS[o.paymentMethod] || PAYMENT_METHODS['cod'];
+      const pm = PAYMENT_METHODS[o.paymentMethod] || PAYMENT_METHODS['cod'];
       const it = (o.items || []).reduce((s, i) => s + (i.price * i.quantity), 0);
       const df = o.deliveryFee || 0, cf = o.codFee || 0, gt = o.total || 0;
       let th = '';
@@ -3320,7 +3384,7 @@ function renderCartPage() {
           <div style="font-size:40px;">${st.icon}</div>
           <div class="status-badge-lg ${st.cls}">${st.text}</div>
           <p><strong>#${(o.orderId || '').slice(-8)}</strong> | ${date}</p>
-          <p><strong>الدفع:</strong> <i class="fa-solid ${pi.icon}"></i> ${pi.name}</p>
+          <p><strong>الدفع:</strong> <i class="fa-solid ${pm.icon}" style="color:${pm.color || 'inherit'}"></i> ${pm.name}</p>
           <div class="order-detail-breakdown">
             <div class="breakdown-row"><span>🛒 المنتجات:</span><span>${it.toFixed(2)} ج</span></div>
             <div class="breakdown-row"><span>🚚 التوصيل:</span><span>${df === 0 ? 'مجاناً 🎉' : df.toFixed(2) + ' ج'}</span></div>
