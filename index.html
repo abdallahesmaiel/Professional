@@ -588,7 +588,7 @@ body::before {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: rgba(255, 255, 255, 0.011764705882352941); /* خلفية شفافة */
+  background: rgba(0, 0, 0, 0.4); /* خلفية شفافة */
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   color: var(--white);
@@ -2786,7 +2786,10 @@ function setupLanguage() {
 // ===== شريط العروض الحصرية (Carousel) =====
 // ============================================================
 let promotionalSlides = [];
-let preloadedImages = [];
+let autoPlayTimer = null;
+let isUserInteracting = false;
+let resumeTimeout = null;
+let currentSlideIndex = 0; // متغير جديد للتحكم بالصورة الحالية بناءً على الترتيب
 
 function loadPromotionalSlides() {
   console.log('🔄 جاري تحميل العروض الترويجية (Carousel)...');
@@ -2794,9 +2797,9 @@ function loadPromotionalSlides() {
   if (!database) {
     console.warn('⚠️ لا يوجد اتصال بقاعدة البيانات، استخدام شرائح افتراضية');
     promotionalSlides = [
-      { title: '✨ عروض حصرية', description: 'تسوق أفضل المنتجات', image: 'https://via.placeholder.com/800x400/C9A96E/1A0F07?text=عروض+حصرية', category: 'all', active: true },
-      { title: '🛍️ قسم الملابس', description: 'أحدث التشكيلات', image: 'https://via.placeholder.com/800x400/4A2C17/C9A96E?text=ملابس+فاخرة', category: 'ملابس', active: true },
-      { title: '📱 أجهزة شخصية', description: 'تكنولوجيا حديثة', image: 'https://via.placeholder.com/800x400/1A0F07/C9A96E?text=أجهزة+حديثة', category: 'أجهزة شخصية', active: true }
+      { title: '✨ عروض حصرية', description: 'تسوق أفضل المنتجات', image: 'https://via.placeholder.com/800x400/C9A96E/1A0F07?text=عروض+حصرية', category: 'all', active: true, interval: 5, order: 1 },
+      { title: '🛍️ قسم الملابس', description: 'أحدث التشكيلات', image: 'https://via.placeholder.com/800x400/4A2C17/C9A96E?text=ملابس+فاخرة', category: 'ملابس', active: true, interval: 5, order: 2 },
+      { title: '📱 أجهزة شخصية', description: 'تكنولوجيا حديثة', image: 'https://via.placeholder.com/800x400/1A0F07/C9A96E?text=أجهزة+حديثة', category: 'أجهزة شخصية', active: true, interval: 5, order: 3 }
     ];
     renderPromotionalCarousel();
     return;
@@ -2818,38 +2821,35 @@ function loadPromotionalSlides() {
               category: slide.category || 'all',
               title: slide.title || 'عرض مميز',
               description: slide.description || '',
-              image: slide.image || ''
+              image: slide.image || '',
+              interval: (typeof slide.interval === 'number') ? slide.interval : (parseInt(slide.interval) || 5),
+              order: parseInt(slide.order) || 0
             });
           }
         }
       }
     }
     
-    // ترتيب الشرائح بناءً على حقل order (الترتيب)
-    slides.sort((a, b) => {
-      const orderA = parseInt(a.order) || 0;
-      const orderB = parseInt(b.order) || 0;
-      return orderA - orderB;
-    });
+    slides.sort((a, b) => a.order - b.order);
     
     if (slides.length === 0) {
       console.warn('⚠️ لا توجد شرائح ترويجية، استخدام شرائح افتراضية');
       promotionalSlides = [
-        { title: '✨ عروض حصرية', description: 'تسوق أفضل المنتجات', image: 'https://via.placeholder.com/800x400/C9A96E/1A0F07?text=عروض+حصرية', category: 'all', active: true },
-        { title: '🛍️ قسم الملابس', description: 'أحدث التشكيلات', image: 'https://via.placeholder.com/800x400/4A2C17/C9A96E?text=ملابس+فاخرة', category: 'ملابس', active: true },
-        { title: '📱 أجهزة شخصية', description: 'تكنولوجيا حديثة', image: 'https://via.placeholder.com/800x400/1A0F07/C9A96E?text=أجهزة+حديثة', category: 'أجهزة شخصية', active: true }
+        { title: '✨ عروض حصرية', description: 'تسوق أفضل المنتجات', image: 'https://via.placeholder.com/800x400/C9A96E/1A0F07?text=عروض+حصرية', category: 'all', active: true, interval: 5, order: 1 },
+        { title: '🛍️ قسم الملابس', description: 'أحدث التشكيلات', image: 'https://via.placeholder.com/800x400/4A2C17/C9A96E?text=ملابس+فاخرة', category: 'ملابس', active: true, interval: 5, order: 2 },
+        { title: '📱 أجهزة شخصية', description: 'تكنولوجيا حديثة', image: 'https://via.placeholder.com/800x400/1A0F07/C9A96E?text=أجهزة+حديثة', category: 'أجهزة شخصية', active: true, interval: 5, order: 3 }
       ];
     } else {
       promotionalSlides = slides;
-      console.log(`✅ تم تحميل ${promotionalSlides.length} عرض ترويجي في قائمة (Carousel)`);
+      console.log(`✅ تم تحميل ${promotionalSlides.length} عرض ترويجي مرتبة حسب الـ order`);
     }
     renderPromotionalCarousel();
   }, (error) => {
     console.error('❌ خطأ في تحميل العروض الترويجية:', error);
     promotionalSlides = [
-      { title: '✨ عروض حصرية', description: 'تسوق أفضل المنتجات', image: 'https://via.placeholder.com/800x400/C9A96E/1A0F07?text=عروض+حصرية', category: 'all', active: true },
-      { title: '🛍️ قسم الملابس', description: 'أحدث التشكيلات', image: 'https://via.placeholder.com/800x400/4A2C17/C9A96E?text=ملابس+فاخرة', category: 'ملابس', active: true },
-      { title: '📱 أجهزة شخصية', description: 'تكنولوجيا حديثة', image: 'https://via.placeholder.com/800x400/1A0F07/C9A96E?text=أجهزة+حديثة', category: 'أجهزة شخصية', active: true }
+      { title: '✨ عروض حصرية', description: 'تسوق أفضل المنتجات', image: 'https://via.placeholder.com/800x400/C9A96E/1A0F07?text=عروض+حصرية', category: 'all', active: true, interval: 5, order: 1 },
+      { title: '🛍️ قسم الملابس', description: 'أحدث التشكيلات', image: 'https://via.placeholder.com/800x400/4A2C17/C9A96E?text=ملابس+فاخرة', category: 'ملابس', active: true, interval: 5, order: 2 },
+      { title: '📱 أجهزة شخصية', description: 'تكنولوجيا حديثة', image: 'https://via.placeholder.com/800x400/1A0F07/C9A96E?text=أجهزة+حديثة', category: 'أجهزة شخصية', active: true, interval: 5, order: 3 }
     ];
     renderPromotionalCarousel();
   });
@@ -2859,7 +2859,6 @@ function getSlideImageUrl(slide) {
   if (slide.image && typeof slide.image === 'string' && slide.image.trim().length > 5) {
     return slide.image.trim();
   }
-  // صور افتراضية مخصصة لكل قسم
   const defaultImages = {
     'ملابس': 'https://via.placeholder.com/800x400/4A2C17/C9A96E?text=👔+عرض+ملابس+فاخرة',
     'أجهزة شخصية': 'https://via.placeholder.com/800x400/1A0F07/C9A96E?text=📱+عرض+أجهزة+حديثة',
@@ -2891,12 +2890,10 @@ function renderPromotionalCarousel() {
     
     const imageUrl = getSlideImageUrl(slide);
     
-    // ===== حذف النص من الصورة تماماً والاكتفاء بالشارة =====
     item.innerHTML = `
       <img src="${imageUrl}" alt="${slide.title || 'عرض مميز'}" loading="lazy" onerror="this.src='https://via.placeholder.com/800x400/4A2C17/C9A96E?text=🏪+عرض+مميز';">
       <div class="promo-badge">✨ عرض حصري</div>
     `;
-    // ============================================================
     
     item.addEventListener('click', () => { goToCategory(slide.category); });
     wrapper.appendChild(item);
@@ -2904,10 +2901,169 @@ function renderPromotionalCarousel() {
   
   section.classList.add('active');
   
-  // إضافة أزرار التنقل للشاشات الكبيرة
   if (prevBtn && nextBtn) {
-    prevBtn.onclick = () => { wrapper.scrollBy({ left: -350, behavior: 'smooth' }); };
-    nextBtn.onclick = () => { wrapper.scrollBy({ left: 350, behavior: 'smooth' }); };
+    prevBtn.onclick = () => {
+      manualScrollHelper(-350);
+    };
+    nextBtn.onclick = () => {
+      manualScrollHelper(350);
+    };
+  }
+
+  setTimeout(() => startAutoPlay(), 1500);
+}
+
+/* ===== دوال التشغيل التلقائي الجديدة والمحسنة ===== */
+function manualScrollHelper(amount) {
+  const wrapper = document.getElementById('promoCarouselWrapper');
+  if (!wrapper) return;
+  stopAutoPlay();
+  isUserInteracting = true;
+  
+  // تحريك التمرير يدوياً
+  wrapper.scrollBy({ left: amount, behavior: 'smooth' });
+  
+  // تحديث المؤشر بناءً على الحركة
+  setTimeout(() => {
+    const step = (wrapper.children[0]?.offsetWidth || 300) + 16;
+    const newIndex = Math.round(wrapper.scrollLeft / step);
+    if (newIndex >= 0 && newIndex < promotionalSlides.length) {
+        currentSlideIndex = newIndex;
+    } else if (newIndex >= promotionalSlides.length) {
+        currentSlideIndex = 0;
+    }
+  }, 400);
+
+  clearTimeout(resumeTimeout);
+  resumeTimeout = setTimeout(() => {
+    isUserInteracting = false;
+    startAutoPlay();
+  }, 4000);
+}
+
+function startAutoPlay() {
+  stopAutoPlay();
+  if (!promotionalSlides || promotionalSlides.length < 2) return;
+  if (isUserInteracting) return;
+
+  const wrapper = document.getElementById('promoCarouselWrapper');
+  if (!wrapper) return;
+
+  // ===== الحل الجذري الجديد: قراءة وقت الصورة الحالية فقط =====
+  let currentDelay = 5000;
+  
+  // التأكد من أن الفهرس صحيح
+  if (currentSlideIndex >= promotionalSlides.length) {
+      currentSlideIndex = 0;
+  }
+  
+  const currentSlide = promotionalSlides[currentSlideIndex];
+  if (currentSlide && typeof currentSlide.interval === 'number') {
+      currentDelay = currentSlide.interval * 1000;
+  } else if (currentSlide && parseInt(currentSlide.interval)) {
+      currentDelay = parseInt(currentSlide.interval) * 1000;
+  } else {
+      currentDelay = 5000;
+  }
+
+  // إصلاح خطأ 'caller/callee': استخدام دالة مسماة لإعادة استدعاء نفسها بشكل آمن
+  autoPlayTimer = setInterval(function timerCallback() {
+    if (isUserInteracting || promotionalSlides.length < 2) return;
+    
+    // حساب الصورة التالية (التي تلي الصورة الحالية مباشرة)
+    let nextIndex = currentSlideIndex + 1;
+    if (nextIndex >= promotionalSlides.length) {
+        nextIndex = 0; // العودة للصورة الأولى
+    }
+    
+    // حساب مقدار التمرير المطلوب للوصول للصورة التالية
+    const step = (wrapper.children[0]?.offsetWidth || 300) + 16;
+    const targetScrollLeft = nextIndex * step;
+    
+    // التمرير للصورة التالية
+    wrapper.scrollTo({ left: targetScrollLeft, behavior: 'smooth' });
+    
+    // تحديث مؤشر الصورة الحالية
+    currentSlideIndex = nextIndex;
+    
+    // تغيير وقت الانتظار بناءً على الصورة الجديدة (التي وصلنا إليها للتو)
+    // هذا يضمن أن الصورة التالية ستأخذ وقتها الخاص من قاعدة البيانات
+    const newSlide = promotionalSlides[currentSlideIndex];
+    let newDelay = 5000;
+    if (newSlide && typeof newSlide.interval === 'number') {
+        newDelay = newSlide.interval * 1000;
+    } else if (newSlide && parseInt(newSlide.interval)) {
+        newDelay = parseInt(newSlide.interval) * 1000;
+    } else {
+        newDelay = 5000;
+    }
+    
+    // إعادة تعيين المؤقت بالوقت الجديد
+    clearInterval(autoPlayTimer);
+    autoPlayTimer = setInterval(timerCallback, newDelay);
+    
+  }, currentDelay);
+}
+
+function stopAutoPlay() {
+  if (autoPlayTimer) {
+    clearInterval(autoPlayTimer);
+    autoPlayTimer = null;
+  }
+}
+
+function setupCarouselInteractions() {
+  const section = document.getElementById('promoCarousel');
+  if (!section) return;
+
+  section.addEventListener('mouseenter', () => {
+    stopAutoPlay();
+    isUserInteracting = true;
+    clearTimeout(resumeTimeout);
+  });
+
+  section.addEventListener('mouseleave', () => {
+    isUserInteracting = false;
+    clearTimeout(resumeTimeout);
+    resumeTimeout = setTimeout(() => {
+      startAutoPlay();
+    }, 1500);
+  });
+
+  section.addEventListener('touchstart', () => {
+    stopAutoPlay();
+    isUserInteracting = true;
+    clearTimeout(resumeTimeout);
+  });
+
+  section.addEventListener('touchend', () => {
+    isUserInteracting = false;
+    clearTimeout(resumeTimeout);
+    resumeTimeout = setTimeout(() => {
+      startAutoPlay();
+    }, 1500);
+  });
+
+  const wrapper = document.getElementById('promoCarouselWrapper');
+  if (wrapper) {
+    wrapper.addEventListener('scroll', () => {
+      if (!isUserInteracting) {
+        // في حالة التمرير التلقائي، نقوم بتحديث المؤشر
+        const step = (wrapper.children[0]?.offsetWidth || 300) + 16;
+        let newIndex = Math.round(wrapper.scrollLeft / step);
+        if (newIndex >= 0 && newIndex < promotionalSlides.length) {
+            currentSlideIndex = newIndex;
+        } else if (newIndex >= promotionalSlides.length) {
+            currentSlideIndex = 0;
+        }
+      } else {
+        clearTimeout(resumeTimeout);
+        resumeTimeout = setTimeout(() => {
+          isUserInteracting = false;
+          startAutoPlay();
+        }, 3000);
+      }
+    });
   }
 }
 
@@ -2962,6 +3118,8 @@ function init() {
   startPeriodicRefresh();
   refreshOrdersStatus();
   loadPromotionalSlides();
+  
+  setTimeout(setupCarouselInteractions, 2000);
   
   if (database) {
     onValue(ref(database, 'settings/flashSale'), (snap) => {
