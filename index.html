@@ -546,6 +546,33 @@ body::before {
 }
 .promo-carousel-section.active { display: block; animation: fadeInUp 0.6s ease; }
 
+/* ===== عنوان العروض الحصرية ===== */
+.promo-carousel-title {
+  text-align: center;
+  font-size: clamp(24px, 4vw, 36px);
+  font-weight: 900;
+  color: var(--primary-dark);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.promo-carousel-title .highlight {
+  color: var(--accent);
+}
+.promo-carousel-title .sub-text {
+  font-size: clamp(14px, 1.8vw, 18px);
+  font-weight: 700;
+  color: var(--primary-light);
+  display: block;
+  margin-top: 4px;
+}
+.promo-carousel-title .icon-big {
+  font-size: clamp(28px, 4vw, 40px);
+}
+/* ========================================== */
+
 .promo-carousel-wrapper {
   display: flex;
   gap: 16px;
@@ -583,25 +610,7 @@ body::before {
   display: block;
 }
 
-/* ===== تعديل الشارة لتكون شفافة وأنيقة فقط ===== */
-.promo-carousel-item .promo-badge {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  background: rgba(0, 0, 0, 0.4); /* خلفية شفافة */
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  color: var(--white);
-  padding: 6px 16px;
-  border-radius: var(--radius-full);
-  font-weight: 800;
-  font-size: 12px;
-  border: 1px solid rgba(255,255,255,0.2);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.35);
-  pointer-events: none;
-  z-index: 2;
-}
-/* ========================================== */
+/* تم إزالة جميع الشارات من على الصورة (promo-badge و product-link-badge) */
 
 /* أزرار التنقل */
 .promo-carousel-btn {
@@ -1392,6 +1401,13 @@ body::before {
 
     <!-- ===== شريط العروض الحصرية ===== -->
     <div class="promo-carousel-section" id="promoCarousel">
+      <div class="promo-carousel-title">
+        <span class="icon-big">✨</span>
+        <div>
+          عروض حصرية
+          <span class="sub-text">سارع في الحصول عليها 🏃</span>
+        </div>
+      </div>
       <div class="promo-carousel-wrapper" id="promoCarouselWrapper"></div>
       <button class="promo-carousel-btn prev" id="promoCarouselPrev" aria-label="السابق"><i class="fa-solid fa-chevron-right"></i></button>
       <button class="promo-carousel-btn next" id="promoCarouselNext" aria-label="التالي"><i class="fa-solid fa-chevron-left"></i></button>
@@ -1589,7 +1605,7 @@ body::before {
 
 <script type="module">
 // ============================================================
-// جافا سكريبت كامل مع شريط العروض (Carousel)
+// جافا سكريبت كامل مع شريط العروض (Carousel) وربط المنتج
 // ============================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, onValue, push, set, get, remove, update, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -1712,6 +1728,8 @@ let allProducts = [], cartItems = [], myOrders = [], wishlist = [];
 let currentCategory = 'all', currentSort = 'newest', currentPriceMin = null, currentPriceMax = null, currentSearchQuery = '';
 let selectedPaymentMethod = 'cod', codFee = 0, deliveryFee = 5;
 let appliedCoupon = null, couponDiscount = 0;
+let targetProductId = null; // متغير لتتبع المنتج المستهدف من العرض
+let isTargetingProduct = false; // متغير لمنع ظهور رسائل مكررة
 
 // ===== طرق الدفع المصرية =====
 const walletNumbers = {
@@ -2619,10 +2637,18 @@ setInterval(updateFlashSaleTimer, 1000);
 // ===== Filter & Sort =====
 function getFilteredAndSortedProducts() {
   let f = [...allProducts];
+  
+  // فلترة حسب القسم
   if (currentCategory !== 'all') f = f.filter(p => (p.category || 'أجهزة شخصية') === currentCategory);
+  
+  // فلترة حسب البحث
   if (currentSearchQuery) { const q = currentSearchQuery.toLowerCase(); f = f.filter(p => (p.name || '').toLowerCase().includes(q) || (p.description || '').toLowerCase().includes(q)); }
+  
+  // فلترة حسب السعر
   if (currentPriceMin !== null && !isNaN(currentPriceMin)) f = f.filter(p => getEffectivePrice(p).finalPrice >= currentPriceMin);
   if (currentPriceMax !== null && !isNaN(currentPriceMax)) f = f.filter(p => getEffectivePrice(p).finalPrice <= currentPriceMax);
+  
+  // ترتيب المنتجات
   switch (currentSort) {
     case 'newest': f.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)); break;
     case 'oldest': f.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)); break;
@@ -2631,6 +2657,7 @@ function getFilteredAndSortedProducts() {
     case 'name-asc': f.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar')); break;
     default: f.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   }
+  
   return f;
 }
 
@@ -2638,21 +2665,92 @@ function getFilteredAndSortedProducts() {
 function renderHomeProducts() {
   const g = $('#productsContainer'), rc = $('#resultsCount');
   if (!g) return;
-  const f = getFilteredAndSortedProducts();
+  
+  let f = getFilteredAndSortedProducts();
+  
+  // إذا كان هناك منتج مستهدف من العرض، نضعه في بداية القائمة مع إضافة علامة مميز
+  let highlightedProduct = null;
+  if (targetProductId) {
+    const targetProduct = allProducts.find(p => p.id === targetProductId);
+    // نتحقق من أن المنتج موجود وفي نفس القسم
+    if (targetProduct && (targetProduct.category === currentCategory || currentCategory === 'all')) {
+      highlightedProduct = targetProduct;
+      // نزيل المنتج من القائمة إذا كان موجوداً لتجنب التكرار
+      f = f.filter(p => p.id !== targetProductId);
+      // نضيفه في البداية
+      f.unshift(targetProduct);
+    }
+  }
+  
   if (rc) rc.textContent = `${f.length} منتج`;
   if (allProducts.length === 0) { g.innerHTML = '<div class="loading-spinner" style="grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i> جاري تحميل المنتجات...</div>'; return; }
-  if (f.length === 0) { g.innerHTML = `<div class="search-no-results"><span class="icon">🔍</span><h3>لا توجد نتائج</h3><button class="btn btn-outline" onclick="window.resetAllFilters()">إعادة ضبط</button></div>`; return; }
-  g.innerHTML = f.map(p => {
+  if (f.length === 0) { 
+    g.innerHTML = `<div class="search-no-results"><span class="icon">🔍</span><h3>لا توجد نتائج</h3><button class="btn btn-outline" onclick="window.resetAllFilters()">إعادة ضبط</button></div>`; 
+    return; 
+  }
+  
+  let productsHtml = f.map(p => {
     const av = (p.quantity || 0) > 0, img = getThumbnailUrl(p.image, 400), hi = p.image && p.image.length > 0;
     const pi = getEffectivePrice(p), cn = p.category || 'أجهزة شخصية', ci = CATEGORIES.find(c => c.id === cn)?.icon || 'fa-box';
     const inWishlist = wishlist.includes(p.id);
     const rating = p.rating || { average: 0, count: 0 };
     const stars = '★'.repeat(Math.round(rating.average)) + '☆'.repeat(5 - Math.round(rating.average));
     let ph = pi.hasDiscount ? `<div class="price-container"><span class="original-price">${pi.basePrice.toFixed(2)} ج</span><span class="discounted-price">${pi.finalPrice.toFixed(2)} <small>ج</small></span><span class="discount-label">🏷️ ${pi.discountLabel}</span></div>` : `<span class="price">${pi.basePrice.toFixed(2)} <small>ج</small></span>`;
-    return `<div class="product-card"><button class="wishlist-btn ${inWishlist ? 'active' : ''}" data-wishlist-id="${p.id}"><i class="fa-${inWishlist ? 'solid' : 'regular'} fa-heart"></i></button><div class="product-img-wrap" onclick="window.openProductDetail('${p.id}')">${hi ? `<img src="${img}" alt="${p.name || ''}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">` : ''}<i class="fas ${p.icon || 'fa-box'} product-img-placeholder" style="${hi ? 'display:none;' : ''}"></i>${pi.hasDiscount ? `<span class="discount-badge"><i class="fa-solid fa-tag"></i> ${pi.discountLabel}</span>` : ''}<span class="category-badge"><i class="fa-solid ${ci}"></i> ${cn}</span><span class="stock-badge ${av ? 'stock-available' : 'stock-out'}">${av ? '✓ متوفر' : '✗ نفذ'}</span></div><div class="product-info"><div class="product-name">${p.name || ''}</div><div class="product-rating"><span class="stars">${stars}</span> (${rating.count})</div><div class="product-desc">${p.description || ''}</div><div class="price-row">${ph}<button class="add-btn" ${!av ? 'disabled' : ''} data-add-id="${p.id}"><i class="fa-solid fa-cart-plus"></i> أضف</button></div></div></div>`;
+    
+    // إضافة class مميز للمنتج المستهدف
+    const isHighlighted = (targetProductId && p.id === targetProductId);
+    const highlightClass = isHighlighted ? 'highlighted-product' : '';
+    
+    return `<div class="product-card ${highlightClass}" id="product-${p.id}" style="${isHighlighted ? 'border-color: var(--accent); box-shadow: 0 0 0 4px rgba(201,169,110,0.4), 0 8px 28px rgba(201,169,110,0.2); transition: all 0.5s ease;' : ''}">
+      <button class="wishlist-btn ${inWishlist ? 'active' : ''}" data-wishlist-id="${p.id}"><i class="fa-${inWishlist ? 'solid' : 'regular'} fa-heart"></i></button>
+      <div class="product-img-wrap" onclick="window.openProductDetail('${p.id}')">
+        ${hi ? `<img src="${img}" alt="${p.name || ''}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">` : ''}
+        <i class="fas ${p.icon || 'fa-box'} product-img-placeholder" style="${hi ? 'display:none;' : ''}"></i>
+        ${pi.hasDiscount ? `<span class="discount-badge"><i class="fa-solid fa-tag"></i> ${pi.discountLabel}</span>` : ''}
+        ${isHighlighted ? `<span style="position:absolute;top:12px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--primary-dark);padding:4px 16px;border-radius:var(--radius-full);font-weight:800;font-size:12px;z-index:5;box-shadow:0 2px 12px rgba(201,169,110,0.5);">🎯 مميز</span>` : ''}
+        <span class="category-badge"><i class="fa-solid ${ci}"></i> ${cn}</span>
+        <span class="stock-badge ${av ? 'stock-available' : 'stock-out'}">${av ? '✓ متوفر' : '✗ نفذ'}</span>
+      </div>
+      <div class="product-info">
+        <div class="product-name">${p.name || ''}</div>
+        <div class="product-rating"><span class="stars">${stars}</span> (${rating.count})</div>
+        <div class="product-desc">${p.description || ''}</div>
+        <div class="price-row">${ph}<button class="add-btn" ${!av ? 'disabled' : ''} data-add-id="${p.id}"><i class="fa-solid fa-cart-plus"></i> أضف</button></div>
+      </div>
+    </div>`;
   }).join('');
+  
+  g.innerHTML = productsHtml;
+  
   g.querySelectorAll('[data-add-id]').forEach(b => b.addEventListener('click', () => addToCart(b.getAttribute('data-add-id'))));
   g.querySelectorAll('[data-wishlist-id]').forEach(b => b.addEventListener('click', () => toggleWishlist(b.getAttribute('data-wishlist-id'))));
+  
+  // إذا كان هناك منتج مستهدف، قم بالتمرير إليه بدون إشعار
+  if (targetProductId && !isTargetingProduct) {
+    isTargetingProduct = true;
+    setTimeout(() => {
+      const targetElement = document.getElementById(`product-${targetProductId}`);
+      if (targetElement) {
+        // التمرير إلى المنتج فقط بدون إشعار
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // إزالة التمييز بعد 4 ثواني
+        setTimeout(() => {
+          targetElement.style.borderColor = 'rgba(74,44,23,0.08)';
+          targetElement.style.boxShadow = 'var(--shadow-sm)';
+          targetElement.style.transition = 'all 0.5s ease';
+        }, 4000);
+      }
+      
+      // إعادة تعيين المتغيرات بعد الانتهاء
+      setTimeout(() => {
+        targetProductId = null;
+        isTargetingProduct = false;
+      }, 500);
+    }, 400);
+  } else if (!targetProductId) {
+    isTargetingProduct = false;
+  }
 }
 
 // ===== Add to Cart =====
@@ -2701,6 +2799,8 @@ function setupCategoriesAndFilters() {
     $$('.category-chip').forEach(c => c.classList.remove('active'));
     this.classList.add('active');
     currentCategory = this.getAttribute('data-category');
+    targetProductId = null; // إعادة تعيين المنتج المستهدف عند تغيير القسم يدوياً
+    isTargetingProduct = false;
     renderHomeProducts();
   }));
   $('#sortSelect')?.addEventListener('change', function() { currentSort = this.value; renderHomeProducts(); });
@@ -2709,6 +2809,8 @@ function setupCategoriesAndFilters() {
     currentPriceMin = mn !== '' && !isNaN(parseFloat(mn)) ? parseFloat(mn) : null;
     currentPriceMax = mx !== '' && !isNaN(parseFloat(mx)) ? parseFloat(mx) : null;
     if (currentPriceMin !== null && currentPriceMax !== null && currentPriceMin > currentPriceMax) { NotificationSystem.warning('السعر الأدنى أكبر من الأعلى'); return; }
+    targetProductId = null;
+    isTargetingProduct = false;
     renderHomeProducts();
   });
   $('#resetFilters')?.addEventListener('click', resetAllFilters);
@@ -2720,6 +2822,8 @@ window.resetAllFilters = function() {
   currentPriceMin = null;
   currentPriceMax = null;
   currentSearchQuery = '';
+  targetProductId = null;
+  isTargetingProduct = false;
   $$('.category-chip').forEach((c, i) => c.classList.toggle('active', i === 0));
   const ss = $('#sortSelect'); if (ss) ss.value = 'newest';
   const pm = $('#priceMin'), px = $('#priceMax'); if (pm) pm.value = ''; if (px) px.value = '';
@@ -2737,10 +2841,15 @@ function setupSearch() {
     const q = this.value.trim();
     clr.classList.toggle('visible', q.length > 0);
     clearTimeout(t);
-    t = setTimeout(() => { currentSearchQuery = q; if ($('#homePage')?.classList.contains('active-page')) renderHomeProducts(); }, 300);
+    t = setTimeout(() => { 
+      currentSearchQuery = q; 
+      targetProductId = null;
+      isTargetingProduct = false;
+      if ($('#homePage')?.classList.contains('active-page')) renderHomeProducts(); 
+    }, 300);
   });
-  clr.addEventListener('click', () => { inp.value = ''; clr.classList.remove('visible'); currentSearchQuery = ''; if ($('#homePage')?.classList.contains('active-page')) renderHomeProducts(); inp.focus(); });
-  inp.addEventListener('keydown', e => { if (e.key === 'Enter') { clearTimeout(t); currentSearchQuery = inp.value.trim(); if ($('#homePage')?.classList.contains('active-page')) renderHomeProducts(); } });
+  clr.addEventListener('click', () => { inp.value = ''; clr.classList.remove('visible'); currentSearchQuery = ''; targetProductId = null; isTargetingProduct = false; if ($('#homePage')?.classList.contains('active-page')) renderHomeProducts(); inp.focus(); });
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') { clearTimeout(t); currentSearchQuery = inp.value.trim(); targetProductId = null; isTargetingProduct = false; if ($('#homePage')?.classList.contains('active-page')) renderHomeProducts(); } });
 }
 
 // ===== Logo =====
@@ -2783,13 +2892,13 @@ function setupLanguage() {
 }
 
 // ============================================================
-// ===== شريط العروض الحصرية (Carousel) =====
+// ===== شريط العروض الحصرية (Carousel) مع ربط المنتج =====
 // ============================================================
 let promotionalSlides = [];
 let autoPlayTimer = null;
 let isUserInteracting = false;
 let resumeTimeout = null;
-let currentSlideIndex = 0; // متغير جديد للتحكم بالصورة الحالية بناءً على الترتيب
+let currentSlideIndex = 0;
 
 function loadPromotionalSlides() {
   console.log('🔄 جاري تحميل العروض الترويجية (Carousel)...');
@@ -2817,13 +2926,15 @@ function loadPromotionalSlides() {
           if (slide.active !== false) {
             slides.push({
               id: key,
-              ...slide,
-              category: slide.category || 'all',
               title: slide.title || 'عرض مميز',
               description: slide.description || '',
               image: slide.image || '',
+              category: slide.category || 'all',
+              linkedProductId: slide.linkedProductId || null,
+              linkedProductName: slide.linkedProductName || null,
               interval: (typeof slide.interval === 'number') ? slide.interval : (parseInt(slide.interval) || 5),
-              order: parseInt(slide.order) || 0
+              order: parseInt(slide.order) || 0,
+              active: slide.active !== false
             });
           }
         }
@@ -2835,21 +2946,22 @@ function loadPromotionalSlides() {
     if (slides.length === 0) {
       console.warn('⚠️ لا توجد شرائح ترويجية، استخدام شرائح افتراضية');
       promotionalSlides = [
-        { title: '✨ عروض حصرية', description: 'تسوق أفضل المنتجات', image: 'https://via.placeholder.com/800x400/C9A96E/1A0F07?text=عروض+حصرية', category: 'all', active: true, interval: 5, order: 1 },
-        { title: '🛍️ قسم الملابس', description: 'أحدث التشكيلات', image: 'https://via.placeholder.com/800x400/4A2C17/C9A96E?text=ملابس+فاخرة', category: 'ملابس', active: true, interval: 5, order: 2 },
-        { title: '📱 أجهزة شخصية', description: 'تكنولوجيا حديثة', image: 'https://via.placeholder.com/800x400/1A0F07/C9A96E?text=أجهزة+حديثة', category: 'أجهزة شخصية', active: true, interval: 5, order: 3 }
+        { title: '✨ عروض حصرية', description: 'تسوق أفضل المنتجات', image: 'https://via.placeholder.com/800x400/C9A96E/1A0F07?text=عروض+حصرية', category: 'all', linkedProductId: null, linkedProductName: null, active: true, interval: 5, order: 1 },
+        { title: '🛍️ قسم الملابس', description: 'أحدث التشكيلات', image: 'https://via.placeholder.com/800x400/4A2C17/C9A96E?text=ملابس+فاخرة', category: 'ملابس', linkedProductId: null, linkedProductName: null, active: true, interval: 5, order: 2 },
+        { title: '📱 أجهزة شخصية', description: 'تكنولوجيا حديثة', image: 'https://via.placeholder.com/800x400/1A0F07/C9A96E?text=أجهزة+حديثة', category: 'أجهزة شخصية', linkedProductId: null, linkedProductName: null, active: true, interval: 5, order: 3 }
       ];
     } else {
       promotionalSlides = slides;
       console.log(`✅ تم تحميل ${promotionalSlides.length} عرض ترويجي مرتبة حسب الـ order`);
+      console.log('📌 العروض المحملة:', promotionalSlides.map(s => ({ title: s.title, linkedProduct: s.linkedProductName || 'لا يوجد' })));
     }
     renderPromotionalCarousel();
   }, (error) => {
     console.error('❌ خطأ في تحميل العروض الترويجية:', error);
     promotionalSlides = [
-      { title: '✨ عروض حصرية', description: 'تسوق أفضل المنتجات', image: 'https://via.placeholder.com/800x400/C9A96E/1A0F07?text=عروض+حصرية', category: 'all', active: true, interval: 5, order: 1 },
-      { title: '🛍️ قسم الملابس', description: 'أحدث التشكيلات', image: 'https://via.placeholder.com/800x400/4A2C17/C9A96E?text=ملابس+فاخرة', category: 'ملابس', active: true, interval: 5, order: 2 },
-      { title: '📱 أجهزة شخصية', description: 'تكنولوجيا حديثة', image: 'https://via.placeholder.com/800x400/1A0F07/C9A96E?text=أجهزة+حديثة', category: 'أجهزة شخصية', active: true, interval: 5, order: 3 }
+      { title: '✨ عروض حصرية', description: 'تسوق أفضل المنتجات', image: 'https://via.placeholder.com/800x400/C9A96E/1A0F07?text=عروض+حصرية', category: 'all', linkedProductId: null, linkedProductName: null, active: true, interval: 5, order: 1 },
+      { title: '🛍️ قسم الملابس', description: 'أحدث التشكيلات', image: 'https://via.placeholder.com/800x400/4A2C17/C9A96E?text=ملابس+فاخرة', category: 'ملابس', linkedProductId: null, linkedProductName: null, active: true, interval: 5, order: 2 },
+      { title: '📱 أجهزة شخصية', description: 'تكنولوجيا حديثة', image: 'https://via.placeholder.com/800x400/1A0F07/C9A96E?text=أجهزة+حديثة', category: 'أجهزة شخصية', linkedProductId: null, linkedProductName: null, active: true, interval: 5, order: 3 }
     ];
     renderPromotionalCarousel();
   });
@@ -2890,12 +3002,53 @@ function renderPromotionalCarousel() {
     
     const imageUrl = getSlideImageUrl(slide);
     
-    item.innerHTML = `
-      <img src="${imageUrl}" alt="${slide.title || 'عرض مميز'}" loading="lazy" onerror="this.src='https://via.placeholder.com/800x400/4A2C17/C9A96E?text=🏪+عرض+مميز';">
-      <div class="promo-badge">✨ عرض حصري</div>
-    `;
+    // بناء HTML للعنصر - بدون أي شارات على الصورة
+    let html = `<img src="${imageUrl}" alt="${slide.title || 'عرض مميز'}" loading="lazy" onerror="this.src='https://via.placeholder.com/800x400/4A2C17/C9A96E?text=🏪+عرض+مميز';">`;
     
-    item.addEventListener('click', () => { goToCategory(slide.category); });
+    item.innerHTML = html;
+    
+    // إضافة حدث النقر مع دعم المنتج المرتبط (بدون إشعارات)
+    item.addEventListener('click', () => {
+      const hasLinkedProduct = slide.linkedProductId && slide.linkedProductName;
+      
+      if (hasLinkedProduct) {
+        // التوجه إلى القسم المحدد مع المنتج المرتبط
+        const targetCategory = slide.category || 'all';
+        const productId = slide.linkedProductId;
+        const product = allProducts.find(p => p.id === productId);
+        
+        if (product) {
+          // تغيير القسم إلى الفئة المحددة
+          const categoryChips = document.querySelectorAll('.category-chip');
+          categoryChips.forEach(chip => {
+            chip.classList.toggle('active', chip.dataset.category === targetCategory);
+          });
+          currentCategory = targetCategory;
+          
+          // تعيين معرف المنتج المستهدف (مع إعادة تعيين isTargetingProduct)
+          targetProductId = productId;
+          isTargetingProduct = false;
+          
+          // تحديث عرض المنتجات
+          renderHomeProducts();
+          
+          // التمرير إلى قسم المنتجات
+          const productsSection = document.getElementById('productsContainer');
+          if (productsSection) {
+            productsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+          
+          // لا نضيف أي إشعار هنا
+        } else {
+          // إذا لم يتم العثور على المنتج، التوجه إلى القسم فقط (بدون إشعار)
+          goToCategorySilent(targetCategory);
+        }
+      } else {
+        // التوجه إلى القسم المحدد كالمعتاد (بدون إشعار)
+        goToCategorySilent(slide.category);
+      }
+    });
+    
     wrapper.appendChild(item);
   });
   
@@ -2913,17 +3066,47 @@ function renderPromotionalCarousel() {
   setTimeout(() => startAutoPlay(), 1500);
 }
 
-/* ===== دوال التشغيل التلقائي الجديدة والمحسنة ===== */
+// دالة للتوجه إلى القسم بدون إشعار
+function goToCategorySilent(category) {
+  if (!category || category === 'all') {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    targetProductId = null;
+    isTargetingProduct = false;
+    return;
+  }
+  const categoryChips = document.querySelectorAll('.category-chip');
+  let targetChip = null;
+  categoryChips.forEach(chip => {
+    if (chip.dataset.category === category) { targetChip = chip; }
+  });
+  if (targetChip) {
+    categoryChips.forEach(c => c.classList.remove('active'));
+    targetChip.classList.add('active');
+    currentCategory = category;
+    targetProductId = null;
+    isTargetingProduct = false;
+    const categoriesSection = document.querySelector('.categories-section');
+    if (categoriesSection) {
+      categoriesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    renderHomeProducts();
+    // لا نضيف أي إشعار
+  } else {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    targetProductId = null;
+    isTargetingProduct = false;
+  }
+}
+
+/* ===== دوال التشغيل التلقائي ===== */
 function manualScrollHelper(amount) {
   const wrapper = document.getElementById('promoCarouselWrapper');
   if (!wrapper) return;
   stopAutoPlay();
   isUserInteracting = true;
   
-  // تحريك التمرير يدوياً
   wrapper.scrollBy({ left: amount, behavior: 'smooth' });
   
-  // تحديث المؤشر بناءً على الحركة
   setTimeout(() => {
     const step = (wrapper.children[0]?.offsetWidth || 300) + 16;
     const newIndex = Math.round(wrapper.scrollLeft / step);
@@ -2949,10 +3132,8 @@ function startAutoPlay() {
   const wrapper = document.getElementById('promoCarouselWrapper');
   if (!wrapper) return;
 
-  // ===== الحل الجذري الجديد: قراءة وقت الصورة الحالية فقط =====
   let currentDelay = 5000;
   
-  // التأكد من أن الفهرس صحيح
   if (currentSlideIndex >= promotionalSlides.length) {
       currentSlideIndex = 0;
   }
@@ -2966,28 +3147,21 @@ function startAutoPlay() {
       currentDelay = 5000;
   }
 
-  // إصلاح خطأ 'caller/callee': استخدام دالة مسماة لإعادة استدعاء نفسها بشكل آمن
   autoPlayTimer = setInterval(function timerCallback() {
     if (isUserInteracting || promotionalSlides.length < 2) return;
     
-    // حساب الصورة التالية (التي تلي الصورة الحالية مباشرة)
     let nextIndex = currentSlideIndex + 1;
     if (nextIndex >= promotionalSlides.length) {
-        nextIndex = 0; // العودة للصورة الأولى
+        nextIndex = 0;
     }
     
-    // حساب مقدار التمرير المطلوب للوصول للصورة التالية
     const step = (wrapper.children[0]?.offsetWidth || 300) + 16;
     const targetScrollLeft = nextIndex * step;
     
-    // التمرير للصورة التالية
     wrapper.scrollTo({ left: targetScrollLeft, behavior: 'smooth' });
     
-    // تحديث مؤشر الصورة الحالية
     currentSlideIndex = nextIndex;
     
-    // تغيير وقت الانتظار بناءً على الصورة الجديدة (التي وصلنا إليها للتو)
-    // هذا يضمن أن الصورة التالية ستأخذ وقتها الخاص من قاعدة البيانات
     const newSlide = promotionalSlides[currentSlideIndex];
     let newDelay = 5000;
     if (newSlide && typeof newSlide.interval === 'number') {
@@ -2998,7 +3172,6 @@ function startAutoPlay() {
         newDelay = 5000;
     }
     
-    // إعادة تعيين المؤقت بالوقت الجديد
     clearInterval(autoPlayTimer);
     autoPlayTimer = setInterval(timerCallback, newDelay);
     
@@ -3048,7 +3221,6 @@ function setupCarouselInteractions() {
   if (wrapper) {
     wrapper.addEventListener('scroll', () => {
       if (!isUserInteracting) {
-        // في حالة التمرير التلقائي، نقوم بتحديث المؤشر
         const step = (wrapper.children[0]?.offsetWidth || 300) + 16;
         let newIndex = Math.round(wrapper.scrollLeft / step);
         if (newIndex >= 0 && newIndex < promotionalSlides.length) {
@@ -3068,8 +3240,11 @@ function setupCarouselInteractions() {
 }
 
 function goToCategory(category) {
+  // هذه الدالة تبقى للاستخدام العام مع إشعار
   if (!category || category === 'all') {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    targetProductId = null;
+    isTargetingProduct = false;
     return;
   }
   const categoryChips = document.querySelectorAll('.category-chip');
@@ -3081,14 +3256,18 @@ function goToCategory(category) {
     categoryChips.forEach(c => c.classList.remove('active'));
     targetChip.classList.add('active');
     currentCategory = category;
+    targetProductId = null;
+    isTargetingProduct = false;
     const categoriesSection = document.querySelector('.categories-section');
     if (categoriesSection) {
       categoriesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
     renderHomeProducts();
-    NotificationSystem.success(`✅ تم التوجه إلى قسم ${category}`);
+    // لا نضيف إشعار هنا أيضاً
   } else {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    targetProductId = null;
+    isTargetingProduct = false;
   }
 }
 // ============================================================
@@ -3101,7 +3280,7 @@ function startPeriodicRefresh() {
 
 // ===== Init =====
 function init() {
-  console.log('🚀 بدء تشغيل المتجر مع شريط العروض (Carousel)...');
+  console.log('🚀 بدء تشغيل المتجر مع شريط العروض (Carousel) وربط المنتج...');
   loadProducts();
   loadLogo();
   loadWalletNumbers();
@@ -3145,7 +3324,7 @@ function init() {
   window.closeProductDetail = closeProductDetail;
   window.goToCategory = goToCategory;
   
-  console.log('✅ تم تشغيل المتجر بنجاح مع شريط العروض (Carousel)');
+  console.log('✅ تم تشغيل المتجر بنجاح مع شريط العروض (Carousel) وربط المنتج');
 }
 
 init();
