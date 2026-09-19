@@ -2050,7 +2050,10 @@ body.product-modal-open{
           <div class="total-summary-row grand-total"><span>💰 المبلغ الإجمالي:</span><span id="grandTotalAmount">0.00 ج</span></div>
         </div>
       </div>
-      <div id="checkoutFeedback" style="display:none;padding:12px;border-radius:var(--radius-md);margin-bottom:10px;font-weight:700;text-align:center;"></div>
+      <div id="firstOrderFreeBadge" style="display:none;align-items:center;gap:8px;margin:10px 0;padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,#ecfdf5,#f0fdf4);border:1px solid #a7f3d0;color:#047857;font-weight:800;font-size:13px;">
+  <i class="fa-solid fa-gift"></i><span>التوصيل مجاني للطلب الأول</span>
+</div>
+<div id="checkoutFeedback" style="display:none;padding:12px;border-radius:var(--radius-md);margin-bottom:10px;font-weight:700;text-align:center;"></div>
       <div class="action-buttons" style="margin-top:20px;">
         <button type="button" class="btn btn-outline" id="cancelCheckout">إلغاء</button>
         <button type="submit" class="btn btn-primary" id="confirmOrder">🚀 إرسال الطلب</button>
@@ -2115,7 +2118,7 @@ body.product-modal-open{
 // جافا سكريبت كامل مع شريط العروض (Carousel) وربط المنتج
 // ============================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, onValue, push, set, get, remove, update, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, onValue, push, set, get, remove, update, increment, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const firebaseConfig = { 
   apiKey: "AIzaSyARX12v1lvgKaFhIoYWRtv1Nqxpt8zz8HE", 
@@ -2233,7 +2236,7 @@ const OrderTimerManager = {
 // ===== State =====
 let allProducts = [], cartItems = [], myOrders = [], wishlist = [];
 let currentCategory = 'all', currentSort = 'newest', currentPriceMin = null, currentPriceMax = null, currentSearchQuery = '';
-let selectedPaymentMethod = 'cod', codFee = 0, deliveryFee = 5;
+let selectedPaymentMethod = 'cod', codFee = 0, deliveryFee = 5, firstOrderFreeDelivery = true, firstOrderEligible = false, firstOrderCheckInProgress = false;
 let appliedCoupon = null, couponDiscount = 0;
 let targetProductId = null; // متغير لتتبع المنتج المستهدف من العرض
 let isTargetingProduct = false; // متغير لمنع ظهور رسائل مكررة
@@ -2321,7 +2324,7 @@ function updateWishlistBadge() {
   if (mb) { mb.textContent = count; mb.classList.toggle('hidden', count === 0); }
 }
 
-function getDeliveryFee() { return deliveryFee; }
+function getDeliveryFee() { return isFirstOrderFreeShipping() ? 0 : deliveryFee; }
 
 // ===== Settings =====
 function loadCODFee() {
@@ -2338,9 +2341,85 @@ function loadDeliveryFee() {
   if (!database) return;
   try {
     onValue(ref(database, 'settings/deliveryFee'), s => {
-      if (s.exists()) { deliveryFee = parseFloat(s.val().fee) || 5; } else { deliveryFee = 5; }
+      if (s.exists()) {
+        const d = s.val() || {};
+        deliveryFee = Number.isFinite(parseFloat(d.fee)) ? parseFloat(d.fee) : 5;
+        firstOrderFreeDelivery = d.firstOrderFree !== false;
+      } else {
+        deliveryFee = 5;
+        firstOrderFreeDelivery = true;
+      }
+      updateFirstOrderDeliveryUI();
+      updateTotalSummary();
     });
-  } catch (e) { deliveryFee = 5; }
+  } catch (e) {
+    deliveryFee = 5;
+    firstOrderFreeDelivery = true;
+  }
+}
+
+function hasLocalOrderForPhone(phone) {
+  const normalized = String(phone || '').trim();
+  if (!normalized) return false;
+  return Array.isArray(myOrders) && myOrders.some(o => String(o.phone || '').trim() === normalized);
+}
+
+async function checkFirstOrderEligibility(phone, silent = true) {
+  const normalized = String(phone || '').trim();
+  firstOrderEligible = false;
+  if (!firstOrderFreeDelivery || !normalized) {
+    updateFirstOrderDeliveryUI();
+    updateTotalSummary();
+    return false;
+  }
+
+  if (hasLocalOrderForPhone(normalized)) {
+    updateFirstOrderDeliveryUI();
+    updateTotalSummary();
+    return false;
+  }
+
+  if (!database) {
+    firstOrderEligible = true;
+    updateFirstOrderDeliveryUI();
+    updateTotalSummary();
+    return true;
+  }
+
+  firstOrderCheckInProgress = true;
+  updateFirstOrderDeliveryUI();
+
+  try {
+    const q = query(ref(database, 'orders'), orderByChild('phone'), equalTo(normalized));
+    const snap = await get(q);
+    firstOrderEligible = !snap.exists();
+  } catch (e) {
+    // لا نعتبر العميل جديداً عند فشل التحقق من السيرفر، حتى لا نعطي شحناً مجانياً بالخطأ.
+    firstOrderEligible = false;
+    if (!silent) NotificationSystem.warning('تعذر التحقق من حالة أول طلب، حاول مرة أخرى.');
+  } finally {
+    firstOrderCheckInProgress = false;
+    updateFirstOrderDeliveryUI();
+    updateTotalSummary();
+  }
+  return firstOrderEligible;
+}
+
+function isFirstOrderFreeShipping() {
+  return firstOrderFreeDelivery && firstOrderEligible;
+}
+
+function updateFirstOrderDeliveryUI() {
+  const badge = document.getElementById('firstOrderFreeBadge');
+  if (!badge) return;
+  if (!firstOrderFreeDelivery) {
+    badge.style.display = 'none';
+    return;
+  }
+  badge.style.display = 'flex';
+  badge.innerHTML = isFirstOrderFreeShipping()
+    ? '<i class="fa-solid fa-gift"></i><span>🎁 أول طلب لك — التوصيل مجانًا</span>'
+    : '<i class="fa-solid fa-truck-fast"></i><span>التوصيل مجاني للطلب الأول</span>';
 }
 function updateCODFeeDisplay() {
   const b = document.getElementById('codFeeBadge');
@@ -2906,6 +2985,8 @@ function openCheckoutModal() {
   $('#checkoutModalOverlay')?.classList.add('show');
   $('#checkoutForm')?.reset();
   fillCheckoutProfile();
+  const existingPhone = $('#custPhone')?.value.trim();
+  if (existingPhone) checkFirstOrderEligibility(existingPhone, true);
   const fb = $('#checkoutFeedback');
   if (fb) { fb.style.display = 'none'; fb.textContent = ''; }
   updateTotalSummary();
@@ -2924,6 +3005,11 @@ $('#applyCouponBtn')?.addEventListener('click', function() {
   if (result.success) { NotificationSystem.success(result.message); updateTotalSummary(); } else { NotificationSystem.error(result.message); const statusEl = document.getElementById('couponStatus'); if (statusEl) { statusEl.innerHTML = `<span style="color:var(--danger);font-weight:700;">${result.message}</span>`; setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 4000); } }
 });
 
+
+document.getElementById('custPhone')?.addEventListener('blur', function() {
+  checkFirstOrderEligibility(this.value.trim(), false);
+});
+
 $('#confirmOrder')?.addEventListener('click', async function(e) {
   e.preventDefault();
   const name = $('#custName')?.value.trim(), address = $('#custAddress')?.value.trim(), phone = $('#custPhone')?.value.trim(), fb = $('#checkoutFeedback');
@@ -2935,9 +3021,11 @@ $('#confirmOrder')?.addEventListener('click', async function(e) {
     const validation = validateCoupon(appliedCoupon.code);
     if (!validation.valid) { NotificationSystem.error(`⚠️ ${validation.message}`); removeCoupon(); return; }
   }
+  // إعادة التحقق لحظة إرسال الطلب لمنع منح الشحن المجاني لعميل لديه طلب سابق.
+  await checkFirstOrderEligibility(phone, false);
   const subtotal = cartItems.reduce((s, i) => s + ((i.finalPrice || i.price || 0)) * (i.quantity || 0), 0);
   const fs = isFreeShipping();
-  let df = fs ? 0 : getDeliveryFee();
+  let df = (fs || isFirstOrderFreeShipping()) ? 0 : getDeliveryFee();
   const cf = (selectedPaymentMethod === 'cod' ? codFee : 0);
   const disc = calculateCouponDiscount(subtotal);
   const gt = subtotal + df + cf - disc;
