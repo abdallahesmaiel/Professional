@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+<!-- First-order delivery: phone is checked through a SHA-256 phone index; customer order data is never queried by the storefront. -->
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4449572474961813" crossorigin="anonymous"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
@@ -2118,7 +2119,7 @@ body.product-modal-open{
 // جافا سكريبت كامل مع شريط العروض (Carousel) وربط المنتج
 // ============================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, onValue, push, set, get, remove, update, increment, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, onValue, push, set, get, remove, update, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const firebaseConfig = { 
   apiKey: "AIzaSyARX12v1lvgKaFhIoYWRtv1Nqxpt8zz8HE", 
@@ -2364,6 +2365,21 @@ function hasLocalOrderForPhone(phone) {
   return Array.isArray(myOrders) && myOrders.some(o => String(o.phone || '').trim() === normalized);
 }
 
+async function hashFirstOrderPhone(phone) {
+  const normalized = String(phone || '').trim();
+  if (!normalized) return '';
+  try {
+    const data = new TextEncoder().encode(normalized);
+    const digest = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(digest))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+  } catch (e) {
+    console.error('❌ تعذر إنشاء بصمة رقم الهاتف:', e);
+    return '';
+  }
+}
+
 async function checkFirstOrderEligibility(phone, silent = true) {
   const normalized = String(phone || '').trim();
   firstOrderEligible = false;
@@ -2390,8 +2406,10 @@ async function checkFirstOrderEligibility(phone, silent = true) {
   updateFirstOrderDeliveryUI();
 
   try {
-    const q = query(ref(database, 'orders'), orderByChild('phone'), equalTo(normalized));
-    const snap = await get(q);
+    const phoneHash = await hashFirstOrderPhone(normalized);
+    if (!phoneHash) throw new Error('PHONE_HASH_FAILED');
+
+    const snap = await get(ref(database, 'orderPhoneIndex/' + phoneHash));
     firstOrderEligible = !snap.exists();
   } catch (e) {
     // لا نعتبر العميل جديداً عند فشل التحقق من السيرفر، حتى لا نعطي شحناً مجانياً بالخطأ.
@@ -3043,7 +3061,17 @@ $('#confirmOrder')?.addEventListener('click', async function(e) {
   if (database) {
     try {
       const nr = push(ref(database, 'orders'));
-      await set(nr, orderData);
+      const phoneHash = await hashFirstOrderPhone(phone);
+      if (!phoneHash) throw new Error('PHONE_HASH_FAILED');
+
+      const updates = {};
+      updates['orders/' + nr.key] = orderData;
+      updates['orderPhoneIndex/' + phoneHash] = {
+        hasOrder: true,
+        createdAt: Date.now()
+      };
+      await update(ref(database), updates);
+
       if (appliedCoupon) {
         const result = await incrementCouponUsage(appliedCoupon.code);
         if (result.success) orderData.coupon.usedCount = result.usedCount;
