@@ -917,6 +917,12 @@ body::before {
   position: relative;
 }
 .product-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); border-color: rgba(201,169,110,0.4); }
+.product-card.highlighted-product {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 4px rgba(201,169,110,0.45), 0 8px 28px rgba(201,169,110,0.22) !important;
+  transition: border-color .35s ease, box-shadow .35s ease;
+}
+
 .product-card .wishlist-btn {
   position: absolute;
   top: 12px;
@@ -6104,7 +6110,8 @@ function renderHomeProducts() {
         </div>` 
       : `<span class="price">${pi.basePrice.toFixed(2)} <small>ج</small></span>`;
     
-    const isHighlighted = (targetProductId && p.id === targetProductId);
+    const isHighlighted = (targetProductId && String(p.id) === String(targetProductId))
+      || (Array.isArray(targetProductIds) && targetProductIds.some(id => String(id) === String(p.id)));
     const highlightClass = isHighlighted ? 'highlighted-product' : '';
     
     return `
@@ -6162,24 +6169,31 @@ function renderHomeProducts() {
     })
   );
   
-  if (targetProductId && !isTargetingProduct) {
+  const activeTargetIds = Array.isArray(targetProductIds) && targetProductIds.length
+    ? targetProductIds.map(String)
+    : (targetProductId ? [String(targetProductId)] : []);
+
+  if (activeTargetIds.length > 0 && !isTargetingProduct) {
     isTargetingProduct = true;
     setTimeout(() => {
-      const targetElement = document.getElementById(`product-${targetProductId}`);
+      const targetElement = activeTargetIds
+        .map(id => document.getElementById(`product-${id}`))
+        .find(Boolean);
+
       if (targetElement) {
-        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        setTimeout(() => {
-          targetElement.style.borderColor = 'rgba(74,44,23,0.08)';
-          targetElement.style.boxShadow = 'var(--shadow-sm)';
-          targetElement.style.transition = 'all 0.5s ease';
-        }, 4000);
+        // Keep the selected product fully visible below the fixed header,
+        // without the extra downward displacement caused by scrollIntoView().
+        const headerOffset = Math.max(72, document.querySelector('header')?.getBoundingClientRect().height || 0) + 12;
+        const targetTop = window.scrollY + targetElement.getBoundingClientRect().top - headerOffset;
+        window.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
       }
+
       setTimeout(() => {
-        targetProductId = null;
+        if (targetProductId) targetProductId = null;
         isTargetingProduct = false;
       }, 500);
-    }, 400);
-  } else if (!targetProductId) {
+    }, 250);
+  } else if (activeTargetIds.length === 0) {
     isTargetingProduct = false;
   }
 }
@@ -7224,11 +7238,9 @@ function renderPromotionalCarousel() {
         isTargetingProduct = false;
         renderHomeProducts();
 
-        const productsSection = document.getElementById('productsContainer');
-        if (productsSection) {
-          productsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-        setTimeout(() => { targetProductIds = []; }, 50);
+        // renderHomeProducts() handles the single exact scroll position and
+        // keeps every linked product highlighted with the gold frame.
+        setTimeout(() => { targetProductIds = []; }, 1200);
       } else {
         goToCategory(slide.category);
       }
@@ -7538,4 +7550,4 @@ if ('serviceWorker' in navigator) {
 
 
 </body>
-</html>
+  </html>
