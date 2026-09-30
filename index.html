@@ -2922,6 +2922,7 @@ let firstOrderCheckInProgress = false;
 let appliedCoupon = null;
 let couponDiscount = 0;
 let targetProductId = null;
+let targetProductIds = [];
 let isTargetingProduct = false;
 let currentDetailProduct = null;
 let returnsActiveTab = 'eligible';
@@ -6050,7 +6051,15 @@ function renderHomeProducts() {
   
   let f = getFilteredAndSortedProducts();
   
-  if (targetProductId) {
+  if (Array.isArray(targetProductIds) && targetProductIds.length > 0) {
+    const linked = targetProductIds
+      .map(id => allProducts.find(p => String(p.id) === String(id)))
+      .filter(Boolean);
+    if (linked.length > 0) {
+      const linkedIds = new Set(linked.map(p => String(p.id)));
+      f = [...linked, ...f.filter(p => !linkedIds.has(String(p.id)))];
+    }
+  } else if (targetProductId) {
     const targetProduct = allProducts.find(p => p.id === targetProductId);
     if (targetProduct && (targetProduct.category === currentCategory || currentCategory === 'all')) {
       f = f.filter(p => p.id !== targetProductId);
@@ -6111,14 +6120,22 @@ function renderHomeProducts() {
           ${hi ? `<img src="${img}" alt="${p.name || ''}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">` : ''}
           <i class="fas ${p.icon || 'fa-box'} product-img-placeholder" style="${hi ? 'display:none;' : ''}"></i>
           ${pi.hasDiscount ? `<span class="discount-badge"><i class="fa-solid fa-tag"></i> ${pi.discountLabel}</span>` : ''}
-          ${isHighlighted ? `<span style="position:absolute;top:12px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--primary-dark);padding:4px 16px;border-radius:var(--radius-full);font-weight:800;font-size:12px;z-index:5;box-shadow:0 2px 12px rgba(201,169,110,0.5);">🎯 مميز</span>` : ''}
+
           <span class="category-badge"><i class="fa-solid ${ci}"></i> ${cn}</span>
-          <span class="stock-badge ${av ? 'stock-available' : 'stock-out'}">${av ? '✓ متوفر' : '✗ نفذ'}</span>
         </div>
         <div class="product-info">
           <div class="product-name">${p.name || ''}</div>
           <div class="product-rating"><span class="stars">${stars}</span> (${rating.count})</div>
           <div class="product-desc">${p.description || ''}</div>
+          ${(() => {
+            const qty = Number(p.quantity ?? 0);
+            const status = qty <= 0
+              ? { cls: 'stock-out', text: '✗ نفذ' }
+              : qty <= 5
+                ? { cls: 'stock-low', text: '⚠ منخفض' }
+                : { cls: 'stock-available', text: '✓ متوفر' };
+            return `<div class="stock-badge ${status.cls}">${status.text}</div>`;
+          })()}
           <div class="price-row">
             ${ph}
             <button class="add-btn" ${!av ? 'disabled' : ''} data-add-id="${p.id}">
@@ -7110,6 +7127,11 @@ function loadPromotionalSlides() {
               category: slide.category || 'all',
               linkedProductId: slide.linkedProductId || null,
               linkedProductName: slide.linkedProductName || null,
+              linkedProductIds: Array.isArray(slide.linkedProductIds)
+                ? slide.linkedProductIds.filter(Boolean).map(String)
+                : (slide.linkedProductIds && typeof slide.linkedProductIds === 'object'
+                    ? Object.values(slide.linkedProductIds).filter(Boolean).map(String)
+                    : (slide.linkedProductId ? [String(slide.linkedProductId)] : [])),
               // Firebase value from the control panel is authoritative.
               // Only missing/invalid values use the same 5-second default as the panel.
               interval: Number.isFinite(parsedInterval) && parsedInterval > 0 ? parsedInterval : PROMO_DEFAULT_INTERVAL_SECONDS,
@@ -7184,32 +7206,34 @@ function renderPromotionalCarousel() {
     item.innerHTML = `<img src="${imageUrl}" alt="${slide.title || 'عرض مميز'}" loading="lazy" onerror="this.src='https://via.placeholder.com/800x400/4A2C17/C9A96E?text=🏪+عرض+مميز';">`;
     
     item.addEventListener('click', () => {
-      if (slide.linkedProductId && slide.linkedProductName) {
+      const linkedIds = Array.isArray(slide.linkedProductIds)
+        ? slide.linkedProductIds.filter(Boolean).map(String)
+        : (slide.linkedProductId ? [String(slide.linkedProductId)] : []);
+      const linkedProducts = linkedIds
+        .map(id => allProducts.find(p => String(p.id) === id))
+        .filter(Boolean);
+
+      if (linkedProducts.length > 0) {
         const targetCategory = slide.category || 'all';
-        const productId = slide.linkedProductId;
-        const product = allProducts.find(p => p.id === productId);
-        
-        if (product) {
-          document.querySelectorAll('.category-chip').forEach(chip => {
-            chip.classList.toggle('active', chip.dataset.category === targetCategory);
-          });
-          currentCategory = targetCategory;
-          targetProductId = productId;
-          isTargetingProduct = false;
-          renderHomeProducts();
-          
-          const productsSection = document.getElementById('productsContainer');
-          if (productsSection) {
-            productsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        } else {
-          goToCategory(slide.category);
+        document.querySelectorAll('.category-chip').forEach(chip => {
+          chip.classList.toggle('active', chip.dataset.category === targetCategory);
+        });
+        currentCategory = targetCategory;
+        targetProductId = null;
+        targetProductIds = linkedProducts.map(p => String(p.id));
+        isTargetingProduct = false;
+        renderHomeProducts();
+
+        const productsSection = document.getElementById('productsContainer');
+        if (productsSection) {
+          productsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
+        setTimeout(() => { targetProductIds = []; }, 50);
       } else {
         goToCategory(slide.category);
       }
     });
-    
+
     wrapper.appendChild(item);
   });
   
@@ -7499,6 +7523,19 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+<style id="exclusive-offer-stock-adjustment">
+.product-info > .stock-badge {
+  position: static !important;
+  display: inline-flex !important;
+  align-items: center;
+  width: fit-content;
+  margin: 8px 0 6px;
+}
+.product-info > .stock-badge.stock-low {
+  color: #b7791f;
+}
+</style>
+
 
 </body>
 </html>
