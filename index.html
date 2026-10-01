@@ -2660,7 +2660,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getDatabase, ref, onValue, push, set, get, remove, update, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 import {
   getAuth, onAuthStateChanged, setPersistence, browserSessionPersistence,
-  getRedirectResult, GoogleAuthProvider, signInWithRedirect, signOut
+  GoogleAuthProvider, signInWithPopup, signOut
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = { 
@@ -2708,13 +2708,7 @@ function clearAuthResume() {
 try {
   if (app) {
     auth = getAuth(app);
-    // مسح جلسة قديمة مرة واحدة فقط، حتى لا تظهر جلسة أنشأتها نسخة سابقة.
-    const AUTH_SESSION_MIGRATION_KEY = 'rashfa_auth_session_migrated_google_v3';
-    if (localStorage.getItem(AUTH_SESSION_MIGRATION_KEY) !== '1') {
-      localStorage.setItem(AUTH_SESSION_MIGRATION_KEY, '1');
-      signOut(auth).catch(() => {});
-    }
-
+    // لا يتم تسجيل الخروج تلقائياً عند تحميل الموقع؛ هذا كان يتعارض مع جلسة Google بعد العودة.
     setPersistence(auth, browserSessionPersistence).catch(e => console.warn('Auth persistence:', e));
 
     onAuthStateChanged(auth, (user) => {
@@ -2735,19 +2729,6 @@ try {
       }
     });
 
-    // مهم مع signInWithRedirect: بعد العودة من Google يتم استلام النتيجة هنا.
-    getRedirectResult(auth).then((result) => {
-      if (result?.user) {
-        console.log('✅ تم تسجيل الدخول بحساب Google والعودة إلى المتجر:', result.user.email || '');
-      }
-    }).catch((e) => {
-      console.error('Google redirect result:', e);
-      if (e?.code === 'auth/unauthorized-domain') {
-        setAuthFeedback('نطاق المتجر غير مصرح به في Firebase. أضف professional-rose.vercel.app إلى Authorized domains.');
-      } else if (e?.code && e.code !== 'auth/popup-closed-by-user') {
-        setAuthFeedback('تعذر إكمال تسجيل الدخول بحساب Google. حاول مرة أخرى.');
-      }
-    });
   }
 } catch (e) {
   console.warn('⚠️ تعذر تهيئة Firebase Authentication:', e);
@@ -2802,19 +2783,51 @@ function closeAuthModal() {
 async function signInWithGoogle() {
   if (!auth) return setAuthFeedback('خدمة تسجيل الدخول غير جاهزة.');
   const b = document.getElementById('authGoogleLoginBtn');
-  if (b) { b.disabled = true; b.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري فتح Google...'; }
+  if (b) { b.disabled = true; b.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري تسجيل الدخول...'; }
   try {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({prompt:'select_account'});
-    // Redirect مناسب للموبايل ويضمن أن العودة تتم إلى نفس صفحة المتجر.
     await setPersistence(auth, browserSessionPersistence);
-    await signInWithRedirect(auth, provider);
+
+    // نستخدم Popup هنا لأن المتجر مستضاف على Vercel وليس Firebase Hosting.
+    // هذا يتجنب مشكلة third-party storage التي قد تمنع redirect من تثبيت جلسة Firebase.
+    const result = await signInWithPopup(auth, provider);
+    const user = result?.user || auth.currentUser;
+
+    if (!user) throw new Error('لم يتم إنشاء جلسة Firebase بعد تسجيل الدخول.');
+
+    authUser = user;
+    updateAuthMenu();
+    closeAuthModal();
+
+    const resume = getAuthResume();
+    if (resume) {
+      clearAuthResume();
+      setTimeout(() => resumeAfterGoogleLogin(resume), 100);
+    } else if (pendingAuthAction) {
+      const action = pendingAuthAction;
+      pendingAuthAction = null;
+      setTimeout(() => { try { action(); } catch(e) { console.error(e); } }, 100);
+    }
+
+    console.log('✅ تم تسجيل الدخول بنجاح:', user.email || '');
   } catch(e) {
-    console.error(e);
-    setAuthFeedback(e?.code === 'auth/unauthorized-domain'
-      ? 'الدومين غير مصرح به في Firebase. أضف professional-rose.vercel.app إلى Authorized domains.'
-      : 'تعذر فتح تسجيل الدخول بحساب Google. حاول مرة أخرى.');
-    if (b) { b.disabled=false; b.innerHTML='<span class="auth-method-icon google"><i class="fa-brands fa-google"></i></span><span><strong>الدخول / إنشاء حساب باستخدام Google</strong><small>اختر حساب Gmail وسيتم تسجيل الدخول مباشرة</small></span>'; }
+    console.error('Google sign-in error:', e);
+    const code = e?.code || '';
+    setAuthFeedback(
+      code === 'auth/popup-closed-by-user'
+        ? 'تم إغلاق نافذة Google قبل إكمال تسجيل الدخول.'
+        : code === 'auth/unauthorized-domain'
+          ? 'الدومين غير مصرح به في Firebase. أضف professional-rose.vercel.app إلى Authorized domains.'
+          : code === 'auth/popup-blocked'
+            ? 'المتصفح منع نافذة Google. اسمح بالنوافذ المنبثقة للموقع ثم حاول مرة أخرى.'
+            : 'تعذر إكمال تسجيل الدخول بحساب Google. حاول مرة أخرى.'
+    );
+  } finally {
+    if (b) {
+      b.disabled = false;
+      b.innerHTML = '<span class="auth-method-icon google"><i class="fa-brands fa-google"></i></span><span><strong>الدخول / إنشاء حساب باستخدام Google</strong><small>اختر حساب Gmail وسيتم تسجيل الدخول مباشرة</small></span>';
+    }
   }
 }
 
@@ -2829,10 +2842,21 @@ function resumeAfterGoogleLogin(resume) {
       const orderId = String(resume.orderId || '');
       if (orderId) {
         switchPage('returns');
-        setTimeout(() => {
+        let tries = 0;
+        const retryReturn = async () => {
+          tries++;
           const retry = document.querySelector('.customer-return-submit[data-order-id="' + CSS.escape(orderId) + '"]');
-          if (retry) retry.click();
-        }, 500);
+          if (retry) {
+            // نعود لنفس خطوة المرتجع بعد تسجيل الدخول.
+            retry.click();
+            return;
+          }
+          if (tries < 12) {
+            try { await renderReturnsPage(); } catch(e) {}
+            setTimeout(retryReturn, 300);
+          }
+        };
+        setTimeout(retryReturn, 200);
       }
     }
   } catch(e) { console.error('resumeAfterGoogleLogin:', e); }
