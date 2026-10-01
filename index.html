@@ -2185,6 +2185,22 @@ body.product-modal-open{
   }
 }
 </style>
+
+<style id="firebase-auth-ui">
+.auth-modal-card{position:relative;max-width:460px!important;width:calc(100% - 28px);padding:28px 22px 24px!important}
+.auth-close-btn{position:absolute;top:12px;left:12px;width:36px;height:36px;border:0;border-radius:50%;background:rgba(201,169,110,.1);color:var(--primary-dark);font-size:18px;cursor:pointer}
+.auth-header{text-align:center;padding:6px 22px 14px}.auth-icon{width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:#fff;font-size:25px}
+.auth-header h3{font-size:23px;font-weight:900;color:var(--primary-dark);margin-bottom:5px}.auth-header p{font-size:13px;color:var(--gray-500);line-height:1.7}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--gray-100);padding:5px;border-radius:14px;margin:4px 0 18px}.auth-tab{border:0;background:transparent;border-radius:10px;padding:10px 8px;font-family:Cairo,sans-serif;font-weight:800;color:var(--gray-500);cursor:pointer}.auth-tab.active{background:#fff;color:var(--primary-dark);box-shadow:var(--shadow-sm)}.auth-security-note{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--gray-100);color:var(--gray-600);font-size:12px;line-height:1.7;font-weight:700}.auth-security-note i{margin-left:5px;color:var(--primary)}
+.auth-method-btn{width:100%;display:flex;align-items:center;gap:12px;text-align:right;padding:13px 14px;border:1.5px solid rgba(74,44,23,.1);background:#fff;border-radius:14px;font-family:Cairo,sans-serif;cursor:pointer;color:var(--primary-dark)}.auth-method-btn small{display:block;color:var(--gray-500);font-size:11px;font-weight:500;margin-top:2px}
+.auth-method-icon{width:42px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:#f5f5f5;font-size:20px;flex:0 0 42px}.auth-method-icon.google{color:#4285f4}
+.auth-or{display:flex;align-items:center;gap:10px;margin:15px 0;color:var(--gray-400);font-size:12px;font-weight:800}.auth-or:before,.auth-or:after{content:"";height:1px;background:var(--gray-200);flex:1}
+.auth-label{display:block;font-size:12px;font-weight:800;color:var(--primary-dark);margin:0 0 7px}.auth-input{width:100%;padding:13px 14px;border:2px solid rgba(74,44,23,.1);border-radius:13px;background:#fff;color:var(--primary-dark);font-family:Cairo,sans-serif;font-size:15px;outline:none}.auth-input:focus{border-color:var(--accent)}
+.auth-otp-input{text-align:center;letter-spacing:8px;font-size:22px;font-weight:900}.auth-primary-btn,.auth-secondary-btn{width:100%;border-radius:13px;padding:12px 14px;margin-top:10px;font-family:Cairo,sans-serif;font-weight:800;cursor:pointer}.auth-primary-btn{border:0;background:linear-gradient(135deg,var(--primary),var(--primary-medium));color:#fff}.auth-secondary-btn{border:1px solid rgba(74,44,23,.12);background:#fff;color:var(--primary-dark)}.auth-primary-btn:disabled{opacity:.6;cursor:wait}
+.auth-recaptcha{margin-top:10px;display:flex;justify-content:center}.auth-otp-note{display:flex;align-items:center;gap:8px;background:var(--success-light);color:var(--success);border-radius:12px;padding:10px 12px;font-size:12px;font-weight:700;margin-bottom:14px}
+.auth-feedback{margin-top:12px;padding:10px 12px;border-radius:12px;font-size:12px;font-weight:700;line-height:1.7}.auth-feedback.error{background:var(--danger-light);color:var(--danger)}.auth-feedback.success{background:var(--success-light);color:var(--success)}
+</style>
+
 </head>
 <body>
 <!-- Notification Center -->
@@ -2201,6 +2217,7 @@ body.product-modal-open{
   <button class="menu-item" data-page="wishlist"><i class="fa-solid fa-heart"></i> المفضلة <span class="badge-menu hidden" id="menuWishlistBadge">0</span></button>
   <button class="menu-item" data-page="cart"><i class="fa-solid fa-cart-shopping"></i> السلة <span class="badge-menu hidden" id="menuCartBadge">0</span></button>
   <button class="menu-item" data-page="returns"><i class="fa-solid fa-rotate-left"></i> طلبات الاسترجاع</button>
+  <button class="menu-item" id="authMenuBtn" type="button"><i class="fa-solid fa-right-to-bracket"></i><span>تسجيل الدخول</span></button>
   <div class="menu-divider"></div>
   <button class="menu-item" data-page="about"><i class="fa-solid fa-info-circle"></i> من نحن</button>
   <button class="menu-item" data-page="contact"><i class="fa-solid fa-envelope"></i> تواصل معنا</button>
@@ -2433,6 +2450,29 @@ body.product-modal-open{
   <button class="nav-item" data-page="returns"><i class="fa-solid fa-rotate-left"></i><span>المرتجعات</span></button>
 </nav>
 
+
+<!-- ===== Firebase Authentication: Google only ===== -->
+<div class="modal-overlay" id="authModalOverlay" aria-hidden="true">
+  <div class="modal-card auth-modal-card" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <button type="button" class="auth-close-btn" id="authCloseBtn" aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button>
+    <div class="auth-header">
+      <div class="auth-icon"><i class="fa-solid fa-user-shield"></i></div>
+      <h3 id="authTitle">تسجيل الدخول</h3>
+      <p id="authSubtitle">سجّل الدخول أو أنشئ حسابك باستخدام حساب Google فقط.</p>
+    </div>
+
+    <div id="authLoginStep" class="auth-step">
+      <button type="button" class="auth-method-btn" id="authGoogleLoginBtn">
+        <span class="auth-method-icon google"><i class="fa-brands fa-google"></i></span>
+        <span><strong>الدخول / إنشاء حساب باستخدام Google</strong><small>اختر حساب Gmail وسيتم تسجيل الدخول مباشرة</small></span>
+      </button>
+      <div class="auth-security-note"><i class="fa-solid fa-shield-halved"></i> لا نستخدم رقم الهاتف أو رسائل OTP حالياً.</div>
+    </div>
+
+    <div id="authFeedback" class="auth-feedback" style="display:none;"></div>
+  </div>
+</div>
+
 <!-- Compare Floating Bar -->
 <div class="compare-floating" id="compareFloating">
   <span class="count" id="compareCount">0</span>
@@ -2618,6 +2658,10 @@ body.product-modal-open{
 // ============================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, onValue, push, set, get, remove, update, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import {
+  getAuth, onAuthStateChanged, setPersistence, browserSessionPersistence,
+  getRedirectResult, GoogleAuthProvider, signInWithRedirect, signOut
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = { 
   apiKey: "AIzaSyARX12v1lvgKaFhIoYWRtv1Nqxpt8zz8HE", 
@@ -2637,6 +2681,174 @@ try {
 } catch (e) { 
   console.warn('⚠️ فشل اتصال Firebase، سيتم استخدام البيانات المحلية:', e); 
 }
+
+
+// ============================================================
+// ===== Firebase Authentication — Google only =====
+// ============================================================
+let auth = null;
+let pendingAuthAction = null;
+let authUser = null;
+const AUTH_RESUME_KEY = 'professional_auth_resume_v3';
+const STORE_ORIGIN = 'https://professional-rose.vercel.app';
+
+function setAuthResume(payload) {
+  try { sessionStorage.setItem(AUTH_RESUME_KEY, JSON.stringify(payload || {})); } catch(e) {}
+}
+function getAuthResume() {
+  try {
+    const raw = sessionStorage.getItem(AUTH_RESUME_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+function clearAuthResume() {
+  try { sessionStorage.removeItem(AUTH_RESUME_KEY); } catch(e) {}
+}
+
+try {
+  if (app) {
+    auth = getAuth(app);
+    // مسح جلسة قديمة مرة واحدة فقط، حتى لا تظهر جلسة أنشأتها نسخة سابقة.
+    const AUTH_SESSION_MIGRATION_KEY = 'rashfa_auth_session_migrated_google_v3';
+    if (localStorage.getItem(AUTH_SESSION_MIGRATION_KEY) !== '1') {
+      localStorage.setItem(AUTH_SESSION_MIGRATION_KEY, '1');
+      signOut(auth).catch(() => {});
+    }
+
+    setPersistence(auth, browserSessionPersistence).catch(e => console.warn('Auth persistence:', e));
+
+    onAuthStateChanged(auth, (user) => {
+      authUser = user || null;
+      updateAuthMenu();
+      if (user) {
+        const resume = getAuthResume();
+        if (resume) {
+          clearAuthResume();
+          closeAuthModal();
+          setTimeout(() => resumeAfterGoogleLogin(resume), 150);
+        } else if (pendingAuthAction) {
+          const action = pendingAuthAction;
+          pendingAuthAction = null;
+          closeAuthModal();
+          setTimeout(() => { try { action(); } catch(e) { console.error(e); } }, 150);
+        }
+      }
+    });
+
+    // مهم مع signInWithRedirect: بعد العودة من Google يتم استلام النتيجة هنا.
+    getRedirectResult(auth).then((result) => {
+      if (result?.user) {
+        console.log('✅ تم تسجيل الدخول بحساب Google والعودة إلى المتجر:', result.user.email || '');
+      }
+    }).catch((e) => {
+      console.error('Google redirect result:', e);
+      if (e?.code === 'auth/unauthorized-domain') {
+        setAuthFeedback('نطاق المتجر غير مصرح به في Firebase. أضف professional-rose.vercel.app إلى Authorized domains.');
+      } else if (e?.code && e.code !== 'auth/popup-closed-by-user') {
+        setAuthFeedback('تعذر إكمال تسجيل الدخول بحساب Google. حاول مرة أخرى.');
+      }
+    });
+  }
+} catch (e) {
+  console.warn('⚠️ تعذر تهيئة Firebase Authentication:', e);
+}
+
+function isUserLoggedIn() { return !!auth?.currentUser; }
+
+function updateAuthMenu() {
+  const b = document.getElementById('authMenuBtn');
+  if (!b) return;
+  b.innerHTML = auth?.currentUser
+    ? '<i class="fa-solid fa-right-from-bracket"></i><span>تسجيل الخروج</span>'
+    : '<i class="fa-solid fa-right-to-bracket"></i><span>تسجيل الدخول</span>';
+}
+
+function setAuthFeedback(msg, type='error') {
+  const el = document.getElementById('authFeedback');
+  if (!el) return;
+  el.textContent = msg || '';
+  el.className = 'auth-feedback ' + type;
+  el.style.display = msg ? 'block' : 'none';
+}
+
+function showAuthChoice() {
+  const title = document.getElementById('authTitle');
+  const subtitle = document.getElementById('authSubtitle');
+  if (title) title.textContent = 'تسجيل الدخول';
+  if (subtitle) subtitle.textContent = 'سجّل الدخول أو أنشئ حسابك باستخدام حساب Google فقط.';
+  document.getElementById('authLoginStep')?.style && (document.getElementById('authLoginStep').style.display = '');
+  setAuthFeedback('');
+}
+
+function openAuthModal({mode='login', onSuccess=null, resume=null}={}) {
+  if (auth?.currentUser) { onSuccess?.(); return; }
+  if (!auth) { NotificationSystem.error('خدمة تسجيل الدخول غير جاهزة حالياً'); return; }
+  pendingAuthAction = onSuccess || null;
+  if (resume) setAuthResume(resume);
+  const modal = document.getElementById('authModalOverlay');
+  modal?.classList.add('show');
+  modal?.setAttribute('aria-hidden','false');
+  showAuthChoice();
+}
+
+function closeAuthModal() {
+  const m = document.getElementById('authModalOverlay');
+  if (!m) return;
+  m.classList.remove('show');
+  m.setAttribute('aria-hidden','true');
+  setAuthFeedback('');
+}
+
+async function signInWithGoogle() {
+  if (!auth) return setAuthFeedback('خدمة تسجيل الدخول غير جاهزة.');
+  const b = document.getElementById('authGoogleLoginBtn');
+  if (b) { b.disabled = true; b.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري فتح Google...'; }
+  try {
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({prompt:'select_account'});
+    // Redirect مناسب للموبايل ويضمن أن العودة تتم إلى نفس صفحة المتجر.
+    await setPersistence(auth, browserSessionPersistence);
+    await signInWithRedirect(auth, provider);
+  } catch(e) {
+    console.error(e);
+    setAuthFeedback(e?.code === 'auth/unauthorized-domain'
+      ? 'الدومين غير مصرح به في Firebase. أضف professional-rose.vercel.app إلى Authorized domains.'
+      : 'تعذر فتح تسجيل الدخول بحساب Google. حاول مرة أخرى.');
+    if (b) { b.disabled=false; b.innerHTML='<span class="auth-method-icon google"><i class="fa-brands fa-google"></i></span><span><strong>الدخول / إنشاء حساب باستخدام Google</strong><small>اختر حساب Gmail وسيتم تسجيل الدخول مباشرة</small></span>'; }
+  }
+}
+
+function resumeAfterGoogleLogin(resume) {
+  try {
+    if (!resume || !isUserLoggedIn()) return;
+    if (resume.type === 'checkout') {
+      openCheckoutModal({skipAuth:true});
+      return;
+    }
+    if (resume.type === 'return') {
+      const orderId = String(resume.orderId || '');
+      if (orderId) {
+        switchPage('returns');
+        setTimeout(() => {
+          const retry = document.querySelector('.customer-return-submit[data-order-id="' + CSS.escape(orderId) + '"]');
+          if (retry) retry.click();
+        }, 500);
+      }
+    }
+  } catch(e) { console.error('resumeAfterGoogleLogin:', e); }
+}
+
+async function handleAuthMenuClick() {
+  if (!auth) return;
+  if (auth.currentUser) {
+    try { await signOut(auth); NotificationSystem.success('تم تسجيل الخروج'); }
+    catch(e) { NotificationSystem.error('تعذر تسجيل الخروج'); }
+  } else openAuthModal({mode:'login'});
+}
+
+document.getElementById('authGoogleLoginBtn')?.addEventListener('click', signInWithGoogle);
+document.getElementById('authCloseBtn')?.addEventListener('click',()=>{ pendingAuthAction=null; clearAuthResume(); closeAuthModal(); });
+document.getElementById('authModalOverlay')?.addEventListener('click',e=>{if(e.target.id==='authModalOverlay'){pendingAuthAction=null; clearAuthResume(); closeAuthModal();}});
 
 // ===== Utils =====
 function calculateFinalPrice(bp, dt, dv) {
@@ -3662,6 +3874,7 @@ $$('.menu-item[data-page]').forEach(i => i.addEventListener('click', () => switc
 $$('.nav-item[data-page]').forEach(i => i.addEventListener('click', () => switchPage(i.getAttribute('data-page'))));
 $('#cartWidgetTop')?.addEventListener('click', () => switchPage('cart'));
 $('#wishlistBtn')?.addEventListener('click', () => switchPage('wishlist'));
+document.getElementById('authMenuBtn')?.addEventListener('click', handleAuthMenuClick);
 $('#logoArea')?.addEventListener('click', () => switchPage('home'));
 
 // ============================================================
@@ -3779,6 +3992,10 @@ function hasActiveReturnRequest(orderId, requests) {
 }
 
 async function submitReturnRequest(order, selections, reason, details) {
+  if (!isUserLoggedIn()) {
+    openAuthModal({mode:'login', resume:{type:'return', orderId:String(order?.orderId || '')}});
+    throw new Error('AUTH_REQUIRED');
+  }
   if (!database) throw new Error('قاعدة البيانات غير متاحة');
   
   const phone = String(order.phone || getSavedPhone()).trim();
@@ -4825,7 +5042,12 @@ function setupEligibleOrderEvents(container) {
         return;
       }
       
-      // جمع التحديدات
+      
+      if (!isUserLoggedIn()) {
+        openAuthModal({ mode: 'login', resume: { type: 'return', orderId: String(orderId) } });
+        return;
+      }
+// جمع التحديدات
       const selections = [];
       container.querySelectorAll(`.return-item-checkbox[data-order-id="${orderId}"]:checked`).forEach(cb => {
         const itemIndex = Number(cb.dataset.itemIndex);
@@ -5172,10 +5394,14 @@ function clearCart() {
 // ============================================================
 // ===== Checkout =====
 // ============================================================
-function openCheckoutModal() {
+function openCheckoutModal(options = {}) {
   if (cartItems.length === 0) { 
     NotificationSystem.warning('السلة فارغة'); 
     return; 
+  }
+  if (!options.skipAuth && !isUserLoggedIn()) {
+    openAuthModal({ mode: 'login', resume: { type: 'checkout' } });
+    return;
   }
   resetPaymentSelection();
   removeCoupon();
@@ -7484,6 +7710,8 @@ function init() {
   window.renderReturnsPage = renderReturnsPage;
   window.submitReturnRequest = submitReturnRequest;
   window.renderCartPage = renderCartPage;
+  window.openAuthModal = openAuthModal;
+  window.isUserLoggedIn = isUserLoggedIn;
   
   console.log('✅ تم تشغيل المتجر بنجاح');
 }
