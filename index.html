@@ -4073,7 +4073,12 @@ async function submitReturnRequest(order, selections, reason, details) {
   const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const requestRef = push(ref(database, 'returnRequests'));
   
+  const customerUid = auth?.currentUser?.uid || '';
+  if (!customerUid) throw new Error('AUTH_REQUIRED');
+
   const requestData = {
+    customerUid,
+    customerEmail: auth?.currentUser?.email || '',
     orderId: order.orderId,
     invoiceCode: String(order.invoiceCode || order.invoiceNumber || order.orderId || '').slice(-8),
     customerName: order.recipientName || '',
@@ -4092,6 +4097,7 @@ async function submitReturnRequest(order, selections, reason, details) {
   const updates = {};
   updates[`returnRequests/${requestRef.key}`] = requestData;
   updates[`returnRequestIndex/${phoneHash}/${requestRef.key}`] = {
+    customerUid,
     orderId: requestData.orderId,
     invoiceCode: requestData.invoiceCode,
     status: 'pending',
@@ -5545,7 +5551,15 @@ $('#confirmOrder')?.addEventListener('click', async function(e) {
   const disc = calculateCouponDiscount(subtotal);
   const gt = subtotal + df + cf - disc;
   
+  const customerUid = auth?.currentUser?.uid || '';
+  if (!customerUid) {
+    NotificationSystem.error('يجب تسجيل الدخول بحساب Google قبل إرسال الطلب.');
+    return;
+  }
+
   const orderData = {
+    customerUid,
+    customerEmail: auth?.currentUser?.email || '',
     items: cartItems.map(i => ({ 
       productId: i.productId, 
       name: i.name, 
@@ -5582,6 +5596,7 @@ $('#confirmOrder')?.addEventListener('click', async function(e) {
       updates['orders/' + nr.key] = orderData;
       updates['orderPhoneIndex/' + phoneHash] = {
         hasOrder: true,
+        customerUid,
         createdAt: Date.now()
       };
       await update(ref(database), updates);
@@ -5590,14 +5605,23 @@ $('#confirmOrder')?.addEventListener('click', async function(e) {
         const phoneHashForCoupon = await hashFirstOrderPhone(phone);
         const couponId = activeCoupons[appliedCoupon.code]?.id;
         if (couponId && phoneHashForCoupon) {
-          const usedRef = ref(database, `couponUses/${couponId}/${phoneHashForCoupon}`);
-          const usedSnap = await get(usedRef);
-          if (usedSnap.exists()) throw new Error('COUPON_ALREADY_USED');
-          await set(usedRef, { usedAt: Date.now() });
-          await update(ref(database, `coupons/${couponId}`), {
-            usedCount: increment(1),
-            lastUsedAt: Date.now()
-          });
+          try {
+            const usedRef = ref(database, `couponUses/${couponId}/${phoneHashForCoupon}`);
+            const usedSnap = await get(usedRef);
+            if (!usedSnap.exists()) {
+              await set(usedRef, { usedAt: Date.now(), customerUid });
+              try {
+                await update(ref(database, `coupons/${couponId}`), {
+                  usedCount: increment(1),
+                  lastUsedAt: Date.now()
+                });
+              } catch (couponCounterError) {
+                console.warn('تعذر تحديث عداد الكوبون، لكن الطلب تم حفظه:', couponCounterError);
+              }
+            }
+          } catch (couponSyncError) {
+            console.warn('تعذر مزامنة استخدام الكوبون، لكن الطلب تم حفظه:', couponSyncError);
+          }
         }
       }
       
@@ -5626,7 +5650,13 @@ $('#confirmOrder')?.addEventListener('click', async function(e) {
         }
         return;
       }
-      NotificationSystem.error('فشل الاتصال بالخادم');
+      const serverCode = err?.code || err?.message || 'UNKNOWN_ERROR';
+      console.error('تفاصيل خطأ Firebase:', serverCode, err);
+      if (serverCode === 'PERMISSION_DENIED' || serverCode === 'permission-denied') {
+        NotificationSystem.error('تم تسجيل الدخول، لكن قواعد Firebase تمنع حفظ الطلب. يجب تحديث صلاحيات العملاء في Realtime Database.');
+      } else {
+        NotificationSystem.error('تعذر إرسال الطلب إلى الخادم. حاول مرة أخرى.');
+      }
     }
   }
   
