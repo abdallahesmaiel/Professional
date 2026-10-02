@@ -5837,6 +5837,7 @@ function searchStoreByBarcode(value, openDetails = true) {
   if (clr) clr.classList.add('visible');
   currentSearchQuery = q;
   targetProductId = p ? p.id : null;
+  targetProductIds = p ? [p.id] : [];
   isTargetingProduct = false;
   if (document.getElementById('homePage')?.classList.contains('active-page')) renderHomeProducts();
   if (p) {
@@ -6300,12 +6301,19 @@ function getFilteredAndSortedProducts() {
   
   if (currentSearchQuery) {
     const q = currentSearchQuery.toLowerCase();
-    f = f.filter(p => 
+    const normalizedQ = normalizeStoreBarcode(q).toLowerCase();
+
+    // البحث يحدد المنتج/المنتجات المطابقة للإطار الذهبي فقط،
+    // لكنه لا يستبعد باقي المنتجات من شبكة العرض.
+    const matchedProducts = f.filter(p => 
       (p.name || '').toLowerCase().includes(q) || 
       (p.description || '').toLowerCase().includes(q) || 
-      normalizeStoreBarcode(p.barcode || '').toLowerCase() === normalizeStoreBarcode(q).toLowerCase() || 
-      normalizeStoreBarcode(p.barcode || '').toLowerCase().includes(normalizeStoreBarcode(q).toLowerCase())
+      normalizeStoreBarcode(p.barcode || '').toLowerCase() === normalizedQ || 
+      normalizeStoreBarcode(p.barcode || '').toLowerCase().includes(normalizedQ)
     );
+    targetProductIds = matchedProducts.map(p => p.id);
+  } else if (Array.isArray(targetProductIds) && targetProductIds.length) {
+    targetProductIds = [];
   }
   
   if (currentPriceMin !== null && !isNaN(currentPriceMin)) {
@@ -6337,19 +6345,23 @@ function renderHomeProducts() {
   
   let f = getFilteredAndSortedProducts();
   
-  if (Array.isArray(targetProductIds) && targetProductIds.length > 0) {
-    const linked = targetProductIds
-      .map(id => allProducts.find(p => String(p.id) === String(id)))
-      .filter(Boolean);
-    if (linked.length > 0) {
-      const linkedIds = new Set(linked.map(p => String(p.id)));
-      f = [...linked, ...f.filter(p => !linkedIds.has(String(p.id)))];
-    }
-  } else if (targetProductId) {
-    const targetProduct = allProducts.find(p => p.id === targetProductId);
-    if (targetProduct && (targetProduct.category === currentCategory || currentCategory === 'all')) {
-      f = f.filter(p => p.id !== targetProductId);
-      f.unshift(targetProduct);
+  // أثناء البحث لا نغيّر ترتيب الشبكة ولا نعزل المنتج المطابق؛
+  // الإطار الذهبي فقط هو الذي يوضح النتيجة.
+  if (!currentSearchQuery) {
+    if (Array.isArray(targetProductIds) && targetProductIds.length > 0) {
+      const linked = targetProductIds
+        .map(id => allProducts.find(p => String(p.id) === String(id)))
+        .filter(Boolean);
+      if (linked.length > 0) {
+        const linkedIds = new Set(linked.map(p => String(p.id)));
+        f = [...linked, ...f.filter(p => !linkedIds.has(String(p.id)))];
+      }
+    } else if (targetProductId) {
+      const targetProduct = allProducts.find(p => p.id === targetProductId);
+      if (targetProduct && (targetProduct.category === currentCategory || currentCategory === 'all')) {
+        f = f.filter(p => p.id !== targetProductId);
+        f.unshift(targetProduct);
+      }
     }
   }
   
@@ -6616,6 +6628,7 @@ function setupSearch() {
     t = setTimeout(() => {
       currentSearchQuery = q;
       targetProductId = null;
+      targetProductIds = [];
       isTargetingProduct = false;
       if ($('#homePage')?.classList.contains('active-page')) renderHomeProducts();
     }, 250);
@@ -6632,6 +6645,7 @@ function setupSearch() {
       }
       currentSearchQuery = inp.value.trim();
       targetProductId = null;
+      targetProductIds = [];
       isTargetingProduct = false;
       if ($('#homePage')?.classList.contains('active-page')) renderHomeProducts();
     }
@@ -6642,6 +6656,7 @@ function setupSearch() {
     clr.classList.remove('visible');
     currentSearchQuery = '';
     targetProductId = null;
+    targetProductIds = [];
     isTargetingProduct = false;
     setBarcodeSearchStatus('');
     if ($('#homePage')?.classList.contains('active-page')) renderHomeProducts();
