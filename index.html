@@ -6072,15 +6072,52 @@ function handleBarcodeUrlOnLoad() {
 // ============================================================
 // ===== Load Products =====
 // ============================================================
+let productsListenerUnsubscribe = null;
+let productsLoadTimeoutId = null;
+let productsLoadResolved = false;
+let productsLoadFailed = false;
+
+function showProductsLoadError() {
+  productsLoadFailed = true;
+  const container = document.getElementById('productsContainer');
+  const count = document.getElementById('resultsCount');
+  if (count) count.textContent = 'تعذر تحميل المنتجات';
+  if (!container || allProducts.length > 0) return;
+  container.innerHTML = `
+    <div class="search-no-results" style="grid-column:1/-1; padding:28px 16px;">
+      <span class="icon">📡</span>
+      <h3>تعذر تحميل المنتجات</h3>
+      <p style="margin:8px 0 16px;">الاتصال بقاعدة البيانات تأخر أو غير متاح. يمكنك إعادة المحاولة، وسيتم عرض المنتجات فور وصولها.</p>
+      <button type="button" class="btn btn-outline" id="retryProductsLoadBtn">إعادة المحاولة</button>
+    </div>`;
+  document.getElementById('retryProductsLoadBtn')?.addEventListener('click', loadProducts, { once: true });
+}
+
 function loadProducts() {
   console.log('🔄 جاري تحميل المنتجات...');
-  if (!database) { 
-    console.warn('⚠️ لا يوجد اتصال بقاعدة البيانات'); 
-    loadDefaultProducts(); 
-    return; 
+  if (productsLoadTimeoutId) clearTimeout(productsLoadTimeoutId);
+  if (typeof productsListenerUnsubscribe === 'function') {
+    try { productsListenerUnsubscribe(); } catch (e) { console.warn('تعذر إيقاف مستمع المنتجات السابق:', e); }
+    productsListenerUnsubscribe = null;
   }
+  productsLoadResolved = false;
+  productsLoadFailed = false;
+  if (!database) {
+    console.warn('⚠️ لا يوجد اتصال بقاعدة البيانات؛ سيتم استخدام المنتجات الافتراضية');
+    loadDefaultProducts();
+    return;
+  }
+  // لا نترك واجهة المنتجات في حالة تحميل إلى أجل غير مسمى إذا لم يرد Firebase.
+  productsLoadTimeoutId = setTimeout(() => {
+    if (productsLoadResolved || allProducts.length > 0) return;
+    console.warn('انتهت مهلة تحميل المنتجات؛ عرض رسالة إعادة المحاولة مع إبقاء المستمع لاستقبال البيانات المتأخرة.');
+    showProductsLoadError();
+  }, 8000);
   try {
-    onValue(ref(database, 'products'), (snap) => {
+    productsListenerUnsubscribe = onValue(ref(database, 'products'), (snap) => {
+      productsLoadResolved = true;
+      productsLoadFailed = false;
+      if (productsLoadTimeoutId) { clearTimeout(productsLoadTimeoutId); productsLoadTimeoutId = null; }
       allProducts = [];
       if (snap.exists()) {
         snap.forEach(child => {
@@ -6123,17 +6160,22 @@ function loadProducts() {
         window.__storeBarcodeUrlHandled = true; 
         setTimeout(handleBarcodeUrlOnLoad, 0); 
       }
-    }, (err) => { 
-      console.error('❌ خطأ Firebase:', err); 
-      loadDefaultProducts(); 
+    }, (err) => {
+      productsLoadResolved = true;
+      if (productsLoadTimeoutId) { clearTimeout(productsLoadTimeoutId); productsLoadTimeoutId = null; }
+      console.error('❌ خطأ Firebase أثناء تحميل المنتجات:', err);
+      showProductsLoadError();
     });
-  } catch (e) { 
-    console.error('❌ خطأ في تحميل المنتجات:', e); 
-    loadDefaultProducts(); 
+  } catch (e) {
+    productsLoadResolved = true;
+    if (productsLoadTimeoutId) { clearTimeout(productsLoadTimeoutId); productsLoadTimeoutId = null; }
+    console.error('❌ خطأ في تحميل المنتجات:', e);
+    showProductsLoadError();
   }
 }
 
 function loadDefaultProducts() {
+  productsLoadFailed = false;
   console.log('📦 تحميل المنتجات الافتراضية');
   allProducts = [
     { id: '1', name: 'مجموعة أدوات حلاقة احترافية', price: 450, icon: 'fa-cut', description: 'مجموعة متكاملة للعناية الشخصية', quantity: 15, image: '', discountType: 'percent', discountValue: 10, category: 'مستلزمات شخصية', createdAt: Date.now() - 500000, rating: { average: 4.8, count: 24 } },
@@ -6367,9 +6409,20 @@ function renderHomeProducts() {
   
   if (rc) rc.textContent = `${f.length} منتج`;
   
-  if (allProducts.length === 0) { 
-    g.innerHTML = '<div class="loading-spinner" style="grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i> جاري تحميل المنتجات...</div>'; 
-    return; 
+  if (allProducts.length === 0) {
+    if (productsLoadFailed) {
+      g.innerHTML = `
+        <div class="search-no-results" style="grid-column:1/-1; padding:28px 16px;">
+          <span class="icon">📡</span>
+          <h3>تعذر تحميل المنتجات</h3>
+          <p style="margin:8px 0 16px;">الاتصال بقاعدة البيانات تأخر أو غير متاح. حاول مرة أخرى بعد التحقق من الاتصال.</p>
+          <button type="button" class="btn btn-outline" id="retryProductsLoadBtn">إعادة المحاولة</button>
+        </div>`;
+      document.getElementById('retryProductsLoadBtn')?.addEventListener('click', loadProducts, { once: true });
+    } else {
+      g.innerHTML = '<div class="loading-spinner" style="grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i> جاري تحميل المنتجات...</div>';
+    }
+    return;
   }
   
   if (f.length === 0) { 
@@ -7405,21 +7458,39 @@ let isUserInteracting = false;
 let resumeTimeout = null;
 let currentSlideIndex = 0;
 const PROMO_DEFAULT_INTERVAL_SECONDS = 5;
+let promoListenerUnsubscribe = null;
+let promoLoadTimeoutId = null;
+let promoLoadResolved = false;
+
+function setDefaultPromotionalSlides() {
+  promotionalSlides = [
+    { title: '✨ عروض حصرية', description: 'تسوق أفضل المنتجات', image: 'https://via.placeholder.com/800x400/C9A96E/1A0F07?text=عروض+حصرية', category: 'all', active: true, interval: PROMO_DEFAULT_INTERVAL_SECONDS, order: 1 }
+  ];
+  currentSlideIndex = 0;
+  renderPromotionalCarousel();
+}
 
 function loadPromotionalSlides() {
   console.log('🔄 جاري تحميل العروض الترويجية (Carousel)...');
-  
-  if (!database) {
-    promotionalSlides = [
-      { title: '✨ عروض حصرية', description: 'تسوق أفضل المنتجات', image: 'https://via.placeholder.com/800x400/C9A96E/1A0F07?text=عروض+حصرية', category: 'all', active: true, interval: PROMO_DEFAULT_INTERVAL_SECONDS, order: 1 }
-    ];
-    currentSlideIndex = 0;
-    renderPromotionalCarousel();
-    return;
+  if (promoLoadTimeoutId) clearTimeout(promoLoadTimeoutId);
+  if (typeof promoListenerUnsubscribe === 'function') {
+    try { promoListenerUnsubscribe(); } catch (e) { console.warn('تعذر إيقاف مستمع العروض السابق:', e); }
+    promoListenerUnsubscribe = null;
   }
-  
+  promoLoadResolved = false;
+  // اعرض العروض الافتراضية فورًا حتى لا يبقى قسم العروض فارغًا أثناء انتظار Firebase.
+  setDefaultPromotionalSlides();
+  if (!database) return;
+
+  promoLoadTimeoutId = setTimeout(() => {
+    if (promoLoadResolved) return;
+    console.warn('تأخر تحميل العروض من Firebase؛ تم الإبقاء على العرض الافتراضي مؤقتًا.');
+  }, 6000);
+
   const promoRef = ref(database, 'settings/promotionalSlides');
-  onValue(promoRef, (snap) => {
+  promoListenerUnsubscribe = onValue(promoRef, (snap) => {
+    promoLoadResolved = true;
+    if (promoLoadTimeoutId) { clearTimeout(promoLoadTimeoutId); promoLoadTimeoutId = null; }
     const slides = [];
     if (snap.exists()) {
       const data = snap.val();
@@ -7469,12 +7540,10 @@ function loadPromotionalSlides() {
     stopAutoPlay();
     renderPromotionalCarousel();
   }, (error) => {
+    promoLoadResolved = true;
+    if (promoLoadTimeoutId) { clearTimeout(promoLoadTimeoutId); promoLoadTimeoutId = null; }
     console.error('❌ خطأ في تحميل العروض الترويجية:', error);
-    promotionalSlides = [
-      { title: '✨ عروض حصرية', description: 'تسوق أفضل المنتجات', image: 'https://via.placeholder.com/800x400/C9A96E/1A0F07?text=عروض+حصرية', category: 'all', linkedProductId: null, linkedProductName: null, active: true, interval: PROMO_DEFAULT_INTERVAL_SECONDS, order: 1 }
-    ];
-    currentSlideIndex = 0;
-    renderPromotionalCarousel();
+    setDefaultPromotionalSlides();
   });
 }
 
