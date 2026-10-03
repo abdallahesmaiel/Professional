@@ -243,9 +243,16 @@ body::before {
   transition: right 0.35s cubic-bezier(0.4,0,0.2,1);
   box-shadow: var(--shadow-xl);
   overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  max-height: 100dvh;
+  padding-bottom: calc(30px + env(safe-area-inset-bottom, 0px));
   border-left: 1px solid rgba(74,44,23,0.08);
 }
 .side-menu.open { right: 0; }
+.side-menu .menu-item { flex-shrink: 0; }
 .side-menu-overlay {
   position: fixed;
   inset: 0;
@@ -2225,11 +2232,11 @@ body.product-modal-open{
   <button class="menu-item" data-page="wishlist"><i class="fa-solid fa-heart"></i> المفضلة <span class="badge-menu hidden" id="menuWishlistBadge">0</span></button>
   <button class="menu-item" data-page="cart"><i class="fa-solid fa-cart-shopping"></i> السلة <span class="badge-menu hidden" id="menuCartBadge">0</span></button>
   <button class="menu-item" data-page="returns"><i class="fa-solid fa-rotate-left"></i> طلبات الاسترجاع</button>
-  <button class="menu-item phone-notification-btn" id="phoneNotificationBtn" type="button" aria-label="تفعيل إشعارات الهاتف"><i class="fa-solid fa-bell"></i><span>إشعارات الهاتف</span><span class="notification-state" id="phoneNotificationState">غير مفعلة</span></button>
   <button class="menu-item" id="authMenuBtn" type="button"><i class="fa-solid fa-right-to-bracket"></i><span>تسجيل الدخول</span></button>
   <div class="menu-divider"></div>
   <button class="menu-item" data-page="about"><i class="fa-solid fa-info-circle"></i> من نحن</button>
   <button class="menu-item" data-page="contact"><i class="fa-solid fa-envelope"></i> تواصل معنا</button>
+  <button class="menu-item phone-notification-btn" id="phoneNotificationBtn" type="button" aria-label="تفعيل إشعارات الهاتف"><i class="fa-solid fa-bell"></i><span>إشعارات الهاتف</span><span class="notification-state" id="phoneNotificationState">غير مفعلة</span></button>
 </div>
 
 <!-- Top Bar -->
@@ -3308,6 +3315,13 @@ function bindPhoneNotificationButton() {
   if (!btn || btn.dataset.bound === '1') return;
   btn.dataset.bound = '1';
   btn.addEventListener('click', async () => {
+    // تأكيد واضح من المستخدم قبل ظهور نافذة سماح المتصفح.
+    if ('Notification' in window && Notification.permission === 'default') {
+      const wantsNotifications = window.confirm(
+        '🔔 هل تريد تفعيل إشعارات الهاتف؟\\n\\nاضغط «موافق» للسماح بإشعارات الطلبات والمرتجعات، أو «إلغاء» للمتابعة بدون تفعيل.'
+      );
+      if (!wantsNotifications) return;
+    }
     const ok = await ensurePhoneNotificationPermission();
     if (ok) {
       await setupReturnPhoneNotificationListener();
