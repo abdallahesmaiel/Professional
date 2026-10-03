@@ -2666,6 +2666,7 @@ body.product-modal-open{
 // جافا سكريبت كامل - الجزء الثاني (Firebase + Logic + Returns)
 // ============================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getMessaging, getToken, onMessage, isSupported as isMessagingSupported } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
 import { getDatabase, ref, onValue, push, set, get, remove, update, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 import {
   getAuth, onAuthStateChanged, setPersistence, browserSessionPersistence,
@@ -2683,6 +2684,128 @@ const firebaseConfig = {
 };
 
 let app, database;
+
+// ============================================================
+// ===== Firebase Cloud Messaging (FCM) — additive integration =====
+// ============================================================
+const FCM_VAPID_KEY = 'BBewszrMAow4Jtcb1B8TxTQRKsWgaTTHJYT1z-73DqlUkpnsMeMuoEE7qHLaoELdM68RgSjAu7aZcwqCvjuRHqs';
+const FCM_TOKEN_STORAGE_KEY = 'professional_store_fcm_token_v1';
+let fcmMessaging = null;
+let fcmServiceWorkerRegistration = null;
+let fcmReady = false;
+
+function saveFcmTokenLocally(token) {
+  try { if (token) localStorage.setItem(FCM_TOKEN_STORAGE_KEY, token); } catch (_) {}
+}
+function getSavedFcmToken() {
+  try { return localStorage.getItem(FCM_TOKEN_STORAGE_KEY) || ''; } catch (_) { return ''; }
+}
+
+function setFcmButtonState() {
+  const btn = document.getElementById('phoneNotificationBtn');
+  const state = document.getElementById('phoneNotificationState');
+  if (!btn || !state) return;
+  const permission = ('Notification' in window) ? Notification.permission : 'unsupported';
+  if (permission === 'granted' && getSavedFcmToken()) {
+    btn.classList.add('enabled');
+    btn.classList.remove('denied');
+    state.textContent = 'مفعلة ✓';
+  } else if (permission === 'denied') {
+    btn.classList.remove('enabled');
+    btn.classList.add('denied');
+    state.textContent = 'مرفوضة';
+  } else if (permission === 'granted') {
+    btn.classList.add('enabled');
+    btn.classList.remove('denied');
+    state.textContent = 'مفعلة ✓';
+  }
+}
+
+async function ensureFcmServiceWorker() {
+  if (!('serviceWorker' in navigator)) return null;
+  try {
+    if (fcmServiceWorkerRegistration) return fcmServiceWorkerRegistration;
+    if (window.__professionalServiceWorkerRegistration) {
+      fcmServiceWorkerRegistration = window.__professionalServiceWorkerRegistration;
+      return fcmServiceWorkerRegistration;
+    }
+    fcmServiceWorkerRegistration = await navigator.serviceWorker.register('./sw.js', { scope: './', updateViaCache: 'none' });
+    await fcmServiceWorkerRegistration.update().catch(() => {});
+    await navigator.serviceWorker.ready;
+    return fcmServiceWorkerRegistration;
+  } catch (e) {
+    console.warn('FCM service worker:', e);
+    try {
+      fcmServiceWorkerRegistration = await navigator.serviceWorker.ready;
+      return fcmServiceWorkerRegistration;
+    } catch (_) { return null; }
+  }
+}
+
+async function initFirebaseWebPush() {
+  try {
+    if (!app || !('Notification' in window) || !('serviceWorker' in navigator)) return false;
+    if (!(await isMessagingSupported())) return false;
+    fcmServiceWorkerRegistration = await ensureFcmServiceWorker();
+    if (!fcmServiceWorkerRegistration) return false;
+    fcmMessaging = getMessaging(app);
+    onMessage(fcmMessaging, payload => {
+      const n = payload?.notification || {};
+      const d = payload?.data || {};
+      const title = n.title || d.title || 'بروفيشنال ستور';
+      const body = n.body || d.body || 'لديك إشعار جديد';
+      NotificationSystem.info(body, title);
+    });
+    fcmReady = true;
+    setFcmButtonState();
+    return true;
+  } catch (e) {
+    console.warn('FCM initialization:', e);
+    fcmReady = false;
+    return false;
+  }
+}
+
+async function activateFirebaseWebPush(showMessage = true) {
+  try {
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+      if (showMessage) NotificationSystem.warning('هذا المتصفح لا يدعم إشعارات الهاتف.');
+      return '';
+    }
+    const permission = Notification.permission === 'granted'
+      ? 'granted'
+      : await Notification.requestPermission();
+    if (permission !== 'granted') {
+      setFcmButtonState();
+      if (showMessage) NotificationSystem.warning('لم يتم السماح بإشعارات الهاتف.');
+      return '';
+    }
+    if (!fcmReady) await initFirebaseWebPush();
+    if (!fcmMessaging || !fcmServiceWorkerRegistration) {
+      if (showMessage) NotificationSystem.error('تعذر تجهيز خدمة إشعارات Firebase حالياً.');
+      return '';
+    }
+    const token = await getToken(fcmMessaging, {
+      vapidKey: FCM_VAPID_KEY,
+      serviceWorkerRegistration: fcmServiceWorkerRegistration
+    });
+    if (!token) throw new Error('FCM token was not returned');
+    saveFcmTokenLocally(token);
+    setFcmButtonState();
+    if (showMessage) NotificationSystem.success('🔔 تم تفعيل إشعارات الهاتف وحفظ رمز الجهاز.');
+    console.log('FCM registration token:', token);
+    return token;
+  } catch (e) {
+    console.warn('FCM activation:', e);
+    setFcmButtonState();
+    if (showMessage) NotificationSystem.error('تعذر تفعيل إشعارات Firebase. تأكد من HTTPS وWeb Push/VAPID.');
+    return '';
+  }
+}
+
+window.getProfessionalFCMToken = getSavedFcmToken;
+window.enableProfessionalPushNotifications = () => activateFirebaseWebPush(true);
+
 try {
   app = initializeApp(firebaseConfig);
   database = getDatabase(app);
@@ -3040,6 +3163,8 @@ async function ensurePhoneNotificationPermission() {
     }
     await navigator.serviceWorker.ready;
     phoneNotificationReady = true;
+    // FCM is initialized after permission is granted; failure here must not break local notifications.
+    await activateFirebaseWebPush(false);
     NotificationSystem.success('🔔 تم تفعيل إشعارات الهاتف بنجاح');
     return true;
   } catch (e) {
@@ -3187,6 +3312,7 @@ function bindPhoneNotificationButton() {
     if (ok) {
       await setupReturnPhoneNotificationListener();
       setupOrderPhoneNotificationListeners();
+      await activateFirebaseWebPush(false);
       updatePhoneNotificationButton();
     }
   });
@@ -8000,7 +8126,12 @@ function init() {
   bindPhoneNotificationButton();
   if ('Notification' in window && Notification.permission === 'granted') {
     phoneNotificationReady = true;
-    setTimeout(() => { setupOrderPhoneNotificationListeners(); setupReturnPhoneNotificationListener(); }, 500);
+    setTimeout(async () => {
+      setupOrderPhoneNotificationListeners();
+      setupReturnPhoneNotificationListener();
+      await initFirebaseWebPush();
+      if (getSavedFcmToken()) setFcmButtonState();
+    }, 500);
   }
   
   setTimeout(setupCarouselInteractions, 2000);
@@ -8077,17 +8208,17 @@ init();
 </script>
 
 <script>
-/* ===== Professional Store PWA ===== */
+/* ===== Professional Store PWA + FCM Service Worker ===== */
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js', { scope: './', updateViaCache: 'none' })
-      .then(function (registration) {
-        registration.update().catch(function () {});
-        console.log('✅ تم تفعيل تطبيق بروفيشنال PWA', registration.scope);
-      })
-      .catch(function (error) {
-        console.warn('⚠️ تعذر تفعيل PWA:', error);
-      });
+  window.addEventListener('load', async function () {
+    try {
+      const registration = await navigator.serviceWorker.register('./sw.js', { scope: './', updateViaCache: 'none' });
+      window.__professionalServiceWorkerRegistration = registration;
+      registration.update().catch(function () {});
+      console.log('✅ تم تفعيل تطبيق بروفيشنال PWA + FCM', registration.scope);
+    } catch (error) {
+      console.warn('⚠️ تعذر تفعيل PWA/FCM:', error);
+    }
   });
 }
 </script>
