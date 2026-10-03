@@ -46,12 +46,6 @@ self.addEventListener('install', event => {
 
       .then(cache => {
 
-        /*
-         * لا نستخدم cache.addAll هنا.
-         * إذا كان ملف واحد غير موجود فلن يفشل تثبيت
-         * Service Worker بالكامل.
-         */
-
         return Promise.all(
 
           CORE.map(url =>
@@ -81,13 +75,7 @@ self.addEventListener('install', event => {
 
               })
 
-              .catch(() => {
-
-                /*
-                 * تجاهل فشل ملف منفرد.
-                 */
-
-              })
+              .catch(() => {})
 
           )
 
@@ -197,7 +185,6 @@ self.addEventListener('fetch', event => {
 
   /* ----------------------------------------------------------
      صفحات HTML
-     
      Network First
      ---------------------------------------------------------- */
 
@@ -289,7 +276,6 @@ self.addEventListener('fetch', event => {
 
   /* ----------------------------------------------------------
      الملفات الثابتة
-     
      Cache First
      ---------------------------------------------------------- */
 
@@ -358,13 +344,6 @@ self.addEventListener('fetch', event => {
 
 /* ============================================================
    PUSH
-   ============================================================
-
-   هذا هو الجزء الأساسي.
-
-   Firebase Cloud Messaging سيرسل Push إلى هذا الـService Worker
-   حتى إذا كانت صفحة المتجر مغلقة.
-
    ============================================================ */
 
 self.addEventListener(
@@ -427,21 +406,6 @@ async function handlePushNotification(
 
   }
 
-
-  /*
-   * Firebase يمكن أن يرسل البيانات بهذا الشكل:
-   *
-   * {
-   *   notification: {...},
-   *   data: {...}
-   * }
-   *
-   * أو Data Payload فقط:
-   *
-   * {
-   *   data: {...}
-   * }
-   */
 
   const notification =
     payload.notification ||
@@ -599,10 +563,6 @@ async function handlePushNotification(
     './index.html';
 
 
-  /*
-   * Firebase fcm_options.link
-   */
-
   if (
 
     !targetUrl ||
@@ -625,11 +585,6 @@ async function handlePushNotification(
 
   }
 
-
-  /*
-   * تأكد أن الرابط لا يخرج إلى موقع خارجي
-   * بدون داعٍ.
-   */
 
   try {
 
@@ -970,8 +925,6 @@ async function openNotificationTarget(
 
   /* ----------------------------------------------------------
      التطبيق مغلق تمامًا
-     
-     يفتح التطبيق عند الضغط على الإشعار.
      ---------------------------------------------------------- */
 
   if (
@@ -1007,10 +960,6 @@ self.addEventListener(
 
 /* ============================================================
    MESSAGE FROM APP
-   ============================================================
-
-   يسمح لصفحة المتجر بإرسال إشعار محلي.
-
    ============================================================ */
 
 self.addEventListener(
@@ -1253,11 +1202,6 @@ async function showLocalNotification(
 self.addEventListener(
   'error',
   event => {
-
-    /*
-     * لا نسمح لخطأ غير متوقع داخل Service Worker
-     * بإيقاف بقية وظائف الإشعارات.
-     */
 
     console.error(
       '[Professional Store SW] Error:',
