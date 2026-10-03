@@ -5,6 +5,7 @@
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4449572474961813" crossorigin="anonymous"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://pagead2.googlesyndication.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://*.cloudinary.com https://api.cloudinary.com; frame-src 'self' https://*.firebaseapp.com https://accounts.google.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' blob:;">
 <meta name="theme-color" content="#1A0F07">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -17,9 +18,8 @@
 <meta name="twitter:card" content="summary_large_image">
 <title>بروفيشنال | متجر المنتجات الاحترافية - Professional Store</title>
 <link rel="manifest" href="./manifest.json">
-<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
-<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -1012,6 +1012,7 @@ body::before {
   backdrop-filter: blur(8px);
 }
 .stock-available { background: rgba(5,150,105,0.9); color: white; }
+.stock-low { background: rgba(217,119,6,0.92); color: white; border: 1px solid rgba(255,255,255,0.25); box-shadow: 0 2px 8px rgba(217,119,6,0.22); }
 .stock-out { background: rgba(220,38,38,0.9); color: white; }
 .product-info {
   padding: 16px;
@@ -2217,6 +2218,7 @@ body.product-modal-open{
   <button class="menu-item" data-page="wishlist"><i class="fa-solid fa-heart"></i> المفضلة <span class="badge-menu hidden" id="menuWishlistBadge">0</span></button>
   <button class="menu-item" data-page="cart"><i class="fa-solid fa-cart-shopping"></i> السلة <span class="badge-menu hidden" id="menuCartBadge">0</span></button>
   <button class="menu-item" data-page="returns"><i class="fa-solid fa-rotate-left"></i> طلبات الاسترجاع</button>
+  <button class="menu-item" id="enablePhoneNotificationsBtn" type="button" aria-label="تفعيل إشعارات الهاتف"><i class="fa-solid fa-bell"></i><span id="phoneNotificationsMenuText">تفعيل إشعارات الهاتف</span></button>
   <button class="menu-item" id="authMenuBtn" type="button"><i class="fa-solid fa-right-to-bracket"></i><span>تسجيل الدخول</span></button>
   <div class="menu-divider"></div>
   <button class="menu-item" data-page="about"><i class="fa-solid fa-info-circle"></i> من نحن</button>
@@ -2663,7 +2665,10 @@ import {
   GoogleAuthProvider, signInWithPopup, signOut
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-const firebaseConfig = { 
+// ملاحظة أمنية: إعداد Firebase للواجهة ليس سراً فعلياً في تطبيق Browser-only؛
+// الحماية الحقيقية تكون عبر Firebase Security Rules. يمكن استبدال هذا الكائن
+// بملف إعدادات مولّد من الخادم/الاستضافة عند توفر Backend بدون تغيير بقية الكود.
+const firebaseConfig = window.__PROFESSIONAL_FIREBASE_CONFIG__ || { 
   apiKey: "AIzaSyARX12v1lvgKaFhIoYWRtv1Nqxpt8zz8HE", 
   authDomain: "rashfa-9d95d.firebaseapp.com", 
   databaseURL: "https://rashfa-9d95d-default-rtdb.asia-southeast1.firebasedatabase.app", 
@@ -2672,6 +2677,25 @@ const firebaseConfig = {
   messagingSenderId: "973516999258", 
   appId: "1:973516999258:web:e71f8d42efd8e461e0a663" 
 };
+
+// إدارة listeners حتى لا يتكرر onValue عند إعادة تحميل جزء من الواجهة.
+const firebaseUnsubscribers = new Map();
+function subscribeFirebase(key, databaseRef, callback, errorCallback) {
+  const previous = firebaseUnsubscribers.get(key);
+  if (typeof previous === 'function') {
+    try { previous(); } catch (e) { console.warn('Firebase unsubscribe:', key, e); }
+  }
+  const unsubscribe = onValue(databaseRef, callback, errorCallback);
+  firebaseUnsubscribers.set(key, unsubscribe);
+  return unsubscribe;
+}
+function unsubscribeFirebase(key) {
+  const unsubscribe = firebaseUnsubscribers.get(key);
+  if (typeof unsubscribe === 'function') {
+    try { unsubscribe(); } catch (e) {}
+  }
+  firebaseUnsubscribers.delete(key);
+}
 
 let app, database;
 try {
@@ -2714,6 +2738,9 @@ try {
     onAuthStateChanged(auth, (user) => {
       authUser = user || null;
       updateAuthMenu();
+      updatePhoneNotificationButton();
+      if (user) startReturnStatusListener().catch(() => {});
+      else stopReturnStatusListener();
       if (user) {
         const resume = getAuthResume();
         if (resume) {
@@ -2902,7 +2929,9 @@ function getEffectivePrice(p) {
   };
 }
 
-const CLOUDINARY_CLOUD_NAME = 'dzprjrvu7';
+const CLOUDINARY_CLOUD_NAME = window.__PROFESSIONAL_CLOUDINARY_CLOUD_NAME__ || 'dzprjrvu7';
+const PHONE_HASH_SALT = window.__PROFESSIONAL_PHONE_HASH_SALT__ || 'professional-store-phone-index-v1::2026';
+const STORAGE_MAX_BYTES = 4 * 1024 * 1024;
 
 function optimizeCloudinaryUrl(u) {
   if (!u) return '';
@@ -2936,14 +2965,24 @@ const NotificationSystem = {
     if (!c) return;
     const n = document.createElement('div');
     n.className = `notification ${type}`;
-    n.innerHTML = `
-      <div class="notification-icon"><i class="fa-solid ${this.icons[type]}"></i></div>
-      <div class="notification-content">
-        <div class="notification-title">${title || this.titles[type]}</div>
-        <div class="notification-message">${msg}</div>
-      </div>
-      <button class="notification-close"><i class="fa-solid fa-xmark"></i></button>
-    `;
+    const icon = document.createElement('div');
+    icon.className = 'notification-icon';
+    icon.innerHTML = `<i class="fa-solid ${this.icons[type]}"></i>`;
+    const content = document.createElement('div');
+    content.className = 'notification-content';
+    const titleEl = document.createElement('div');
+    titleEl.className = 'notification-title';
+    titleEl.textContent = title || this.titles[type];
+    const messageEl = document.createElement('div');
+    messageEl.className = 'notification-message';
+    messageEl.textContent = String(msg ?? '');
+    content.append(titleEl, messageEl);
+    const close = document.createElement('button');
+    close.className = 'notification-close';
+    close.type = 'button';
+    close.setAttribute('aria-label', 'إغلاق الإشعار');
+    close.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+    n.append(icon, content, close);
     c.appendChild(n);
     const t = setTimeout(() => {
       if (n.parentNode) { 
@@ -2962,6 +3001,27 @@ const NotificationSystem = {
   warning(m, t) { this.show(m, 'warning', t); },
   info(m, t) { this.show(m, 'info', t); }
 };
+
+// ============================================================
+// ===== Order/Return Status Notifications + State Guard =====
+// ============================================================
+const ORDER_STATUS_RANK = { pending:10, accepted:20, processing:30, delivering:40, shipped:50, delivered:60, returned:70, rejected:80, cancelled:80 };
+const ORDER_STATUS_TEXT = { pending:'جاري قبول الطلب', accepted:'تم قبول الطلب', processing:'جاري تجهيز الطلب', delivering:'جاري توصيل الطلب', shipped:'تم شحن الطلب', delivered:'تم توصيل الطلب', returned:'تم تسجيل إرجاع الطلب', rejected:'تم رفض الطلب', cancelled:'تم إلغاء الطلب' };
+const RETURN_STATUS_TEXT = { pending:'تم استلام طلب الاسترجاع وهو قيد المراجعة', approved:'تمت الموافقة على طلب الاسترجاع', completed:'اكتملت عملية الاسترجاع', rejected:'تم رفض طلب الاسترجاع' };
+let returnStatusListenerKey = null;
+let returnStatusSeeded = false;
+let returnStatusSnapshot = {};
+function getNotificationStorageKey(){ return 'professional_phone_notification_seen_v2'; }
+function getSeenNotificationMap(){ return storageGetJson(getNotificationStorageKey(), {}) || {}; }
+function markNotificationSeen(key){ const map=getSeenNotificationMap(); map[String(key)]=Date.now(); const keys=Object.keys(map); if(keys.length>300){ keys.sort((a,b)=>Number(map[a]||0)-Number(map[b]||0)); keys.slice(0,keys.length-300).forEach(k=>delete map[k]); } storageSet(getNotificationStorageKey(),map); }
+async function getPhoneNotificationRegistration(){ if(!('serviceWorker' in navigator)) return null; try{return await navigator.serviceWorker.ready;}catch(e){return null;} }
+async function showPhoneNotification(title,body,data={}){ if(!('Notification' in window)||Notification.permission!=='granted') return false; const registration=await getPhoneNotificationRegistration(); if(!registration||typeof registration.showNotification!=='function') return false; try{ await registration.showNotification(String(title||'بروفيشنال'),{body:String(body||''),icon:'./icon-192.png',badge:'./icon-192.png',dir:'rtl',lang:'ar',tag:String(data.tag||'professional-store-status'),renotify:true,vibrate:[200,100,200],data:{url:'./مدير.html',...data}}); return true; }catch(e){console.warn('Phone notification failed:',e);return false;} }
+async function notifyOrderStatusChange(order,newStatus,oldStatus){ const status=String(newStatus||'').toLowerCase(); if(!status||status===String(oldStatus||'').toLowerCase()) return; const key=`order:${order.orderId}:${status}`; if(getSeenNotificationMap()[key]) return; markNotificationSeen(key); const text=ORDER_STATUS_TEXT[status]||`تغيرت حالة الطلب إلى: ${status}`; const invoice=String(order.orderId||'').slice(-8); const message=`الطلب #${invoice}: ${text}.`; NotificationSystem.info(`🔔 ${message}`,'تحديث الطلب'); await showPhoneNotification('بروفيشنال — تحديث الطلب',message,{tag:key,type:'order',orderId:order.orderId}); }
+async function notifyReturnStatusChange(request,newStatus,oldStatus){ const status=String(newStatus||'').toLowerCase(); if(!status||status===String(oldStatus||'').toLowerCase()) return; const key=`return:${request.id}:${status}`; if(getSeenNotificationMap()[key]) return; markNotificationSeen(key); const invoice=String(request.invoiceCode||request.orderId||'').slice(-8); const text=RETURN_STATUS_TEXT[status]||`تغيرت حالة المرتجع إلى: ${status}`; const message=`مرتجع الفاتورة #${invoice}: ${text}.`; const type=status==='rejected'?'warning':status==='completed'?'success':'info'; NotificationSystem[type](message,'تحديث المرتجع'); await showPhoneNotification('بروفيشنال — تحديث المرتجع',message,{tag:key,type:'return',returnId:request.id}); }
+async function enablePhoneNotifications(){ if(!('Notification' in window)){NotificationSystem.warning('هذا المتصفح لا يدعم إشعارات الهاتف.');return false;} if(Notification.permission==='denied'){NotificationSystem.warning('إشعارات الهاتف محظورة من إعدادات المتصفح. افتح إعدادات الموقع واسمح بالإشعارات ثم أعد المحاولة.');return false;} try{ const permission=Notification.permission==='granted'?'granted':await Notification.requestPermission(); updatePhoneNotificationButton(); if(permission!=='granted'){NotificationSystem.warning('لم يتم السماح بإشعارات الهاتف.');return false;} await showPhoneNotification('بروفيشنال','تم تفعيل إشعارات حالة الطلبات والمرتجعات على هاتفك.',{tag:'professional-notification-enabled'}); NotificationSystem.success('✅ تم تفعيل إشعارات الهاتف لحالات الطلبات والمرتجعات.'); return true; }catch(e){console.warn('Notification permission error:',e);NotificationSystem.error('تعذر تفعيل إشعارات الهاتف.');return false;} }
+function updatePhoneNotificationButton(){ const btn=document.getElementById('enablePhoneNotificationsBtn'); const text=document.getElementById('phoneNotificationsMenuText'); if(!btn||!text) return; if(!('Notification' in window)){text.textContent='الإشعارات غير مدعومة';btn.disabled=true;return;} if(Notification.permission==='granted'){text.textContent='إشعارات الهاتف مفعلة ✓';btn.classList.add('active');} else if(Notification.permission==='denied'){text.textContent='السماح بإشعارات الهاتف من الإعدادات';btn.classList.remove('active');} else{text.textContent='تفعيل إشعارات الهاتف';btn.classList.remove('active');} }
+async function startReturnStatusListener(){ if(!database||!auth?.currentUser) return; const phone=getSavedPhone(); if(!phone) return; try{ const phoneHash=await hashFirstOrderPhone(phone); if(!phoneHash) return; const key=`customerReturnStatus:${phoneHash}`; if(returnStatusListenerKey!==key){ if(returnStatusListenerKey) unsubscribeFirebase(returnStatusListenerKey); returnStatusListenerKey=key; returnStatusSeeded=false; returnStatusSnapshot={}; } subscribeFirebase(key,ref(database,`returnRequestIndex/${phoneHash}`),(snap)=>{ const data=snap.exists()?(snap.val()||{}):{}; const next={}; Object.entries(data).forEach(([id,value])=>{ const request=value||{}; const status=String(request.status||'pending').toLowerCase(); next[id]={...request,id,status}; if(returnStatusSeeded){ const oldStatus=String(returnStatusSnapshot[id]?.status||'').toLowerCase(); if(oldStatus&&oldStatus!==status) notifyReturnStatusChange(next[id],status,oldStatus); } const localOrder=myOrders.find(o=>String(o.orderId)===String(request.orderId)); if(localOrder){ if(status==='pending'||status==='approved'){ localOrder.returnRequestPending=true; localOrder.returnRequestId=id; } else if(status==='completed'){ localOrder.returnRequestPending=false; localOrder.returnRequestId=id; localOrder.status='returned'; localOrder.returnedAt=Number(request.completedAt||request.approvedAt||Date.now()); } else if(status==='rejected'){ localOrder.returnRequestPending=false; localOrder.returnRequestId=id; } } }); returnStatusSnapshot=next; returnStatusSeeded=true; },(error)=>console.warn('Return status listener:',error)); }catch(e){console.warn('تعذر تشغيل مستمع حالات المرتجعات:',e);} }
+function stopReturnStatusListener(){ if(returnStatusListenerKey) unsubscribeFirebase(returnStatusListenerKey); returnStatusListenerKey=null; returnStatusSeeded=false; returnStatusSnapshot={}; }
 
 // ============================================================
 // ===== Order Timer Manager =====
@@ -3072,12 +3132,12 @@ const CompletedReturnsTimerManager = {
   deleteTimers: new Map(),
   countdownIntervals: new Map(),
   
-  // بدء عداد الحذف التلقائي (24 ساعة)
+  // بدء عداد الحذف التلقائي: 24 ساعة، وهو نفس النص المعروض للمستخدم
   startAutoDelete(returnId, completedAt, onDelete) {
     this.clear(returnId);
     
     const elapsed = Date.now() - completedAt;
-    const remaining = Math.max(0, 10 * 60 * 1000 - elapsed);
+    const remaining = Math.max(0, 24 * 60 * 60 * 1000 - elapsed);
     
     if (remaining <= 0) {
       onDelete(returnId);
@@ -3093,13 +3153,13 @@ const CompletedReturnsTimerManager = {
     console.log(`⏰ بدأ عداد الحذف للمرتجع ${returnId} - ${Math.floor(remaining / 1000)} ثانية متبقية`);
   },
   
-  // بدء عداد العرض التنازلي (يُحدّث كل ثانية)
+  // بدء عداد العرض التنازلي (24 ساعة، يُحدّث كل ثانية)
   startCountdown(returnId, completedAt, updateCallback) {
     this.stopCountdown(returnId);
     
     const interval = setInterval(() => {
       const elapsed = Date.now() - completedAt;
-      const remaining = Math.max(0, 10 * 60 * 1000 - elapsed);
+      const remaining = Math.max(0, 24 * 60 * 60 * 1000 - elapsed);
       
       if (remaining <= 0) {
         this.stopCountdown(returnId);
@@ -3179,7 +3239,7 @@ function getCustomerIdentity() {
   let x = loadFromStorage(REVIEW_STORAGE_KEY, null);
   if (!x?.customerId) {
     x = { customerId: 'guest-' + Math.random().toString(36).slice(2) + '-' + Date.now().toString(36) };
-    try { localStorage.setItem(REVIEW_STORAGE_KEY, JSON.stringify(x)); } catch (e) {}
+    storageSet(REVIEW_STORAGE_KEY, x);
   }
   return x;
 }
@@ -3190,15 +3250,15 @@ function getCheckoutProfile() {
 
 function saveCheckoutProfile(name, address, phone) {
   try {
-    localStorage.setItem(CHECKOUT_PROFILE_KEY, JSON.stringify({ name, address, phone, savedAt: Date.now() }));
-    localStorage.setItem('professional_checkout_phone', phone);
+    storageSet(CHECKOUT_PROFILE_KEY, { name, address, phone, savedAt: Date.now() });
+    storageSet('professional_checkout_phone', phone);
   } catch (e) {}
 }
 
 function clearCheckoutProfile() {
   try { 
-    localStorage.removeItem(CHECKOUT_PROFILE_KEY); 
-    localStorage.removeItem('professional_checkout_phone');
+    storageRemove(CHECKOUT_PROFILE_KEY); 
+    storageRemove('professional_checkout_phone');
   } catch (e) {}
   const el = $('#checkoutSavedNote');
   if (el) el.style.display = 'none';
@@ -3264,14 +3324,58 @@ const CATEGORIES = [
 ];
 
 // ===== Storage =====
-function loadFromStorage(k, f = []) {
-  try { 
-    const d = localStorage.getItem(k); 
-    return d ? JSON.parse(d) : f; 
-  } catch (e) { 
-    localStorage.removeItem(k); 
-    return f; 
+function getSafeStorage() {
+  try {
+    return window.localStorage;
+  } catch (e) {
+    return null;
   }
+}
+
+function storageGet(key, fallback = null) {
+  const storage = getSafeStorage();
+  if (!storage) return fallback;
+  try {
+    const raw = storage.getItem(key);
+    return raw == null ? fallback : raw;
+  } catch (e) {
+    return fallback;
+  }
+}
+
+function storageGetJson(key, fallback = null) {
+  const raw = storageGet(key, null);
+  if (raw == null) return fallback;
+  try { return JSON.parse(raw); }
+  catch (e) { return fallback; }
+}
+
+function storageSet(key, value) {
+  const storage = getSafeStorage();
+  if (!storage) return false;
+  try {
+    const serialized = typeof value === 'string' ? value : JSON.stringify(value);
+    if (serialized.length > STORAGE_MAX_BYTES) {
+      console.warn(`⚠️ تم رفض حفظ ${key}: البيانات أكبر من الحد المسموح.`);
+      return false;
+    }
+    storage.setItem(key, serialized);
+    return true;
+  } catch (e) {
+    console.warn(`⚠️ تعذر حفظ ${key} محلياً:`, e);
+    return false;
+  }
+}
+
+function storageRemove(key) {
+  const storage = getSafeStorage();
+  if (!storage) return false;
+  try { storage.removeItem(key); return true; } catch (e) { return false; }
+}
+
+function loadFromStorage(k, f = []) {
+  const value = storageGetJson(k, f);
+  return value == null ? f : value;
 }
 
 cartItems = loadFromStorage('professional_cart_v4', []);
@@ -3295,24 +3399,24 @@ try {
 wishlist = loadFromStorage('professional_wishlist_v4', []);
 
 function saveCart() {
-  try { localStorage.setItem('professional_cart_v4', JSON.stringify(cartItems)); } catch (e) {}
+  storageSet('professional_cart_v4', cartItems);
   updateBadges();
 }
 
 function saveOrders() {
-  try { localStorage.setItem('professional_orders_v4', JSON.stringify(myOrders)); } catch (e) {}
+  storageSet('professional_orders_v4', myOrders);
   // نسخة محلية مخصصة للمرتجعات: الطلب المسلّم يبقى متاحاً حتى نهاية نافذة الـ24 ساعة.
   try {
     const returnEligibleOrders = myOrders.filter(o => {
       if (o.status !== 'delivered' || !o.deliveredAt) return false;
       return (Date.now() - Number(o.deliveredAt)) < 24 * 60 * 60 * 1000;
     });
-    localStorage.setItem('professional_return_orders_v1', JSON.stringify(returnEligibleOrders));
+    storageSet('professional_return_orders_v1', returnEligibleOrders);
   } catch (e) {}
 }
 
 function saveWishlist() {
-  try { localStorage.setItem('professional_wishlist_v4', JSON.stringify(wishlist)); } catch (e) {}
+  storageSet('professional_wishlist_v4', wishlist);
   updateWishlistBadge();
   renderWishlistPage();
 }
@@ -3383,7 +3487,7 @@ async function hashFirstOrderPhone(phone) {
   const normalized = String(phone || '').trim();
   if (!normalized) return '';
   try {
-    const data = new TextEncoder().encode(normalized);
+    const data = new TextEncoder().encode(PHONE_HASH_SALT + '|' + normalized);
     const digest = await crypto.subtle.digest('SHA-256', data);
     return Array.from(new Uint8Array(digest))
       .map(b => b.toString(16).padStart(2, '0'))
@@ -3900,6 +4004,7 @@ $('#cartWidgetTop')?.addEventListener('click', () => switchPage('cart'));
 $('#wishlistBtn')?.addEventListener('click', () => switchPage('wishlist'));
 document.getElementById('authMenuBtn')?.addEventListener('click', handleAuthMenuClick);
 $('#logoArea')?.addEventListener('click', () => switchPage('home'));
+document.getElementById('enablePhoneNotificationsBtn')?.addEventListener('click', () => enablePhoneNotifications());
 
 // ============================================================
 // ===== Returns System (COMPLETELY REWRITTEN - FIXED) =====
@@ -3917,10 +4022,10 @@ let returnsPageState = {
 
 function getSavedPhone() {
   try {
-    const p = JSON.parse(localStorage.getItem('professional_checkout_profile_v1') || '{}');
-    return String(p.phone || localStorage.getItem('professional_checkout_phone') || '').trim();
+    const p = storageGetJson('professional_checkout_profile_v1', {});
+    return String(p.phone || storageGet('professional_checkout_phone', '') || '').trim();
   } catch (e) {
-    return String(localStorage.getItem('professional_checkout_phone') || '').trim();
+    return String(storageGet('professional_checkout_phone', '') || '').trim();
   }
 }
 
@@ -4021,6 +4126,12 @@ async function submitReturnRequest(order, selections, reason, details) {
     throw new Error('AUTH_REQUIRED');
   }
   if (!database) throw new Error('قاعدة البيانات غير متاحة');
+
+  const currentUid = String(auth?.currentUser?.uid || '').trim();
+  const orderUid = String(order?.customerUid || '').trim();
+  if (!currentUid || !orderUid || orderUid !== currentUid) {
+    throw new Error('لا تملك صلاحية إنشاء مرتجع لهذا الطلب');
+  }
   
   const phone = String(order.phone || getSavedPhone()).trim();
   if (!phone) throw new Error('رقم الهاتف غير متوفر');
@@ -4108,6 +4219,14 @@ async function submitReturnRequest(order, selections, reason, details) {
   };
   
   await update(ref(database), updates);
+  const localOrder = myOrders.find(o => String(o.orderId) === String(order.orderId));
+  if (localOrder) {
+    localOrder.returnRequestPending = true;
+    localOrder.returnRequestId = requestRef.key;
+    if (localOrder.deliveredAt && !localOrder.status) localOrder.status = 'delivered';
+    saveOrders();
+  }
+  await startReturnStatusListener();
   console.log('✅ تم إرسال طلب الاسترجاع بنجاح:', requestRef.key);
   return requestRef.key;
 }
@@ -4399,8 +4518,10 @@ async function renderReturnsPage() {
   });
   
   const eligibleOrders = (myOrders || []).filter(o => {
-    // returned = حالة الطلب أصبحت returned بعد إرجاع كل الكمية.
-    if (!['delivered'].includes(String(o.status || '').toLowerCase()) || !o.deliveredAt) return false;
+    const effectiveStatus = Number(o.deliveredAt || 0) > 0
+      ? (String(o.status || '').toLowerCase() === 'returned' ? 'returned' : 'delivered')
+      : String(o.status || '').toLowerCase();
+    if (effectiveStatus !== 'delivered' || !o.deliveredAt) return false;
     if (now - Number(o.deliveredAt) > windowMs) return false;
     if (hasActiveReturnRequest(o.orderId, allRequests)) return false;
     // لا تمنعنا سجلات completed الجزئية؛ المنع فقط إذا استُنفدت كل الكمية.
@@ -4578,7 +4699,7 @@ function renderEligibleOrders(orders, allRequests) {
           
           <div style="flex:1;min-width:150px;">
             <div style="font-weight:800;color:var(--primary-dark);font-size:13px;margin-bottom:2px;">
-              ${item.name || 'منتج'}
+              ${escapeStoreHtml(item.name || 'منتج')}
             </div>
             <div style="font-size:11px;color:var(--gray-500);">
               الكمية المتاحة للإرجاع: <strong style="color:var(--accent);">${availableQty}</strong> من <strong>${originalQty}</strong>
@@ -5172,8 +5293,10 @@ function renderCartPage() {
   // الطلب المسلّم يظل داخل myOrders لمدة 24 ساعة حتى يكون متاحاً للمرتجعات،
   // لكنه يختفي من واجهة السلة بعد 10 دقائق فقط.
   const visibleCartOrders = myOrders.filter(o => {
-    if (o.status !== 'delivered' || !o.deliveredAt) return true;
-    return (Date.now() - Number(o.deliveredAt)) <= 10 * 60 * 1000;
+    const status = String(o.status || '').toLowerCase();
+    if (status === 'returned') return false;
+    if (o.deliveredAt) return (Date.now() - Number(o.deliveredAt)) <= 10 * 60 * 1000;
+    return true;
   });
   
   if (visibleCartOrders.length > 0) {
@@ -5190,10 +5313,17 @@ function renderCartPage() {
         shipped: { icon: '📦', text: 'تم الشحن', cls: 'badge-shipped' },
         delivered: { icon: '✓', text: 'تم التوصيل ✓', cls: 'badge-delivered' },
         rejected: { icon: '❌', text: 'تم الرفض', cls: 'badge-rejected' },
-        cancelled: { icon: '✕', text: 'ملغي', cls: 'badge-cancelled' }
+        cancelled: { icon: '✕', text: 'ملغي', cls: 'badge-cancelled' },
+        returned: { icon: '↩️', text: 'تم تسجيل المرتجع', cls: 'badge-delivered' }
       };
       
-      const st = sm[o.status] || sm['pending'];
+      const rawStatus = String(o.status || 'pending').toLowerCase();
+      const displayStatus = o.returnRequestPending
+        ? 'return-pending'
+        : (o.deliveredAt && ['pending','accepted','processing','delivering','shipped'].includes(rawStatus) ? 'delivered' : rawStatus);
+      const st = displayStatus === 'return-pending'
+        ? { icon: '↩️', text: 'طلب الاسترجاع قيد المراجعة', cls: 'badge-pending' }
+        : (sm[displayStatus] || sm['pending']);
       const date = o.createdAt ? new Date(o.createdAt).toLocaleString('ar-EG') : '';
       const pm = PAYMENT_METHODS[o.paymentMethod] || PAYMENT_METHODS['cod'];
       const it = (o.items || []).reduce((s, i) => s + (i.price * i.quantity), 0);
@@ -5229,9 +5359,9 @@ function renderCartPage() {
             <div class="breakdown-row total"><span>💰 الإجمالي:</span><span>${gt.toFixed(2)} ج</span></div>
           </div>
           
-          ${o.recipientName ? `<p><strong>المستلم:</strong> ${o.recipientName}</p>` : ''}
-          ${o.address ? `<p><strong>العنوان:</strong> ${o.address}</p>` : ''}
-          ${o.phone ? `<p><strong>الهاتف:</strong> ${o.phone}</p>` : ''}
+          ${o.recipientName ? `<p><strong>المستلم:</strong> ${escapeStoreHtml(o.recipientName)}</p>` : ''}
+          ${o.address ? `<p><strong>العنوان:</strong> ${escapeStoreHtml(o.address)}</p>` : ''}
+          ${o.phone ? `<p><strong>الهاتف:</strong> ${escapeStoreHtml(o.phone)}</p>` : ''}
           
           ${th}
           
@@ -5239,13 +5369,13 @@ function renderCartPage() {
             <small>المنتجات:</small>
             ${(o.items || []).map(i => `
               <div class="order-item-mini">
-                <span>${i.name} × ${i.quantity}</span>
+                <span>${escapeStoreHtml(i.name)} × ${Number(i.quantity) || 0}</span>
                 <span>${(i.price * i.quantity).toFixed(2)} ج</span>
               </div>
             `).join('')}
           </div>
           
-          ${o.rejectionReason ? `<div class="rejection-reason">❌ ${o.rejectionReason}</div>` : ''}
+          ${o.rejectionReason ? `<div class="rejection-reason">❌ ${escapeStoreHtml(o.rejectionReason)}</div>` : ''}
           
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
             ${o.status === 'pending' 
@@ -5409,21 +5539,64 @@ function removeItem(idx) {
   renderCartPage();
 }
 
-function clearCart() {
-  if (cartItems.length === 0) { 
-    NotificationSystem.info('السلة فارغة'); 
-    return; 
+async function clearCart() {
+  if (cartItems.length === 0) {
+    NotificationSystem.info('السلة فارغة');
+    return;
   }
   if (!confirm('⚠️ هل أنت متأكد من تفريغ السلة بالكامل؟')) return;
+
+  const cancelPending = myOrders.some(o => o.status === 'pending')
+    ? confirm('هل تريد أيضاً إلغاء الطلبات المعلّقة الموجودة حالياً؟')
+    : false;
+
   cartItems = [];
   saveCart();
-  NotificationSystem.success('✅ تم تفريغ السلة بنجاح');
+
+  if (cancelPending && database && auth?.currentUser?.uid) {
+    const updates = {};
+    myOrders.forEach(o => {
+      if (o.status === 'pending' && String(o.customerUid || '') === String(auth.currentUser.uid)) {
+        updates[`orders/${o.orderId}/status`] = 'cancelled';
+        updates[`orders/${o.orderId}/cancelledAt`] = Date.now();
+        updates[`orders/${o.orderId}/cancelledBy`] = 'customer';
+      }
+    });
+    if (Object.keys(updates).length) {
+      try {
+        await update(ref(database), updates);
+        myOrders = myOrders.map(o => {
+          if (updates[`orders/${o.orderId}/status`]) return { ...o, status: 'cancelled', cancelledAt: updates[`orders/${o.orderId}/cancelledAt`] };
+          return o;
+        });
+        saveOrders();
+        NotificationSystem.success('✅ تم تفريغ السلة وإلغاء الطلبات المعلّقة');
+      } catch (e) {
+        NotificationSystem.warning('تم تفريغ السلة، لكن تعذر إلغاء بعض الطلبات المعلّقة بسبب الاتصال.');
+      }
+    } else {
+      NotificationSystem.success('✅ تم تفريغ السلة بنجاح');
+    }
+  } else {
+    NotificationSystem.success('✅ تم تفريغ السلة بنجاح');
+  }
   renderCartPage();
 }
+
 
 // ============================================================
 // ===== Checkout =====
 // ============================================================
+let checkoutSubmitting = false;
+function hasCheckoutDraft() {
+  if (checkoutSubmitting) return false;
+  return ['custName','custAddress','custPhone'].some(id => String(document.getElementById(id)?.value || '').trim().length > 0);
+}
+
+function confirmCheckoutDiscard() {
+  return !hasCheckoutDraft() || confirm('لديك بيانات إدخال في نموذج الطلب. هل تريد إغلاق نافذة الدفع وفقدان البيانات الحالية؟');
+}
+
 function openCheckoutModal(options = {}) {
   if (cartItems.length === 0) { 
     NotificationSystem.warning('السلة فارغة'); 
@@ -5451,6 +5624,7 @@ function openCheckoutModal(options = {}) {
 
 function closeCheckoutModal(fromHistory = false) {
   const modal = $('#checkoutModalOverlay');
+  if (!fromHistory && !confirmCheckoutDiscard()) return;
   if (!modal) return;
   if (!fromHistory && modal.classList.contains('show')) {
     closeStoreLayerFromButton('checkout', () => modal.classList.remove('show'));
@@ -5466,35 +5640,55 @@ $('#checkoutModalOverlay')?.addEventListener('click', function(e) {
   if (e.target === this) closeCheckoutModal(); 
 });
 
+window.addEventListener('beforeunload', (event) => {
+  const modal = document.getElementById('checkoutModalOverlay');
+  if (modal?.classList.contains('show') && hasCheckoutDraft()) {
+    event.preventDefault();
+    event.returnValue = '';
+  }
+});
+
+let couponApplyTimer = null;
+let couponApplyBusy = false;
 $('#applyCouponBtn')?.addEventListener('click', function() {
   const input = document.getElementById('couponInput');
   if (!input) return;
   const code = input.value.trim();
-  if (!code) { 
-    NotificationSystem.warning('⚠️ أدخل كود الخصم'); 
-    return; 
+  if (!code) {
+    NotificationSystem.warning('⚠️ أدخل كود الخصم');
+    return;
   }
-  const result = applyCoupon(code);
-  if (result.success) { 
-    NotificationSystem.success(result.message); 
-    updateTotalSummary(); 
-  } else { 
-    NotificationSystem.error(result.message); 
-    const statusEl = document.getElementById('couponStatus');
-    if (statusEl) { 
-      statusEl.innerHTML = `<span style="color:var(--danger);font-weight:700;">${result.message}</span>`; 
-      setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 4000); 
+  clearTimeout(couponApplyTimer);
+  couponApplyTimer = setTimeout(() => {
+    if (couponApplyBusy) return;
+    couponApplyBusy = true;
+    try {
+      const result = applyCoupon(code);
+      if (result.success) {
+        NotificationSystem.success(result.message);
+        updateTotalSummary();
+      } else {
+        NotificationSystem.error(result.message);
+        const statusEl = document.getElementById('couponStatus');
+        if (statusEl) {
+          statusEl.textContent = result.message;
+          setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 4000);
+        }
+      }
+    } finally {
+      couponApplyBusy = false;
     }
-  }
+  }, 500);
 });
 
 document.getElementById('custPhone')?.addEventListener('blur', function() {
-  localStorage.setItem('professional_checkout_phone', this.value.trim());
+  storageSet('professional_checkout_phone', this.value.trim());
   checkFirstOrderEligibility(this.value.trim(), false);
 });
 
 $('#confirmOrder')?.addEventListener('click', async function(e) {
   e.preventDefault();
+  checkoutSubmitting = true;
   const name = $('#custName')?.value.trim();
   const address = $('#custAddress')?.value.trim();
   const phone = $('#custPhone')?.value.trim();
@@ -5507,6 +5701,7 @@ $('#confirmOrder')?.addEventListener('click', async function(e) {
       fb.style.color = 'var(--danger)'; 
       fb.textContent = '⚠️ املأ جميع الحقول'; 
     } 
+    checkoutSubmitting = false;
     return; 
   }
   
@@ -5517,11 +5712,13 @@ $('#confirmOrder')?.addEventListener('click', async function(e) {
       fb.style.color = 'var(--danger)'; 
       fb.textContent = '⚠️ رقم هاتف غير صحيح'; 
     } 
+    checkoutSubmitting = false;
     return; 
   }
   
   if (cartItems.length === 0) { 
     closeCheckoutModal(); 
+    checkoutSubmitting = false;
     return; 
   }
   
@@ -5538,7 +5735,8 @@ $('#confirmOrder')?.addEventListener('click', async function(e) {
     if (alreadyUsed) {
       NotificationSystem.error('❌ لقد استخدمت هذا الكوبون من قبل. كل عميل يمكنه استخدام الكوبون مرة واحدة فقط.');
       removeCoupon();
-      return;
+      checkoutSubmitting = false;
+    return;
     }
   }
   
@@ -5554,6 +5752,7 @@ $('#confirmOrder')?.addEventListener('click', async function(e) {
   const customerUid = auth?.currentUser?.uid || '';
   if (!customerUid) {
     NotificationSystem.error('يجب تسجيل الدخول بحساب Google قبل إرسال الطلب.');
+    checkoutSubmitting = false;
     return;
   }
 
@@ -5638,6 +5837,7 @@ $('#confirmOrder')?.addEventListener('click', async function(e) {
         btn.disabled = false; 
         btn.innerHTML = '🚀 إرسال الطلب'; 
       }
+      checkoutSubmitting = false;
       return;
     } catch (err) {
       console.error('❌ خطأ في إرسال الطلب:', err);
@@ -5648,6 +5848,7 @@ $('#confirmOrder')?.addEventListener('click', async function(e) {
           btn.disabled = false; 
           btn.innerHTML = '🚀 إرسال الطلب'; 
         }
+        checkoutSubmitting = false;
         return;
       }
       const serverCode = err?.code || err?.message || 'UNKNOWN_ERROR';
@@ -5675,6 +5876,7 @@ $('#confirmOrder')?.addEventListener('click', async function(e) {
     btn.disabled = false; 
     btn.innerHTML = '🚀 إرسال الطلب'; 
   }
+  checkoutSubmitting = false;
 });
 
 document.addEventListener('keydown', e => {
@@ -5800,6 +6002,25 @@ function normalizeStoreBarcode(value) {
     .replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)));
 }
 
+function validateStoreBarcode(value) {
+  const code = normalizeStoreBarcode(value);
+  if (!/^\d+$/.test(code)) return { valid: false, type: 'invalid', code };
+  if (code.length === 12 || code.length === 13) {
+    const body = code.slice(0, -1);
+    const expected = Number(code.at(-1));
+    let sum = 0;
+    for (let i = 0; i < body.length; i++) {
+      const digit = Number(body[i]);
+      const fromRight = body.length - i;
+      sum += digit * (fromRight % 2 === 1 ? 3 : 1);
+    }
+    const check = (10 - (sum % 10)) % 10;
+    return { valid: check === expected, type: code.length === 12 ? 'UPC-A' : 'EAN-13', code, expected: check };
+  }
+  // بعض المنتجات تستخدم باركودات داخلية/GS1 بأطوال أخرى؛ لا نرفضها تلقائياً.
+  return { valid: code.length > 0, type: 'internal', code };
+}
+
 function escapeStoreHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, ch => ({ 
     '&': '&amp;', 
@@ -5830,6 +6051,11 @@ function findProductByBarcode(value) {
 function searchStoreByBarcode(value, openDetails = true) {
   const q = normalizeStoreBarcode(value);
   if (!q) return null;
+  const validation = validateStoreBarcode(q);
+  if (!validation.valid) {
+    setBarcodeSearchStatus(`باركود غير صحيح (${validation.type})`, 'error');
+    return null;
+  }
   const p = findProductByBarcode(q);
   const inp = document.getElementById('searchInput');
   const clr = document.getElementById('searchClear');
@@ -6072,52 +6298,20 @@ function handleBarcodeUrlOnLoad() {
 // ============================================================
 // ===== Load Products =====
 // ============================================================
-let productsListenerUnsubscribe = null;
-let productsLoadTimeoutId = null;
-let productsLoadResolved = false;
 let productsLoadFailed = false;
-
-function showProductsLoadError() {
-  productsLoadFailed = true;
-  const container = document.getElementById('productsContainer');
-  const count = document.getElementById('resultsCount');
-  if (count) count.textContent = 'تعذر تحميل المنتجات';
-  if (!container || allProducts.length > 0) return;
-  container.innerHTML = `
-    <div class="search-no-results" style="grid-column:1/-1; padding:28px 16px;">
-      <span class="icon">📡</span>
-      <h3>تعذر تحميل المنتجات</h3>
-      <p style="margin:8px 0 16px;">الاتصال بقاعدة البيانات تأخر أو غير متاح. يمكنك إعادة المحاولة، وسيتم عرض المنتجات فور وصولها.</p>
-      <button type="button" class="btn btn-outline" id="retryProductsLoadBtn">إعادة المحاولة</button>
-    </div>`;
-  document.getElementById('retryProductsLoadBtn')?.addEventListener('click', loadProducts, { once: true });
-}
+let productsLoading = false;
 
 function loadProducts() {
   console.log('🔄 جاري تحميل المنتجات...');
-  if (productsLoadTimeoutId) clearTimeout(productsLoadTimeoutId);
-  if (typeof productsListenerUnsubscribe === 'function') {
-    try { productsListenerUnsubscribe(); } catch (e) { console.warn('تعذر إيقاف مستمع المنتجات السابق:', e); }
-    productsListenerUnsubscribe = null;
-  }
-  productsLoadResolved = false;
+  productsLoading = true;
   productsLoadFailed = false;
-  if (!database) {
-    console.warn('⚠️ لا يوجد اتصال بقاعدة البيانات؛ سيتم استخدام المنتجات الافتراضية');
-    loadDefaultProducts();
-    return;
+  if (!database) { 
+    console.warn('⚠️ لا يوجد اتصال بقاعدة البيانات'); 
+    loadDefaultProducts(); 
+    return; 
   }
-  // لا نترك واجهة المنتجات في حالة تحميل إلى أجل غير مسمى إذا لم يرد Firebase.
-  productsLoadTimeoutId = setTimeout(() => {
-    if (productsLoadResolved || allProducts.length > 0) return;
-    console.warn('انتهت مهلة تحميل المنتجات؛ عرض رسالة إعادة المحاولة مع إبقاء المستمع لاستقبال البيانات المتأخرة.');
-    showProductsLoadError();
-  }, 8000);
   try {
-    productsListenerUnsubscribe = onValue(ref(database, 'products'), (snap) => {
-      productsLoadResolved = true;
-      productsLoadFailed = false;
-      if (productsLoadTimeoutId) { clearTimeout(productsLoadTimeoutId); productsLoadTimeoutId = null; }
+    subscribeFirebase('products', ref(database, 'products'), (snap) => {
       allProducts = [];
       if (snap.exists()) {
         snap.forEach(child => {
@@ -6146,6 +6340,8 @@ function loadProducts() {
         });
         console.log(`✅ تم تحميل ${allProducts.length} منتج`);
       }
+      productsLoading = false;
+      productsLoadFailed = false;
       if (allProducts.length === 0) { 
         console.warn('⚠️ لا توجد منتجات، جاري تحميل الافتراضية'); 
         loadDefaultProducts(); 
@@ -6160,21 +6356,30 @@ function loadProducts() {
         window.__storeBarcodeUrlHandled = true; 
         setTimeout(handleBarcodeUrlOnLoad, 0); 
       }
-    }, (err) => {
-      productsLoadResolved = true;
-      if (productsLoadTimeoutId) { clearTimeout(productsLoadTimeoutId); productsLoadTimeoutId = null; }
-      console.error('❌ خطأ Firebase أثناء تحميل المنتجات:', err);
-      showProductsLoadError();
+    }, (err) => { 
+      console.error('❌ خطأ Firebase:', err);
+      productsLoading = false;
+      productsLoadFailed = true;
+      const g = document.getElementById('productsContainer');
+      if (g) {
+        g.innerHTML = `<div class="empty-state" style="grid-column:1/-1;text-align:center;padding:40px;"><div class="empty-icon">⚠️</div><h3>تعذر تحميل المنتجات</h3><p>تحقق من الاتصال ثم حاول مرة أخرى.</p><button class="btn btn-primary" type="button" id="retryProductsBtn">إعادة المحاولة</button></div>`;
+        g.querySelector('#retryProductsBtn')?.addEventListener('click', loadProducts, { once: true });
+      }
     });
-  } catch (e) {
-    productsLoadResolved = true;
-    if (productsLoadTimeoutId) { clearTimeout(productsLoadTimeoutId); productsLoadTimeoutId = null; }
+  } catch (e) { 
     console.error('❌ خطأ في تحميل المنتجات:', e);
-    showProductsLoadError();
+    productsLoading = false;
+    productsLoadFailed = true;
+    const g = document.getElementById('productsContainer');
+    if (g) {
+      g.innerHTML = `<div class="empty-state" style="grid-column:1/-1;text-align:center;padding:40px;"><div class="empty-icon">⚠️</div><h3>تعذر تحميل المنتجات</h3><p>تحقق من الاتصال ثم حاول مرة أخرى.</p><button class="btn btn-primary" type="button" id="retryProductsBtn">إعادة المحاولة</button></div>`;
+      g.querySelector('#retryProductsBtn')?.addEventListener('click', loadProducts, { once: true });
+    }
   }
 }
 
 function loadDefaultProducts() {
+  productsLoading = false;
   productsLoadFailed = false;
   console.log('📦 تحميل المنتجات الافتراضية');
   allProducts = [
@@ -6224,7 +6429,7 @@ function renderFlashSale() {
   const section = document.getElementById('flashSaleSection');
   if (!container || !section) return;
   if (database) {
-    onValue(ref(database, 'settings/flashSale'), (snap) => {
+    subscribeFirebase('flashSale', ref(database, 'settings/flashSale'), (snap) => {
       if (snap.exists()) {
         const data = snap.val();
         flashSaleSettings.status = data.status || 'inactive';
@@ -6275,11 +6480,11 @@ function updateFlashSaleDisplay() {
     return `
       <div class="product-card" style="background:rgba(255,255,255,0.95);">
         <div class="product-img-wrap" style="aspect-ratio:1/1;padding:8px;cursor:pointer;" onclick="window.openProductDetail('${p.id}')">
-          ${img ? `<img src="${img}" alt="${p.name}" loading="lazy" onerror="this.style.display='none';">` : `<i class="fas ${p.icon || 'fa-box'} product-img-placeholder"></i>`}
+          ${img ? `<img src="${escapeStoreHtml(img)}" alt="${escapeStoreHtml(p.name)}" loading="lazy" onerror="this.style.display='none';">` : `<i class="fas ${p.icon || 'fa-box'} product-img-placeholder"></i>`}
           <span class="discount-badge">🔥 ${pi.discountLabel}</span>
         </div>
         <div class="product-info">
-          <div class="product-name">${p.name}</div>
+          <div class="product-name">${escapeStoreHtml(p.name)}</div>
           <div class="price-row">
             <div class="price-container">
               <span class="original-price">${pi.basePrice.toFixed(2)} ج</span>
@@ -6380,7 +6585,7 @@ function getFilteredAndSortedProducts() {
 // ============================================================
 // ===== Render Home Products =====
 // ============================================================
-function renderHomeProducts() {
+function renderHomeProductsCore() {
   const g = $('#productsContainer');
   const rc = $('#resultsCount');
   if (!g) return;
@@ -6409,19 +6614,17 @@ function renderHomeProducts() {
   
   if (rc) rc.textContent = `${f.length} منتج`;
   
+  if (productsLoading && allProducts.length === 0) { 
+    g.innerHTML = '<div class="loading-spinner" style="grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i> جاري تحميل المنتجات...</div>';
+    return;
+  }
+  if (productsLoadFailed && allProducts.length === 0) {
+    g.innerHTML = '<div class="empty-state" style="grid-column:1/-1;text-align:center;padding:40px;"><div class="empty-icon">⚠️</div><h3>تعذر تحميل المنتجات</h3><p>تحقق من الاتصال ثم حاول مرة أخرى.</p><button class="btn btn-primary" type="button" id="retryProductsBtn">إعادة المحاولة</button></div>';
+    document.getElementById('retryProductsBtn')?.addEventListener('click', loadProducts, { once: true });
+    return;
+  }
   if (allProducts.length === 0) {
-    if (productsLoadFailed) {
-      g.innerHTML = `
-        <div class="search-no-results" style="grid-column:1/-1; padding:28px 16px;">
-          <span class="icon">📡</span>
-          <h3>تعذر تحميل المنتجات</h3>
-          <p style="margin:8px 0 16px;">الاتصال بقاعدة البيانات تأخر أو غير متاح. حاول مرة أخرى بعد التحقق من الاتصال.</p>
-          <button type="button" class="btn btn-outline" id="retryProductsLoadBtn">إعادة المحاولة</button>
-        </div>`;
-      document.getElementById('retryProductsLoadBtn')?.addEventListener('click', loadProducts, { once: true });
-    } else {
-      g.innerHTML = '<div class="loading-spinner" style="grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i> جاري تحميل المنتجات...</div>';
-    }
+    g.innerHTML = '<div class="loading-spinner" style="grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i> جاري تحميل المنتجات...</div>';
     return;
   }
   
@@ -6473,12 +6676,12 @@ function renderHomeProducts() {
           <i class="fas ${p.icon || 'fa-box'} product-img-placeholder" style="${hi ? 'display:none;' : ''}"></i>
           ${pi.hasDiscount ? `<span class="discount-badge"><i class="fa-solid fa-tag"></i> ${pi.discountLabel}</span>` : ''}
 
-          <span class="category-badge"><i class="fa-solid ${ci}"></i> ${cn}</span>
+          <span class="category-badge"><i class="fa-solid ${escapeStoreHtml(ci)}"></i> ${escapeStoreHtml(cn)}</span>
         </div>
         <div class="product-info">
-          <div class="product-name">${p.name || ''}</div>
+          <div class="product-name">${escapeStoreHtml(p.name || '')}</div>
           <div class="product-rating"><span class="stars">${stars}</span> (${rating.count})</div>
-          <div class="product-desc">${p.description || ''}</div>
+          <div class="product-desc">${escapeStoreHtml(p.description || '')}</div>
           ${(() => {
             const qty = Number(p.quantity ?? 0);
             const status = qty <= 0
@@ -6691,7 +6894,8 @@ function setupSearch() {
     if (e.key === 'Enter') {
       clearTimeout(t);
       const q = normalizeStoreBarcode(inp.value);
-      const exact = findProductByBarcode(q);
+      const validation = validateStoreBarcode(q);
+      const exact = validation.valid ? findProductByBarcode(q) : null;
       if (exact) { 
         searchStoreByBarcode(q, true); 
         return; 
@@ -6721,7 +6925,7 @@ function setupSearch() {
   const readerModal = document.getElementById('storeBarcodeReaderModal');
   const readerFile = document.getElementById('storeBarcodeImageInput');
   
-  cameraBtn?.addEventListener('click', () => startStoreBarcodeCamera());
+  cameraBtn?.addEventListener('click', () => { setBarcodeSearchStatus('جاري فتح قارئ الباركود…'); startStoreBarcodeCamera(); });
   
   fileInput?.addEventListener('change', () => {
     const f = fileInput.files?.[0];
@@ -6850,21 +7054,21 @@ function renderContactPage() {
       if (snap.exists()) {
         const data = snap.val();
         grid.innerHTML = `
-          <a href="tel:${data.phone || ''}" class="contact-info-item">
+          <a href="tel:${encodeURIComponent(String(data.phone || ''))}" class="contact-info-item">
             <i class="fa-solid fa-phone"></i>
             <div class="contact-text">
               <div class="info-label">📞 هاتف</div>
-              <div class="info-value">${data.phone || 'غير متوفر'}</div>
+              <div class="info-value">${escapeStoreHtml(data.phone || 'غير متوفر')}</div>
             </div>
           </a>
-          <a href="https://wa.me/${(data.whatsapp || '').replace(/[^0-9]/g, '')}" target="_blank" class="contact-info-item">
+          <a href="https://wa.me/${encodeURIComponent(String(data.whatsapp || '').replace(/[^0-9]/g, ''))}" target="_blank" class="contact-info-item">
             <i class="fa-brands fa-whatsapp" style="color:#25D366;"></i>
             <div class="contact-text">
               <div class="info-label">💬 واتساب</div>
-              <div class="info-value">${data.whatsapp || 'غير متوفر'}</div>
+              <div class="info-value">${escapeStoreHtml(data.whatsapp || 'غير متوفر')}</div>
             </div>
           </a>
-          <a href="${data.facebook || '#'}" target="_blank" class="contact-info-item">
+          <a href="${escapeStoreHtml(data.facebook || '#')}" target="_blank" class="contact-info-item">
             <i class="fa-brands fa-facebook" style="color:#1877F2;"></i>
             <div class="contact-text">
               <div class="info-label">📘 فيسبوك</div>
@@ -6875,7 +7079,7 @@ function renderContactPage() {
             <i class="fa-solid fa-envelope"></i>
             <div class="contact-text">
               <div class="info-label">✉️ بريد إلكتروني</div>
-              <div class="info-value">${data.email || 'غير متوفر'}</div>
+              <div class="info-value">${escapeStoreHtml(data.email || 'غير متوفر')}</div>
             </div>
           </a>
         `;
@@ -6937,9 +7141,9 @@ document.getElementById('sendContactBtn')?.addEventListener('click', async funct
       document.getElementById('contactSubject').value = '';
       document.getElementById('contactMessage').value = '';
     } else {
-      const messages = JSON.parse(localStorage.getItem('contact_messages') || '[]');
+      const messages = storageGetJson('contact_messages', []);
       messages.push({ email, subject, message, createdAt: Date.now() });
-      localStorage.setItem('contact_messages', JSON.stringify(messages));
+      storageSet('contact_messages', messages);
       NotificationSystem.success('✅ تم حفظ رسالتك محلياً!');
     }
   } catch (e) { 
@@ -6955,40 +7159,47 @@ document.getElementById('sendContactBtn')?.addEventListener('click', async funct
 // ============================================================
 async function refreshOrdersStatus() {
   if (!database || myOrders.length === 0) return;
-  let c = false;
-  for (const o of [...myOrders]) {
-    // حتى الطلب المسلّم يجب مزامنته، لأن المدير قد يحوله إلى returned بعد إرجاع كل الكمية.
+  let changed = false;
+  const nextOrders = [];
+  const snapshot = [...myOrders];
+  for (const o of snapshot) {
     try {
       const s = await get(ref(database, `orders/${o.orderId}`));
-      if (s.exists()) {
-        const d = s.val() || {};
-        const os = o.status;
-        const oldLedger = JSON.stringify(o.returnedQuantities || {});
-        o.status = d.status || o.status || 'pending';
-        o.rejectionReason = d.rejectionReason || '';
-        if (d.deliveredAt) o.deliveredAt = Number(d.deliveredAt);
-        if (d.returnedAt) o.returnedAt = Number(d.returnedAt);
-        if (d.returnedQuantities) o.returnedQuantities = d.returnedQuantities;
-        if (o.status === 'delivered' && os !== 'delivered') {
-          o.deliveredAt = Number(d.deliveredAt || o.deliveredAt || Date.now());
-          OrderTimerManager.startDeliveredTimer(o.orderId);
-        }
-        if (o.status === 'rejected' && os !== 'rejected') {
-          o.rejectedAt = Number(d.rejectedAt || Date.now());
-          OrderTimerManager.startRejectedTimer(o.orderId);
-        }
-        if (os !== o.status || oldLedger !== JSON.stringify(o.returnedQuantities || {})) c = true;
-      } else {
-        // إذا انتهت مهلة الـ24 ساعة وحُذف الطلب من Firebase، يمكن حذفه محلياً أيضاً.
-        OrderTimerManager.clearTimer(o.orderId);
-        myOrders = myOrders.filter(x => x.orderId !== o.orderId);
-        c = true;
+      if (!s.exists()) { OrderTimerManager.clearTimer(o.orderId); changed = true; continue; }
+      const d = s.val() || {};
+      const oldStatus = String(o.status || 'pending').toLowerCase();
+      const incomingStatus = String(d.status || o.status || 'pending').toLowerCase();
+      const deliveredKnown = Number(o.deliveredAt || d.deliveredAt || 0) > 0;
+      const returnedKnown = oldStatus === 'returned' || incomingStatus === 'returned' || Number(o.returnedAt || d.returnedAt || 0) > 0;
+      let finalStatus = incomingStatus;
+      if (returnedKnown) finalStatus = 'returned';
+      else if (deliveredKnown && ['pending','accepted','processing','delivering','shipped'].includes(incomingStatus)) finalStatus = 'delivered';
+      else {
+        const oldRank = ORDER_STATUS_RANK[oldStatus] || 0;
+        const incomingRank = ORDER_STATUS_RANK[incomingStatus] || 0;
+        if (oldStatus === 'delivered' && incomingRank < ORDER_STATUS_RANK.delivered) finalStatus = 'delivered';
+        else if (oldStatus === 'returned') finalStatus = 'returned';
+        else if (oldRank > incomingRank && ['pending','accepted','processing','delivering','shipped'].includes(incomingStatus)) finalStatus = oldStatus;
       }
-    } catch (e) {}
+      const updated = {...o,status:finalStatus,rejectionReason:d.rejectionReason || o.rejectionReason || ''};
+      if (d.deliveredAt) updated.deliveredAt=Number(d.deliveredAt);
+      if (d.returnedAt) updated.returnedAt=Number(d.returnedAt);
+      if (d.returnedQuantities) updated.returnedQuantities=d.returnedQuantities;
+      if (finalStatus==='returned' && !updated.returnedAt) updated.returnedAt=Date.now();
+      const ledgerChanged=JSON.stringify(o.returnedQuantities||{})!==JSON.stringify(updated.returnedQuantities||{});
+      if (oldStatus!==finalStatus || ledgerChanged) changed=true;
+      if (oldStatus!==finalStatus) await notifyOrderStatusChange(updated,finalStatus,oldStatus);
+      if (finalStatus==='delivered' && oldStatus!=='delivered') { updated.deliveredAt=Number(updated.deliveredAt||Date.now()); OrderTimerManager.startDeliveredTimer(updated.orderId); }
+      if (finalStatus==='rejected' && oldStatus!=='rejected') { updated.rejectedAt=Number(d.rejectedAt||o.rejectedAt||Date.now()); OrderTimerManager.startRejectedTimer(updated.orderId); }
+      if (finalStatus==='returned') OrderTimerManager.clearTimer(updated.orderId);
+      nextOrders.push(updated);
+    } catch(e) { nextOrders.push(o); }
   }
-  if (c) { 
+  if (changed) {
+    myOrders=nextOrders;
     saveOrders();
     if ($('#cartPage')?.classList.contains('active-page')) renderCartPage();
+    if ($('#returnsPage')?.classList.contains('active-page')) renderReturnsPage();
   }
 }
 
@@ -7054,13 +7265,13 @@ function renderWishlistPage() {
         ${hi ? `<img src="${img}" alt="${p.name || ''}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">` : ''}
         <i class="fas ${p.icon || 'fa-box'} product-img-placeholder" style="${hi ? 'display:none;' : ''}"></i>
         ${pi.hasDiscount ? `<span class="discount-badge"><i class="fa-solid fa-tag"></i> ${pi.discountLabel}</span>` : ''}
-        <span class="category-badge"><i class="fa-solid ${ci}"></i> ${cn}</span>
+        <span class="category-badge"><i class="fa-solid ${escapeStoreHtml(ci)}"></i> ${escapeStoreHtml(cn)}</span>
         <span class="stock-badge ${av ? 'stock-available' : 'stock-out'}">${av ? '✓ متوفر' : '✗ نفذ'}</span>
       </div>
       <div class="product-info">
         <div class="product-name" role="button" tabindex="0" onclick="window.openProductDetail('${p.id}')">${p.name || ''}</div>
         <div class="product-rating"><span class="stars">${stars}</span> (${rating.count})</div>
-        <div class="product-desc">${p.description || ''}</div>
+        <div class="product-desc">${escapeStoreHtml(p.description || '')}</div>
         <div class="price-row">
           ${ph}
           <button class="add-btn" ${!av ? 'disabled' : ''} data-add-id="${p.id}"><i class="fa-solid fa-cart-plus"></i> أضف</button>
@@ -7133,7 +7344,10 @@ function renderReviewList(a) {
   `).join('');
 }
 
+let activeReviewListenerKey = null;
 function loadProductReviews(pid) {
+  if (activeReviewListenerKey) unsubscribeFirebase(activeReviewListenerKey);
+  activeReviewListenerKey = 'reviews:' + String(pid);
   const b = $('#reviewList');
   if (b) {
     b.innerHTML = '<div class="review-loading"><i class="fa-solid fa-spinner fa-spin"></i> جاري تحميل التقييمات...</div>';
@@ -7145,7 +7359,7 @@ function loadProductReviews(pid) {
     return;
   }
   try {
-    onValue(ref(database, 'reviews/' + pid), s => {
+    subscribeFirebase('reviews:' + String(pid), ref(database, 'reviews/' + pid), s => {
       const a = [];
       if (s.exists()) {
         const d = s.val();
@@ -7215,7 +7429,7 @@ async function submitProductReview() {
     } else {
       const a = loadFromStorage('reviews_' + pid, []);
       a.push(review);
-      localStorage.setItem('reviews_' + pid, JSON.stringify(a));
+      storageSet('reviews_' + pid, a);
       currentProductReviews = a;
       renderReviewSummary(a);
       renderReviewList(a);
@@ -7234,13 +7448,13 @@ async function submitProductReview() {
 // ============================================================
 // ===== GLOBAL COMMERCE UPGRADE v2 =====
 // ============================================================
-let compareProducts = JSON.parse(localStorage.getItem('ps_compare_products') || '[]');
-let recentlyViewed = JSON.parse(localStorage.getItem('ps_recently_viewed') || '[]');
+let compareProducts = loadFromStorage('ps_compare_products', []);
+let recentlyViewed = loadFromStorage('ps_recently_viewed', []);
 let discoveryMode = 'all';
 
 function persistCommerceUX() {
-  localStorage.setItem('ps_compare_products', JSON.stringify(compareProducts.slice(0, 3)));
-  localStorage.setItem('ps_recently_viewed', JSON.stringify(recentlyViewed.slice(0, 3)));
+  storageSet('ps_compare_products', compareProducts.slice(0, 3));
+  storageSet('ps_recently_viewed', recentlyViewed.slice(0, 3));
 }
 
 function rememberRecentlyViewed(pid) {
@@ -7441,13 +7655,13 @@ function setupGlobalCommerceUX() {
   updateCompareFloating();
 }
 
-// Re-render hook
-const _renderHomeProductsOriginal = renderHomeProducts;
-renderHomeProducts = function() {
-  _renderHomeProductsOriginal();
+// واجهة رسم واحدة ثابتة بدلاً من إعادة تعريف الدالة لاحقاً (كان ذلك يسبب
+// سلوكاً غير متوقع عند تكرار تحميل الصفحة/الموديول).
+function renderHomeProducts() {
+  renderHomeProductsCore();
   updateCompareFloating();
   renderRecentlyViewed();
-};
+}
 
 // ============================================================
 // ===== Promotional Carousel =====
@@ -7458,39 +7672,21 @@ let isUserInteracting = false;
 let resumeTimeout = null;
 let currentSlideIndex = 0;
 const PROMO_DEFAULT_INTERVAL_SECONDS = 5;
-let promoListenerUnsubscribe = null;
-let promoLoadTimeoutId = null;
-let promoLoadResolved = false;
-
-function setDefaultPromotionalSlides() {
-  promotionalSlides = [
-    { title: '✨ عروض حصرية', description: 'تسوق أفضل المنتجات', image: 'https://via.placeholder.com/800x400/C9A96E/1A0F07?text=عروض+حصرية', category: 'all', active: true, interval: PROMO_DEFAULT_INTERVAL_SECONDS, order: 1 }
-  ];
-  currentSlideIndex = 0;
-  renderPromotionalCarousel();
-}
 
 function loadPromotionalSlides() {
   console.log('🔄 جاري تحميل العروض الترويجية (Carousel)...');
-  if (promoLoadTimeoutId) clearTimeout(promoLoadTimeoutId);
-  if (typeof promoListenerUnsubscribe === 'function') {
-    try { promoListenerUnsubscribe(); } catch (e) { console.warn('تعذر إيقاف مستمع العروض السابق:', e); }
-    promoListenerUnsubscribe = null;
+  
+  if (!database) {
+    promotionalSlides = [
+      { title: '✨ عروض حصرية', description: 'تسوق أفضل المنتجات', image: 'https://via.placeholder.com/800x400/C9A96E/1A0F07?text=عروض+حصرية', category: 'all', active: true, interval: PROMO_DEFAULT_INTERVAL_SECONDS, order: 1 }
+    ];
+    currentSlideIndex = 0;
+    renderPromotionalCarousel();
+    return;
   }
-  promoLoadResolved = false;
-  // اعرض العروض الافتراضية فورًا حتى لا يبقى قسم العروض فارغًا أثناء انتظار Firebase.
-  setDefaultPromotionalSlides();
-  if (!database) return;
-
-  promoLoadTimeoutId = setTimeout(() => {
-    if (promoLoadResolved) return;
-    console.warn('تأخر تحميل العروض من Firebase؛ تم الإبقاء على العرض الافتراضي مؤقتًا.');
-  }, 6000);
-
+  
   const promoRef = ref(database, 'settings/promotionalSlides');
-  promoListenerUnsubscribe = onValue(promoRef, (snap) => {
-    promoLoadResolved = true;
-    if (promoLoadTimeoutId) { clearTimeout(promoLoadTimeoutId); promoLoadTimeoutId = null; }
+  subscribeFirebase('promotionalSlides', promoRef, (snap) => {
     const slides = [];
     if (snap.exists()) {
       const data = snap.val();
@@ -7540,10 +7736,12 @@ function loadPromotionalSlides() {
     stopAutoPlay();
     renderPromotionalCarousel();
   }, (error) => {
-    promoLoadResolved = true;
-    if (promoLoadTimeoutId) { clearTimeout(promoLoadTimeoutId); promoLoadTimeoutId = null; }
     console.error('❌ خطأ في تحميل العروض الترويجية:', error);
-    setDefaultPromotionalSlides();
+    promotionalSlides = [
+      { title: '✨ عروض حصرية', description: 'تسوق أفضل المنتجات', image: 'https://via.placeholder.com/800x400/C9A96E/1A0F07?text=عروض+حصرية', category: 'all', linkedProductId: null, linkedProductName: null, active: true, interval: PROMO_DEFAULT_INTERVAL_SECONDS, order: 1 }
+    ];
+    currentSlideIndex = 0;
+    renderPromotionalCarousel();
   });
 }
 
@@ -7581,7 +7779,12 @@ function renderPromotionalCarousel() {
     item.className = 'promo-carousel-item';
     
     const imageUrl = getSlideImageUrl(slide);
-    item.innerHTML = `<img src="${imageUrl}" alt="${slide.title || 'عرض مميز'}" loading="lazy" onerror="this.src='https://via.placeholder.com/800x400/4A2C17/C9A96E?text=🏪+عرض+مميز';">`;
+    const img = document.createElement('img');
+    img.src = imageUrl;
+    img.alt = slide.title || 'عرض مميز';
+    img.loading = 'lazy';
+    img.addEventListener('error', () => { img.src = 'https://via.placeholder.com/800x400/4A2C17/C9A96E?text=🏪+عرض+مميز'; }, { once: true });
+    item.appendChild(img);
     
     item.addEventListener('click', () => {
       const linkedIds = Array.isArray(slide.linkedProductIds)
@@ -7822,21 +8025,10 @@ function init() {
   startPeriodicRefresh();
   refreshOrdersStatus();
   loadPromotionalSlides();
+  updatePhoneNotificationButton();
+  startReturnStatusListener().catch(() => {});
   
   setTimeout(setupCarouselInteractions, 2000);
-  
-  if (database) {
-    onValue(ref(database, 'settings/flashSale'), (snap) => {
-      if (snap.exists()) {
-        const data = snap.val();
-        flashSaleSettings.status = data.status || 'inactive';
-        flashSaleSettings.count = data.count || 4;
-        flashSaleSettings.endTime = data.endTime || Date.now() + 24 * 60 * 60 * 1000;
-        updateFlashSaleDisplay();
-        updateFlashSaleTimer();
-      }
-    });
-  }
   
   // Expose to window
   window.switchPage = switchPage;
@@ -7883,6 +8075,27 @@ init();
   };
   new MutationObserver(sync).observe(modal, { attributes: true, attributeFilter: ['class'] });
   sync();
+})();
+</script>
+
+<script>
+(function ensureIconButtonAccessibility(){
+  const labels = {
+    'hamburger-btn':'فتح القائمة', 'close-menu':'إغلاق القائمة', 'notification-close':'إغلاق الإشعار',
+    'wishlist-btn':'إضافة أو إزالة من المفضلة', 'compare-btn-mini':'إضافة إلى المقارنة',
+    'promo-carousel-btn prev':'العرض السابق', 'promo-carousel-btn next':'العرض التالي',
+    'search-clear':'مسح البحث', 'barcode-search-btn':'قراءة الباركود'
+  };
+  document.querySelectorAll('button').forEach(btn => {
+    if (btn.getAttribute('aria-label')) return;
+    const cls = [...btn.classList].join(' ');
+    const key = Object.keys(labels).find(k => cls.includes(k));
+    if (key) btn.setAttribute('aria-label', labels[key]);
+    else if (!btn.textContent.trim() && btn.querySelector('i')) {
+      const title = btn.getAttribute('title');
+      if (title) btn.setAttribute('aria-label', title);
+    }
+  });
 })();
 </script>
 
