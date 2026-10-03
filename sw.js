@@ -1,163 +1,346 @@
 /* ============================================================
-   Professional Store PWA — Service Worker
-   Version: v4
-   - Offline cache
-   - Network-first HTML
-   - Cache-first static assets
-   - Push notifications
-   - Notification click handling
-   - In-app notification messages
-   - Safe update / activation
+   Professional Store PWA
+   Firebase Cloud Messaging + Web Push Service Worker
+   Version: v5
+
+   الوظائف:
+   - استقبال Firebase Cloud Messaging
+   - استقبال Web Push
+   - إشعارات تعمل والتطبيق مغلق
+   - إشعارات تعمل والتطبيق في الخلفية
+   - فتح الطلب/المرتجع عند الضغط على الإشعار
+   - دعم Data Payload و Notification Payload
+   - Offline Cache
+   - Network First للصفحات
+   - Cache First للملفات الثابتة
+   - تحديث آمن للـ Service Worker
    ============================================================ */
 
-const CACHE_NAME = 'professional-store-pwa-v4';
+'use strict';
+
+
+/* ============================================================
+   CACHE
+   ============================================================ */
+
+const CACHE_NAME =
+  'professional-store-pwa-v5';
 
 const CORE = [
   './',
   './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png',
-  './apple-touch-icon.png',
-  './favicon-32.png'
+  './manifest.json'
 ];
+
 
 /* ============================================================
    INSTALL
    ============================================================ */
 
 self.addEventListener('install', event => {
+
   event.waitUntil(
-    caches.open(CACHE_NAME)
+
+    caches
+      .open(CACHE_NAME)
+
       .then(cache => {
-        return cache.addAll(CORE).catch(error => {
-          console.warn(
-            '[Professional Store SW] بعض ملفات CORE لم يتم تخزينها:',
-            error
-          );
-        });
+
+        /*
+         * لا نستخدم cache.addAll هنا.
+         * إذا كان ملف واحد غير موجود فلن يفشل تثبيت
+         * Service Worker بالكامل.
+         */
+
+        return Promise.all(
+
+          CORE.map(url =>
+
+            fetch(
+              new Request(
+                url,
+                {
+                  cache: 'no-store'
+                }
+              )
+            )
+
+              .then(response => {
+
+                if (
+                  response &&
+                  response.ok
+                ) {
+
+                  return cache.put(
+                    url,
+                    response
+                  );
+
+                }
+
+              })
+
+              .catch(() => {
+
+                /*
+                 * تجاهل فشل ملف منفرد.
+                 */
+
+              })
+
+          )
+
+        );
+
       })
-      .then(() => self.skipWaiting())
+
+      .catch(() => {})
+
+      .then(() => {
+
+        return self.skipWaiting();
+
+      })
+
   );
+
 });
+
 
 /* ============================================================
    ACTIVATE
    ============================================================ */
 
 self.addEventListener('activate', event => {
+
   event.waitUntil(
-    caches.keys()
+
+    caches
+      .keys()
+
       .then(keys => {
+
         return Promise.all(
+
           keys
-            .filter(key => key !== CACHE_NAME)
-            .map(key => caches.delete(key))
+
+            .filter(
+              key =>
+                key !== CACHE_NAME
+            )
+
+            .map(
+              key =>
+                caches.delete(key)
+            )
+
         );
+
       })
-      .then(() => self.clients.claim())
+
+      .then(() => {
+
+        return self.clients.claim();
+
+      })
+
   );
+
 });
+
 
 /* ============================================================
    FETCH
    ============================================================ */
 
 self.addEventListener('fetch', event => {
-  if (!event.request) return;
 
-  if (event.request.method !== 'GET') {
+  if (!event.request) {
     return;
   }
 
-  const url = new URL(event.request.url);
+  if (
+    event.request.method !== 'GET'
+  ) {
+    return;
+  }
 
-  /* ----------------------------------------------------------
-     لا نعمل Cache للـService Worker نفسه
-     ---------------------------------------------------------- */
-
-  if (url.pathname.endsWith('/sw.js')) {
-    event.respondWith(
-      fetch(event.request, {
-        cache: 'no-store'
-      })
+  const url =
+    new URL(
+      event.request.url
     );
-    return;
-  }
+
 
   /* ----------------------------------------------------------
-     HTML / Navigation
-     
-     دائمًا نحاول الشبكة أولًا حتى تصل تحديثات الموقع
-     للمستخدم بدون الحاجة لمسح Cache يدويًا.
+     Service Worker نفسه
      ---------------------------------------------------------- */
 
   if (
-    event.request.mode === 'navigate' ||
-    event.request.destination === 'document' ||
-    url.pathname.endsWith('/index.html') ||
-    url.pathname === '/'
+    url.pathname.endsWith('/sw.js')
   ) {
+
     event.respondWith(
-      fetch(event.request, {
-        cache: 'no-store'
-      })
-        .then(response => {
-          if (response && response.ok) {
-            const copy = response.clone();
 
-            caches.open(CACHE_NAME)
-              .then(cache => {
-                return cache.put(event.request, copy);
-              })
-              .catch(() => {});
-          }
+      fetch(
+        event.request,
+        {
+          cache: 'no-store'
+        }
+      )
 
-          return response;
-        })
-        .catch(() => {
-          return caches.match(event.request)
-            .then(cached => {
-              return cached || caches.match('./index.html');
-            });
-        })
     );
 
     return;
   }
 
+
   /* ----------------------------------------------------------
-     Static Assets
+     صفحات HTML
      
-     Cache First:
-     - الصور
-     - الأيقونات
-     - الملفات الثابتة
+     Network First
+     ---------------------------------------------------------- */
+
+  if (
+
+    event.request.mode ===
+      'navigate'
+
+    ||
+
+    event.request.destination ===
+      'document'
+
+    ||
+
+    url.pathname.endsWith(
+      '/index.html'
+    )
+
+    ||
+
+    url.pathname === '/'
+
+  ) {
+
+    event.respondWith(
+
+      fetch(
+        event.request,
+        {
+          cache: 'no-store'
+        }
+      )
+
+        .then(response => {
+
+          if (
+            response &&
+            response.ok
+          ) {
+
+            const copy =
+              response.clone();
+
+            caches
+              .open(CACHE_NAME)
+              .then(cache => {
+
+                return cache.put(
+                  event.request,
+                  copy
+                );
+
+              })
+
+              .catch(() => {});
+
+          }
+
+          return response;
+
+        })
+
+        .catch(() => {
+
+          return caches
+            .match(event.request)
+
+            .then(cached => {
+
+              return (
+                cached ||
+
+                caches.match(
+                  './index.html'
+                )
+
+              );
+
+            });
+
+        })
+
+    );
+
+    return;
+  }
+
+
+  /* ----------------------------------------------------------
+     الملفات الثابتة
+     
+     Cache First
      ---------------------------------------------------------- */
 
   event.respondWith(
-    caches.match(event.request)
+
+    caches
+      .match(event.request)
+
       .then(cached => {
+
         if (cached) {
           return cached;
         }
 
-        return fetch(event.request)
-          .then(response => {
-            if (response && response.ok) {
-              const copy = response.clone();
+        return fetch(
+          event.request
+        )
 
-              caches.open(CACHE_NAME)
+          .then(response => {
+
+            if (
+              response &&
+              response.ok
+            ) {
+
+              const copy =
+                response.clone();
+
+              caches
+                .open(CACHE_NAME)
                 .then(cache => {
-                  return cache.put(event.request, copy);
+
+                  return cache.put(
+                    event.request,
+                    copy
+                  );
+
                 })
+
                 .catch(() => {});
+
             }
 
             return response;
+
           });
+
       })
+
       .catch(() => {
+
         return new Response(
           'Offline',
           {
@@ -165,91 +348,372 @@ self.addEventListener('fetch', event => {
             statusText: 'Offline'
           }
         );
+
       })
+
   );
+
 });
 
+
 /* ============================================================
-   PUSH NOTIFICATIONS
+   PUSH
    ============================================================
 
-   هذا الحدث يستقبل Push Notification من خدمة Push مثل
-   Firebase Cloud Messaging أو Web Push.
+   هذا هو الجزء الأساسي.
 
-   مثال Payload:
-
-   {
-     "title": "تم قبول طلبك",
-     "body": "تم قبول طلبك رقم #12345",
-     "icon": "./icon-192.png",
-     "badge": "./icon-192.png",
-     "url": "./index.html?open=orders",
-     "tag": "order-12345"
-   }
+   Firebase Cloud Messaging سيرسل Push إلى هذا الـService Worker
+   حتى إذا كانت صفحة المتجر مغلقة.
 
    ============================================================ */
 
-self.addEventListener('push', event => {
+self.addEventListener(
+  'push',
+  event => {
 
-  let data = {};
+    event.waitUntil(
+
+      handlePushNotification(
+        event
+      )
+
+    );
+
+  }
+);
+
+
+/* ============================================================
+   HANDLE PUSH
+   ============================================================ */
+
+async function handlePushNotification(
+  event
+) {
+
+  let payload = {};
 
   try {
+
     if (event.data) {
-      data = event.data.json();
+
+      payload =
+        event.data.json();
+
     }
-  } catch (error) {
-    try {
-      data = {
-        body: event.data
-          ? event.data.text()
-          : 'لديك إشعار جديد'
-      };
-    } catch (textError) {
-      data = {};
-    }
+
   }
 
+  catch (error) {
+
+    try {
+
+      payload = {
+
+        body:
+          event.data
+            ? event.data.text()
+            : ''
+
+      };
+
+    }
+
+    catch (textError) {
+
+      payload = {};
+
+    }
+
+  }
+
+
+  /*
+   * Firebase يمكن أن يرسل البيانات بهذا الشكل:
+   *
+   * {
+   *   notification: {...},
+   *   data: {...}
+   * }
+   *
+   * أو Data Payload فقط:
+   *
+   * {
+   *   data: {...}
+   * }
+   */
+
+  const notification =
+    payload.notification ||
+    {};
+
+  const data =
+    payload.data ||
+    {};
+
+
+  /* ==========================================================
+     TITLE
+     ========================================================== */
+
   const title =
+
     data.title ||
-    data.notification?.title ||
+
+    notification.title ||
+
+    payload.title ||
+
     'بروفيشنال ستور';
 
+
+  /* ==========================================================
+     BODY
+     ========================================================== */
+
   const body =
+
     data.body ||
-    data.notification?.body ||
-    'لديك تحديث جديد';
+
+    notification.body ||
+
+    payload.body ||
+
+    'لديك تحديث جديد في متجر بروفيشنال';
+
+
+  /* ==========================================================
+     ICON
+     ========================================================== */
 
   const icon =
+
     data.icon ||
-    data.notification?.icon ||
+
+    notification.icon ||
+
+    payload.icon ||
+
     './icon-192.png';
+
+
+  /* ==========================================================
+     BADGE
+     ========================================================== */
 
   const badge =
+
     data.badge ||
+
+    notification.badge ||
+
     './icon-192.png';
 
-  const notificationUrl =
+
+  /* ==========================================================
+     ORDER ID
+     ========================================================== */
+
+  const orderId =
+
+    data.orderId ||
+
+    data.orderID ||
+
+    data.order_id ||
+
+    payload.orderId ||
+
+    '';
+
+
+  /* ==========================================================
+     RETURN ID
+     ========================================================== */
+
+  const returnId =
+
+    data.returnId ||
+
+    data.returnID ||
+
+    data.return_id ||
+
+    payload.returnId ||
+
+    '';
+
+
+  /* ==========================================================
+     NOTIFICATION TYPE
+     ========================================================== */
+
+  const notificationType =
+
+    data.type ||
+
+    data.notificationType ||
+
+    data.notification_type ||
+
+    payload.type ||
+
+    'general';
+
+
+  /* ==========================================================
+     NOTIFICATION ID
+     ========================================================== */
+
+  const notificationId =
+
+    data.notificationId ||
+
+    data.notificationID ||
+
+    data.notification_id ||
+
+    payload.notificationId ||
+
+    '';
+
+
+  /* ==========================================================
+     URL
+     ========================================================== */
+
+  let targetUrl =
+
     data.url ||
-    data.notification?.click_action ||
+
+    data.click_action ||
+
+    data.clickAction ||
+
+    notification.click_action ||
+
+    notification.clickAction ||
+
+    payload.url ||
+
     './index.html';
 
+
+  /*
+   * Firebase fcm_options.link
+   */
+
+  if (
+
+    !targetUrl ||
+
+    targetUrl === './index.html'
+
+  ) {
+
+    if (
+      notification.fcm_options &&
+      notification.fcm_options.link
+    ) {
+
+      targetUrl =
+        notification
+          .fcm_options
+          .link;
+
+    }
+
+  }
+
+
+  /*
+   * تأكد أن الرابط لا يخرج إلى موقع خارجي
+   * بدون داعٍ.
+   */
+
+  try {
+
+    const absoluteUrl =
+      new URL(
+        targetUrl,
+        self.location.origin
+      );
+
+    if (
+      absoluteUrl.origin !==
+      self.location.origin
+    ) {
+
+      targetUrl =
+        './index.html';
+
+    }
+
+    else {
+
+      targetUrl =
+        absoluteUrl.href;
+
+    }
+
+  }
+
+  catch (error) {
+
+    targetUrl =
+      './index.html';
+
+  }
+
+
+  /* ==========================================================
+     TAG
+     ========================================================== */
+
   const tag =
+
     data.tag ||
-    data.id ||
-    `professional-store-${Date.now()}`;
+
+    payload.tag ||
+
+    (
+      notificationType +
+      '-' +
+      (
+        orderId ||
+        returnId ||
+        notificationId ||
+        Date.now()
+      )
+    );
+
+
+  /* ==========================================================
+     NOTIFICATION OPTIONS
+     ========================================================== */
 
   const options = {
-    body: body,
 
-    icon: icon,
+    body:
+      String(body),
 
-    badge: badge,
+    icon:
+      icon,
 
-    tag: tag,
+    badge:
+      badge,
 
-    renotify: true,
+    tag:
+      tag,
 
-    requireInteraction: false,
+    renotify:
+      true,
+
+    requireInteraction:
+      false,
+
+    silent:
+      false,
 
     vibrate: [
       200,
@@ -258,226 +722,373 @@ self.addEventListener('push', event => {
     ],
 
     data: {
-      url: notificationUrl,
+
+      url:
+        targetUrl,
 
       notificationId:
-        data.notificationId ||
-        data.id ||
-        '',
+        notificationId,
 
       type:
-        data.type ||
-        'general',
+        notificationType,
 
       orderId:
-        data.orderId ||
-        '',
+        orderId,
 
       returnId:
-        data.returnId ||
-        ''
-    },
+        returnId
 
-    actions: Array.isArray(data.actions)
-      ? data.actions
-      : []
+    }
+
   };
 
-  event.waitUntil(
-    self.registration.showNotification(
-      title,
-      options
+
+  /* ==========================================================
+     ACTIONS
+     ========================================================== */
+
+  if (
+    Array.isArray(
+      data.actions
     )
-  );
-});
+  ) {
+
+    options.actions =
+      data.actions;
+
+  }
+
+  else if (
+    Array.isArray(
+      payload.actions
+    )
+  ) {
+
+    options.actions =
+      payload.actions;
+
+  }
+
+
+  /* ==========================================================
+     SHOW NOTIFICATION
+     ========================================================== */
+
+  await self.registration
+    .showNotification(
+      String(title),
+      options
+    );
+
+}
+
 
 /* ============================================================
    NOTIFICATION CLICK
    ============================================================ */
 
-self.addEventListener('notificationclick', event => {
+self.addEventListener(
+  'notificationclick',
+  event => {
 
-  event.notification.close();
+    event.notification.close();
 
-  const notificationData =
-    event.notification.data || {};
 
-  const targetUrl =
-    notificationData.url ||
+    const notificationData =
+      event.notification.data ||
+      {};
+
+
+    const targetUrl =
+
+      notificationData.url ||
+
+      './index.html';
+
+
+    event.waitUntil(
+
+      openNotificationTarget(
+        targetUrl,
+        notificationData
+      )
+
+    );
+
+  }
+);
+
+
+/* ============================================================
+   OPEN NOTIFICATION TARGET
+   ============================================================ */
+
+async function openNotificationTarget(
+  targetUrl,
+  notificationData
+) {
+
+  let finalUrl =
     './index.html';
 
-  event.waitUntil(
 
-    self.clients.matchAll({
-      type: 'window',
-      includeUncontrolled: true
-    })
+  try {
 
-      .then(clientList => {
+    const url =
+      new URL(
+        targetUrl,
+        self.location.origin
+      );
 
-        /* ------------------------------------------------------
-           إذا كان التطبيق مفتوحًا بالفعل:
-           نركز عليه ونرسل له الرابط.
-           ------------------------------------------------------ */
 
-        for (const client of clientList) {
+    if (
+      url.origin ===
+      self.location.origin
+    ) {
 
-          if (
-            client.url &&
-            'focus' in client
-          ) {
+      finalUrl =
+        url.href;
 
-            return client
-              .focus()
-              .then(() => {
+    }
 
-                if (
-                  'postMessage' in client
-                ) {
+  }
 
-                  client.postMessage({
-                    type: 'OPEN_NOTIFICATION_TARGET',
+  catch (error) {
 
-                    url: targetUrl,
+    finalUrl =
+      './index.html';
 
-                    notificationId:
-                      notificationData.notificationId || '',
+  }
 
-                    notificationType:
-                      notificationData.type || '',
 
-                    orderId:
-                      notificationData.orderId || '',
+  const clientList =
+    await self.clients.matchAll({
 
-                    returnId:
-                      notificationData.returnId || ''
-                  });
+      type:
+        'window',
 
-                }
+      includeUncontrolled:
+        true
 
-                return client;
-              });
-          }
-        }
+    });
 
-        /* ------------------------------------------------------
-           التطبيق غير مفتوح:
-           افتح المتجر.
-           ------------------------------------------------------ */
 
-        if (
-          self.clients.openWindow
-        ) {
+  /* ----------------------------------------------------------
+     التطبيق مفتوح أو في الخلفية
+     ---------------------------------------------------------- */
 
-          return self.clients.openWindow(
-            targetUrl
-          );
-        }
+  for (
+    const client of clientList
+  ) {
 
-        return null;
-      })
-  );
-});
+    if (
+      !client ||
+      !client.url
+    ) {
+
+      continue;
+
+    }
+
+
+    try {
+
+      const clientUrl =
+        new URL(
+          client.url
+        );
+
+
+      if (
+        clientUrl.origin !==
+        self.location.origin
+      ) {
+
+        continue;
+
+      }
+
+    }
+
+    catch (error) {
+
+      continue;
+
+    }
+
+
+    if (
+      'focus' in client
+    ) {
+
+      await client.focus();
+
+
+      if (
+        'postMessage' in client
+      ) {
+
+        client.postMessage({
+
+          type:
+            'OPEN_NOTIFICATION_TARGET',
+
+          url:
+            finalUrl,
+
+          notificationId:
+            notificationData
+              .notificationId ||
+            '',
+
+          notificationType:
+            notificationData
+              .type ||
+            '',
+
+          orderId:
+            notificationData
+              .orderId ||
+            '',
+
+          returnId:
+            notificationData
+              .returnId ||
+            ''
+
+        });
+
+      }
+
+
+      return;
+
+    }
+
+  }
+
+
+  /* ----------------------------------------------------------
+     التطبيق مغلق تمامًا
+     
+     يفتح التطبيق عند الضغط على الإشعار.
+     ---------------------------------------------------------- */
+
+  if (
+    'openWindow' in
+    self.clients
+  ) {
+
+    await self.clients.openWindow(
+      finalUrl
+    );
+
+  }
+
+}
+
 
 /* ============================================================
    NOTIFICATION CLOSE
    ============================================================ */
 
-self.addEventListener('notificationclose', event => {
+self.addEventListener(
+  'notificationclose',
+  event => {
 
-  /*
-   يمكن لاحقًا استخدام هذا الحدث لتسجيل أن المستخدم
-   أغلق الإشعار بدون فتحه.
-  */
+    /*
+     * لا نقوم بأي شيء هنا حاليًا.
+     * يمكن ربطه لاحقًا بإحصائيات الإشعارات.
+     */
 
-});
+  }
+);
+
 
 /* ============================================================
-   MESSAGE FROM PAGE
+   MESSAGE FROM APP
    ============================================================
 
-   يسمح لصفحة مدير.html بإرسال إشعار محلي إلى Service Worker.
-
-   مثال من الصفحة:
-
-   navigator.serviceWorker.controller.postMessage({
-       type: 'SHOW_NOTIFICATION',
-       title: 'تم قبول الطلب',
-       body: 'تم قبول طلبك بنجاح',
-       url: './index.html',
-       orderId: '123'
-   });
+   يسمح لصفحة المتجر بإرسال إشعار محلي.
 
    ============================================================ */
 
-self.addEventListener('message', event => {
+self.addEventListener(
+  'message',
+  event => {
 
-  if (!event.data) {
-    return;
-  }
+    if (
+      !event.data
+    ) {
 
-  const message =
-    event.data;
+      return;
 
-  /* ----------------------------------------------------------
-     عرض إشعار من داخل الموقع
-     ---------------------------------------------------------- */
+    }
 
-  if (
-    message.type ===
-    'SHOW_NOTIFICATION'
-  ) {
 
-    const title =
-      message.title ||
-      'بروفيشنال ستور';
+    const message =
+      event.data;
 
-    const body =
-      message.body ||
-      'لديك تحديث جديد';
 
-    const icon =
-      message.icon ||
-      './icon-192.png';
+    /* ========================================================
+       SKIP WAITING
+       ======================================================== */
 
-    const badge =
-      message.badge ||
-      './icon-192.png';
+    if (
+      message.type ===
+      'SKIP_WAITING'
+    ) {
 
-    const url =
-      message.url ||
-      './index.html';
+      self.skipWaiting();
 
-    const tag =
-      message.tag ||
-      message.notificationId ||
-      `local-${Date.now()}`;
+      return;
 
-    event.waitUntil(
+    }
 
-      self.registration.showNotification(
-        title,
-        {
-          body: body,
 
-          icon: icon,
+    /* ========================================================
+       SHOW NOTIFICATION
+       ======================================================== */
 
-          badge: badge,
+    if (
+      message.type ===
+      'SHOW_NOTIFICATION'
+    ) {
 
-          tag: tag,
+      event.waitUntil(
 
-          renotify: true,
+        showLocalNotification(
+          message
+        )
 
-          requireInteraction: false,
+      );
 
-          vibrate: [
-            200,
-            100,
-            200
-          ],
+      return;
 
-          data: {
-            url: url,
+    }
+
+
+    /* ========================================================
+       OPEN URL
+       ======================================================== */
+
+    if (
+      message.type ===
+      'OPEN_URL'
+    ) {
+
+      const url =
+        message.url ||
+        './index.html';
+
+
+      event.waitUntil(
+
+        openNotificationTarget(
+          url,
+          {
+            url:
+              url,
 
             notificationId:
               message.notificationId ||
@@ -485,7 +1096,7 @@ self.addEventListener('message', event => {
 
             type:
               message.notificationType ||
-              'general',
+              '',
 
             orderId:
               message.orderId ||
@@ -495,101 +1106,176 @@ self.addEventListener('message', event => {
               message.returnId ||
               ''
           }
-        }
+        )
+
+      );
+
+    }
+
+  }
+);
+
+
+/* ============================================================
+   LOCAL NOTIFICATION
+   ============================================================ */
+
+async function showLocalNotification(
+  message
+) {
+
+  const title =
+    message.title ||
+    'بروفيشنال ستور';
+
+
+  const body =
+    message.body ||
+    'لديك تحديث جديد';
+
+
+  const icon =
+    message.icon ||
+    './icon-192.png';
+
+
+  const badge =
+    message.badge ||
+    './icon-192.png';
+
+
+  const url =
+    message.url ||
+    './index.html';
+
+
+  const notificationId =
+    message.notificationId ||
+    '';
+
+
+  const notificationType =
+    message.notificationType ||
+    'general';
+
+
+  const orderId =
+    message.orderId ||
+    '';
+
+
+  const returnId =
+    message.returnId ||
+    '';
+
+
+  const tag =
+
+    message.tag ||
+
+    notificationId ||
+
+    (
+      notificationType +
+      '-' +
+      (
+        orderId ||
+        returnId ||
+        Date.now()
       )
     );
 
-    return;
-  }
 
-  /* ----------------------------------------------------------
-     فتح رابط معين
-     ---------------------------------------------------------- */
+  await self.registration
+    .showNotification(
 
-  if (
-    message.type ===
-    'OPEN_URL'
-  ) {
+      String(title),
 
-    const url =
-      message.url ||
-      './index.html';
+      {
 
-    event.waitUntil(
+        body:
+          String(body),
 
-      self.clients.matchAll({
-        type: 'window',
-        includeUncontrolled: true
-      })
+        icon:
+          icon,
 
-        .then(clientList => {
+        badge:
+          badge,
 
-          for (const client of clientList) {
+        tag:
+          tag,
 
-            if (
-              client.url &&
-              'focus' in client
-            ) {
+        renotify:
+          true,
 
-              return client
-                .focus()
-                .then(() => {
+        requireInteraction:
+          false,
 
-                  if (
-                    'postMessage' in client
-                  ) {
+        silent:
+          false,
 
-                    client.postMessage({
-                      type:
-                        'OPEN_NOTIFICATION_TARGET',
+        vibrate: [
+          200,
+          100,
+          200
+        ],
 
-                      url: url
-                    });
+        data: {
 
-                  }
+          url:
+            url,
 
-                  return client;
-                });
-            }
-          }
+          notificationId:
+            notificationId,
 
-          if (
-            self.clients.openWindow
-          ) {
+          type:
+            notificationType,
 
-            return self.clients.openWindow(
-              url
-            );
-          }
+          orderId:
+            orderId,
 
-          return null;
-        })
+          returnId:
+            returnId
+
+        }
+
+      }
+
     );
-  }
 
-});
+}
+
 
 /* ============================================================
-   SKIP WAITING
-   ============================================================
-
-   يسمح للصفحة بطلب تفعيل النسخة الجديدة من Service Worker
-   فورًا.
-
+   SERVICE WORKER ERROR PROTECTION
    ============================================================ */
 
 self.addEventListener(
-  'message',
+  'error',
   event => {
 
-    if (
-      event.data &&
-      event.data.type ===
-      'SKIP_WAITING'
-    ) {
+    /*
+     * لا نسمح لخطأ غير متوقع داخل Service Worker
+     * بإيقاف بقية وظائف الإشعارات.
+     */
 
-      self.skipWaiting();
-    }
+    console.error(
+      '[Professional Store SW] Error:',
+      event.error
+    );
+
+  }
+);
+
+
+self.addEventListener(
+  'unhandledrejection',
+  event => {
+
+    console.error(
+      '[Professional Store SW] Unhandled Promise:',
+      event.reason
+    );
 
   }
 );
