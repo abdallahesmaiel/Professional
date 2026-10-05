@@ -3255,6 +3255,13 @@ function setupOrderPhoneNotificationListeners() {
       const next = String(data.status || order.status || 'pending').toLowerCase();
       const previous = phoneNotificationStatusMemory[id];
       if (previous == null) {
+        const knownStatus = String(order.status || '').toLowerCase();
+        if (knownStatus === 'pending' && next === 'accepted') {
+          markInitialOrderNotificationStatus(id, next);
+          order.status = next;
+          await notifyOrderStatusChange(order, knownStatus, next);
+          return;
+        }
         markInitialOrderNotificationStatus(id, next);
         return;
       }
@@ -7356,8 +7363,13 @@ async function refreshOrdersStatus() {
 
         if (os !== o.status) {
           const stored = phoneNotificationStatusMemory[String(o.orderId || '')];
-          if (stored == null) markInitialOrderNotificationStatus(o.orderId, o.status);
-          else if (stored !== o.status) {
+          if (stored == null) {
+            markInitialOrderNotificationStatus(o.orderId, o.status);
+            if (String(os || '').toLowerCase() === 'pending' &&
+                String(o.status || '').toLowerCase() === 'accepted') {
+              notifyOrderStatusChange(o, os, o.status).catch(() => {});
+            }
+          } else if (stored !== o.status) {
             markInitialOrderNotificationStatus(o.orderId, o.status);
             notifyOrderStatusChange(o, stored, o.status).catch(() => {});
           }
