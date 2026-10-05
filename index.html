@@ -8,6 +8,7 @@
 <meta name="theme-color" content="#1A0F07">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="professional-store-build" content="v4-fixed-search-clear-camera-no-overlap-auth-fast-cart-returns">
 <meta name="description" content="بروفيشنال — متجر إلكتروني عربي احترافي للمنتجات المميزة مع عروض، مفضلة، مقارنة، سلة، دفع وطلب وتتبع الطلبات.">
 <meta name="keywords" content="بروفيشنال, متجر إلكتروني, تسوق, عروض, منتجات, مصر, Professional Store">
 <meta name="robots" content="index,follow">
@@ -864,8 +865,12 @@ body::before {
   cursor:pointer; z-index:4; transition:all .25s ease; font-size:17px;
 }
 .barcode-search-btn:hover{background:var(--accent);color:#fff;transform:translateY(-50%) scale(1.05)}
+.barcode-search-camera-btn{position:absolute;left:4px;top:50%;transform:translateY(-50%);width:38px;height:38px;border:0;border-radius:50%;background:rgba(74,44,23,.08);color:var(--primary-dark);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:4;transition:all .25s ease;font-size:16px}
+.barcode-search-camera-btn:hover{background:var(--primary);color:#fff;transform:translateY(-50%) scale(1.05)}
+.barcode-search-camera-btn:active{transform:translateY(-50%) scale(.94)}
+@media(max-width:480px){.barcode-search-camera-btn{left:2px;width:32px;height:32px;font-size:14px}}
 .barcode-search-btn:active{transform:translateY(-50%) scale(.94)}
-.search-wrapper .search-input{padding-left:94px;}
+.search-wrapper .search-input{padding-left:138px;}
 .barcode-scan-status{
   margin:8px auto 0; max-width:550px; min-height:0; text-align:center;
   font-size:12px; font-weight:700; color:var(--primary-light);
@@ -901,7 +906,7 @@ body::before {
 .barcode-reader-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 @media(max-width:480px){
   .barcode-search-btn{left:40px;width:34px;height:34px;font-size:15px}
-  .search-wrapper .search-input{padding-left:82px}
+  .search-wrapper .search-input{padding-left:118px}
 }
 
 /* ===== Products Grid ===== */
@@ -2355,8 +2360,7 @@ body.product-modal-open{
       <div class="search-wrapper">
         <i class="fa-solid fa-magnifying-glass search-icon"></i>
         <input type="text" class="search-input" id="searchInput" placeholder="🔍 ابحث عن منتج أو باركود..." autocomplete="off" inputmode="search">
-        <button type="button" class="barcode-search-btn" id="barcodeSearchBtn" aria-label="قراءة باركود"><i class="fa-solid fa-camera"></i></button>
-        <input type="file" id="barcodeSearchFile" accept="image/*" capture="environment" style="display:none">
+        <button type="button" class="barcode-search-camera-btn" id="barcodeSearchCameraBtn" aria-label="قراءة الباركود بالكاميرا" title="قراءة الباركود بالكاميرا"><i class="fa-solid fa-camera"></i></button>
         <button class="search-clear" id="searchClear"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="barcode-scan-status" id="barcodeSearchStatus"></div>
@@ -2594,7 +2598,7 @@ body.product-modal-open{
       <button type="button" class="btn btn-primary" id="restartStoreBarcodeReader"><i class="fa-solid fa-camera"></i> تشغيل الكاميرا</button>
       <button type="button" class="btn btn-outline" id="uploadStoreBarcodeImage"><i class="fa-solid fa-image"></i> اختيار صورة</button>
     </div>
-    <input type="file" id="storeBarcodeImageInput" accept="image/*" capture="environment" style="display:none">
+    <input type="file" id="storeBarcodeImageInput" accept="image/*" style="display:none">
   </div>
 </div>
 
@@ -2676,7 +2680,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getMessaging, getToken, onMessage, isSupported as isMessagingSupported } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
 import { getDatabase, ref, onValue, push, set, get, remove, update, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 import {
-  getAuth, onAuthStateChanged, setPersistence, browserSessionPersistence,
+  getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence,
   GoogleAuthProvider, signInWithPopup, signOut
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
@@ -2848,7 +2852,7 @@ try {
   if (app) {
     auth = getAuth(app);
     // لا يتم تسجيل الخروج تلقائياً عند تحميل الموقع؛ هذا كان يتعارض مع جلسة Google بعد العودة.
-    setPersistence(auth, browserSessionPersistence).catch(e => console.warn('Auth persistence:', e));
+    setPersistence(auth, browserLocalPersistence).catch(e => console.warn('Auth persistence:', e));
 
     onAuthStateChanged(auth, (user) => {
       authUser = user || null;
@@ -2933,7 +2937,7 @@ async function signInWithGoogle() {
   try {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({prompt:'select_account'});
-    await setPersistence(auth, browserSessionPersistence);
+    await setPersistence(auth, browserLocalPersistence);
 
     // نستخدم Popup هنا لأن المتجر مستضاف على Vercel وليس Firebase Hosting.
     // هذا يتجنب مشكلة third-party storage التي قد تمنع redirect من تثبيت جلسة Firebase.
@@ -4242,12 +4246,18 @@ function switchPage(p, options = {}) {
     $('#cartPage')?.classList.add('active-page');
     document.querySelector('.nav-item[data-page="cart"]')?.classList.add('active');
     document.querySelector('.menu-item[data-page="cart"]')?.classList.add('active');
-    refreshOrdersStatus().then(() => renderCartPage());
+    renderCartPage();
+    refreshOrdersStatus().then(() => {
+      if ($('#cartPage')?.classList.contains('active-page')) renderCartPage();
+    }).catch(() => {});
   } else if (p === 'returns') {
     $('#returnsPage')?.classList.add('active-page');
     document.querySelector('.nav-item[data-page="returns"]')?.classList.add('active');
     document.querySelector('.menu-item[data-page="returns"]')?.classList.add('active');
-    refreshOrdersStatus().then(() => renderReturnsPage());
+    renderReturnsPage();
+    refreshOrdersStatus().then(() => {
+      if ($('#returnsPage')?.classList.contains('active-page')) renderReturnsPage();
+    }).catch(() => {});
   } else if (p === 'about') {
     $('#aboutPage')?.classList.add('active-page');
     document.querySelector('.nav-item[data-page="about"]')?.classList.add('active');
@@ -4294,45 +4304,73 @@ function getSavedPhone() {
   }
 }
 
-async function loadCustomerReturnRequests() {
-  if (!database) return [];
+const RETURN_REQUEST_CACHE_KEY = 'professional_return_requests_cache_v2';
+
+function getCachedCustomerReturnRequests() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(RETURN_REQUEST_CACHE_KEY) || 'null');
+    return Array.isArray(cached?.requests) ? cached.requests : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function cacheCustomerReturnRequests(requests) {
+  try {
+    localStorage.setItem(RETURN_REQUEST_CACHE_KEY, JSON.stringify({
+      savedAt: Date.now(),
+      requests: Array.isArray(requests) ? requests : []
+    }));
+  } catch (_) {}
+}
+
+async function loadCustomerReturnRequests(options = {}) {
+  const fresh = options.fresh === true;
+  const cached = getCachedCustomerReturnRequests();
+
+  // الاستخدام العادي في الواجهة يعرض الكاش فوراً.
+  if (!fresh) return cached;
+  if (!database) return cached;
+
   const phone = getSavedPhone();
-  if (!phone) return [];
-  
+  if (!phone) return cached;
+
   try {
     const phoneHash = await hashFirstOrderPhone(phone);
-    if (!phoneHash) return [];
-    
-    const snap = await get(ref(database, `returnRequestIndex/${phoneHash}`));
-    if (!snap.exists()) return [];
-    
-    const data = snap.val() || {};
-    const requests = [];
-    let rootData = {};
-    try {
-      const rootSnap = await get(ref(database, 'returnRequests'));
-      rootData = rootSnap.exists() ? (rootSnap.val() || {}) : {};
-    } catch (syncError) {
-      console.warn('Return request root sync failed:', syncError);
+    if (!phoneHash) return cached;
+
+    // الفهرس والجذر يُقرآن بالتوازي بدلاً من الانتظار المتسلسل.
+    const [indexSnap, rootSnap] = await Promise.all([
+      get(ref(database, `returnRequestIndex/${phoneHash}`)),
+      get(ref(database, 'returnRequests')).catch(() => null)
+    ]);
+
+    if (!indexSnap?.exists()) {
+      cacheCustomerReturnRequests([]);
+      return [];
     }
-    
+
+    const data = indexSnap.val() || {};
+    const rootData = rootSnap?.exists() ? (rootSnap.val() || {}) : {};
+    const requests = [];
+
     for (const key in data) {
-      if (data.hasOwnProperty(key)) {
-        const indexed = data[key] || {};
-        const root = rootData[key] || {};
-        requests.push({ 
-          id: key, 
-          ...indexed,
-          ...root,
-          phoneHash 
+      if (Object.prototype.hasOwnProperty.call(data, key)) {
+        requests.push({
+          id: key,
+          ...(data[key] || {}),
+          ...(rootData[key] || {}),
+          phoneHash
         });
       }
     }
-    
-    return requests.sort((a, b) => (b.requestedAt || 0) - (a.requestedAt || 0));
+
+    requests.sort((a, b) => (b.requestedAt || 0) - (a.requestedAt || 0));
+    cacheCustomerReturnRequests(requests);
+    return requests;
   } catch (e) {
     console.warn('Return request index failed:', e);
-    return [];
+    return cached;
   }
 }
 
@@ -4405,7 +4443,7 @@ async function submitReturnRequest(order, selections, reason, details) {
     throw new Error('انتهت مدة الاسترجاع (24 ساعة من التسليم)');
   }
   
-  const requests = await loadCustomerReturnRequests();
+  const requests = await loadCustomerReturnRequests({fresh:true});
   
   if (hasActiveReturnRequest(order.orderId, requests)) {
     throw new Error('يوجد طلب استرجاع قيد المراجعة لهذه الفاتورة');
@@ -4741,7 +4779,7 @@ function setupCompletedReturnsEvents(container) {
 // ============================================================
 // ===== Render Returns Page (UPDATED - FIXED) =====
 // ============================================================
-async function renderReturnsPage() {
+async function renderReturnsPage(options = {}) {
   const container = document.getElementById('returnsPageContent');
   if (!container) return;
   
@@ -4867,6 +4905,17 @@ async function renderReturnsPage() {
   } else if (returnsPageState.currentFilter === 'rejected') {
     setupRejectedReturnsTimers(rejectedRequests);
     setupRejectedReturnsEvents(container);
+  }
+
+  // عرض فوري من الذاكرة ثم مزامنة Firebase في الخلفية.
+  if (options.fresh !== true && database && getSavedPhone()) {
+    const cachedSnapshot = JSON.stringify(allRequests);
+    loadCustomerReturnRequests({fresh:true}).then(freshRequests => {
+      if (!document.querySelector('#returnsPage')?.classList.contains('active-page')) return;
+      if (JSON.stringify(freshRequests) !== cachedSnapshot) {
+        renderReturnsPage({fresh:true});
+      }
+    }).catch(() => {});
   }
 }
 
@@ -7039,19 +7088,12 @@ function setupSearch() {
     inp.focus();
   });
 
-  const fileInput = document.getElementById('barcodeSearchFile');
-  const cameraBtn = document.getElementById('barcodeSearchBtn');
+  const cameraBtn = document.getElementById('barcodeSearchCameraBtn');
   const readerModal = document.getElementById('storeBarcodeReaderModal');
   const readerFile = document.getElementById('storeBarcodeImageInput');
-  
+
   cameraBtn?.addEventListener('click', () => startStoreBarcodeCamera());
-  
-  fileInput?.addEventListener('change', () => {
-    const f = fileInput.files?.[0];
-    if (f) handleStoreBarcodeImage(f);
-    fileInput.value = '';
-  });
-  
+
   document.getElementById('restartStoreBarcodeReader')?.addEventListener('click', startStoreBarcodeCamera);
   document.getElementById('closeStoreBarcodeReader')?.addEventListener('click', closeStoreBarcodeReader);
   document.getElementById('uploadStoreBarcodeImage')?.addEventListener('click', () => readerFile?.click());
@@ -7278,20 +7320,31 @@ document.getElementById('sendContactBtn')?.addEventListener('click', async funct
 // ============================================================
 async function refreshOrdersStatus() {
   if (!database || myOrders.length === 0) return;
-  let c = false;
-  for (const o of [...myOrders]) {
-    // حتى الطلب المسلّم يجب مزامنته، لأن المدير قد يحوله إلى returned بعد إرجاع كل الكمية.
+  const ordersSnapshot = [...myOrders];
+
+  const results = await Promise.all(ordersSnapshot.map(async (o) => {
     try {
-      const s = await get(ref(database, `orders/${o.orderId}`));
-      if (s.exists()) {
-        const d = s.val() || {};
+      const snap = await get(ref(database, `orders/${o.orderId}`));
+      return { order: o, snap };
+    } catch (_) {
+      return { order: o, snap: null };
+    }
+  }));
+
+  let changed = false;
+  for (const {order:o, snap} of results) {
+    try {
+      if (snap?.exists()) {
+        const d = snap.val() || {};
         const os = o.status;
         const oldLedger = JSON.stringify(o.returnedQuantities || {});
+
         o.status = d.status || o.status || 'pending';
         o.rejectionReason = d.rejectionReason || '';
         if (d.deliveredAt) o.deliveredAt = Number(d.deliveredAt);
         if (d.returnedAt) o.returnedAt = Number(d.returnedAt);
         if (d.returnedQuantities) o.returnedQuantities = d.returnedQuantities;
+
         if (o.status === 'delivered' && os !== 'delivered') {
           o.deliveredAt = Number(d.deliveredAt || o.deliveredAt || Date.now());
           OrderTimerManager.startDeliveredTimer(o.orderId);
@@ -7300,6 +7353,7 @@ async function refreshOrdersStatus() {
           o.rejectedAt = Number(d.rejectedAt || Date.now());
           OrderTimerManager.startRejectedTimer(o.orderId);
         }
+
         if (os !== o.status) {
           const stored = phoneNotificationStatusMemory[String(o.orderId || '')];
           if (stored == null) markInitialOrderNotificationStatus(o.orderId, o.status);
@@ -7308,18 +7362,19 @@ async function refreshOrdersStatus() {
             notifyOrderStatusChange(o, stored, o.status).catch(() => {});
           }
         }
-        if (os !== o.status || oldLedger !== JSON.stringify(o.returnedQuantities || {})) c = true;
-      } else {
-        // إذا انتهت مهلة الـ24 ساعة وحُذف الطلب من Firebase، يمكن حذفه محلياً أيضاً.
+        if (os !== o.status || oldLedger !== JSON.stringify(o.returnedQuantities || {})) changed = true;
+      } else if (snap) {
         OrderTimerManager.clearTimer(o.orderId);
         myOrders = myOrders.filter(x => x.orderId !== o.orderId);
-        c = true;
+        changed = true;
       }
-    } catch (e) {}
+    } catch (_) {}
   }
-  if (c) { 
+
+  if (changed) {
     saveOrders();
     if ($('#cartPage')?.classList.contains('active-page')) renderCartPage();
+    if ($('#returnsPage')?.classList.contains('active-page')) renderReturnsPage();
   }
 }
 
@@ -8250,5 +8305,42 @@ if ('serviceWorker' in navigator) {
 </style>
 
 
+<style id="v4-search-controls-fix">
+/* ===== V4: Search clear + camera buttons must never overlap ===== */
+.search-box,
+.search-container,
+.search-wrapper {
+  position: relative;
+}
+#searchInput {
+  padding-left: 92px !important;
+  padding-right: 16px !important;
+}
+#searchClear {
+  position: absolute !important;
+  left: 52px !important;
+  right: auto !important;
+  z-index: 20 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  pointer-events: auto !important;
+}
+#searchClear:not(.visible) {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+#barcodeSearchCameraBtn {
+  position: absolute !important;
+  left: 10px !important;
+  right: auto !important;
+  z-index: 21 !important;
+  width: 36px !important;
+  min-width: 36px !important;
+}
+</style>
 </body>
   </html>
