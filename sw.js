@@ -1,8 +1,7 @@
-/* PROFESSIONAL STORE SW v6 - FCM ACCEPTED STATUS FIX */
 /* ============================================================
    Professional Store PWA
    Firebase Cloud Messaging + Web Push Service Worker
-   Version: v6
+   Version: v5
 
    الوظائف:
    - استقبال Firebase Cloud Messaging
@@ -46,75 +45,23 @@ try {
     const notification = payload?.notification || {};
     const data = payload?.data || {};
 
-    const status = String(
-      data.status ||
-      data.orderStatus ||
-      data.returnStatus ||
-      data.state ||
-      payload?.status ||
-      payload?.orderStatus ||
-      payload?.returnStatus ||
-      ''
-    ).trim().toLowerCase();
-
-    const statusTextMap = {
-      accepted: 'تم قبول طلبك',
-      accept: 'تم قبول طلبك',
-      approved: 'تم قبول طلبك',
-      confirmed: 'تم تأكيد طلبك',
-      processing: 'جاري تجهيز طلبك',
-      preparing: 'جاري تجهيز طلبك',
-      ready: 'طلبك جاهز للتسليم',
-      shipped: 'تم شحن طلبك',
-      out_for_delivery: 'طلبك خرج للتوصيل',
-      'out-for-delivery': 'طلبك خرج للتوصيل',
-      delivered: 'تم توصيل طلبك',
-      completed: 'تم إكمال طلبك',
-      cancelled: 'تم إلغاء طلبك',
-      canceled: 'تم إلغاء طلبك',
-      return_accepted: 'تم قبول طلب المرتجع',
-      'return-accepted': 'تم قبول طلب المرتجع',
-      return_approved: 'تم قبول طلب المرتجع',
-      'return-approved': 'تم قبول طلب المرتجع',
-      return_rejected: 'تم رفض طلب المرتجع',
-      'return-rejected': 'تم رفض طلب المرتجع',
-      return_received: 'تم استلام طلب المرتجع',
-      'return-received': 'تم استلام طلب المرتجع',
-      return_processing: 'جاري مراجعة طلب المرتجع',
-      'return-processing': 'جاري مراجعة طلب المرتجع',
-      return_completed: 'تم إكمال طلب المرتجع',
-      'return-completed': 'تم إكمال طلب المرتجع'
-    };
-
-    const mappedStatusText = statusTextMap[status] || '';
-    const isAccepted = ['accepted', 'accept', 'approved'].includes(status);
-
     const title =
       notification.title ||
       data.title ||
-      (isAccepted ? '✅ تم قبول الطلب' :
-       status === 'confirmed' ? '✅ تم تأكيد الطلب' :
-       'بروفيشنال ستور');
+      'تنبيه من لوحة التحكم';
 
     const body =
       notification.body ||
       data.body ||
-      mappedStatusText ||
-      'لديك تحديث جديد في متجر بروفيشنال ستور';
+      'لديك تحديث جديد.';
 
-    const url =
-      data.url ||
-      data.click_action ||
-      data.clickAction ||
-      notification.click_action ||
-      notification.clickAction ||
-      './index.html';
+    const url = data.url || './index.html';
 
-    self.registration.showNotification(String(title), {
-      body: String(body),
+    self.registration.showNotification(title, {
+      body,
       icon: data.icon || notification.icon || './icon-192.png',
-      badge: data.badge || notification.badge || './icon-72.png',
-      tag: data.tag || `fcm-${data.orderId || data.orderID || status || Date.now()}`,
+      badge: data.badge || './icon-72.png',
+      tag: data.tag || `admin-${Date.now()}`,
       renotify: true,
       requireInteraction: false,
       dir: 'rtl',
@@ -136,7 +83,7 @@ try {
    ============================================================ */
 
 const CACHE_NAME =
-  'professional-store-pwa-v6';
+  'professional-store-pwa-v5';
 
 const CORE = [
   './',
@@ -544,41 +491,6 @@ async function handlePushNotification(
 
 
   /* ==========================================================
-     BODY STATUS MAP
-     ========================================================== */
-
-  const statusTextMap = {
-    'accepted': 'تم قبول طلبك',
-    'accept': 'تم قبول طلبك',
-    'approved': 'تم قبول طلبك',
-    'confirmed': 'تم تأكيد طلبك',
-    'processing': 'جاري تجهيز طلبك',
-    'preparing': 'جاري تجهيز طلبك',
-    'ready': 'طلبك جاهز للتسليم',
-    'shipped': 'تم شحن طلبك',
-    'out_for_delivery': 'طلبك خرج للتوصيل',
-    'out-for-delivery': 'طلبك خرج للتوصيل',
-    'delivered': 'تم توصيل طلبك',
-    'completed': 'تم إكمال طلبك',
-    'cancelled': 'تم إلغاء طلبك',
-    'canceled': 'تم إلغاء طلبك',
-    'return_accepted': 'تم قبول طلب المرتجع',
-    'return-accepted': 'تم قبول طلب المرتجع',
-    'return_approved': 'تم قبول طلب المرتجع',
-    'return-approved': 'تم قبول طلب المرتجع',
-    'return_rejected': 'تم رفض طلب المرتجع',
-    'return-rejected': 'تم رفض طلب المرتجع',
-    'return_received': 'تم استلام طلب المرتجع',
-    'return-received': 'تم استلام طلب المرتجع',
-    'return_processing': 'جاري مراجعة طلب المرتجع',
-    'return-processing': 'جاري مراجعة طلب المرتجع',
-    'return_completed': 'تم إكمال طلب المرتجع',
-    'return-completed': 'تم إكمال طلب المرتجع'
-  };
-
-  const mappedStatusText = statusTextMap[status] || '';
-
-  /* ==========================================================
      BODY
      ========================================================== */
 
@@ -674,9 +586,18 @@ async function handlePushNotification(
     'general';
 
 
-  /* ==========================================================
-     ORDER / RETURN STATUS
-     ========================================================== */
+  /* ORDER / RETURN STATUS */
+
+  const status = String(
+    data.status ||
+    data.orderStatus ||
+    data.returnStatus ||
+    data.state ||
+    payload.status ||
+    payload.orderStatus ||
+    payload.returnStatus ||
+    ''
+  ).trim().toLowerCase();
 
   const statusType = String(
     data.statusType ||
@@ -684,6 +605,36 @@ async function handlePushNotification(
     notificationType
   ).trim().toLowerCase();
 
+  const statusTextMap = {
+    'accepted': 'تم قبول طلبك',
+    'accept': 'تم قبول طلبك',
+    'approved': 'تم قبول طلبك',
+    'confirmed': 'تم تأكيد طلبك',
+    'processing': 'جاري تجهيز طلبك',
+    'preparing': 'جاري تجهيز طلبك',
+    'ready': 'طلبك جاهز للتسليم',
+    'shipped': 'تم شحن طلبك',
+    'out_for_delivery': 'طلبك خرج للتوصيل',
+    'out-for-delivery': 'طلبك خرج للتوصيل',
+    'delivered': 'تم توصيل طلبك',
+    'completed': 'تم إكمال طلبك',
+    'cancelled': 'تم إلغاء طلبك',
+    'canceled': 'تم إلغاء طلبك',
+    'return_accepted': 'تم قبول طلب المرتجع',
+    'return-accepted': 'تم قبول طلب المرتجع',
+    'return_approved': 'تم قبول طلب المرتجع',
+    'return-approved': 'تم قبول طلب المرتجع',
+    'return_rejected': 'تم رفض طلب المرتجع',
+    'return-rejected': 'تم رفض طلب المرتجع',
+    'return_received': 'تم استلام طلب المرتجع',
+    'return-received': 'تم استلام طلب المرتجع',
+    'return_processing': 'جاري مراجعة طلب المرتجع',
+    'return-processing': 'جاري مراجعة طلب المرتجع',
+    'return_completed': 'تم إكمال طلب المرتجع',
+    'return-completed': 'تم إكمال طلب المرتجع'
+  };
+
+  const mappedStatusText = statusTextMap[status] || '';
 
   /* ==========================================================
      NOTIFICATION ID
