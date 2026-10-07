@@ -1362,6 +1362,35 @@ body::before {
 .product-detail-modal .modal-card { max-width: 800px; padding: 0; overflow: hidden; }
 .product-detail-content { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
 .product-detail-image { background: var(--milk); padding: 30px; display: flex; align-items: center; justify-content: center; min-height: 300px; }
+
+/* أزرار معاينة المنتج: الإغلاق والمشاركة أعلى الصورة */
+.product-detail-image { position: relative; }
+.product-detail-top-btn {
+  position: absolute;
+  top: 12px;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 4;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  box-shadow: 0 5px 16px rgba(0,0,0,.14);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.product-detail-close-top { left: 12px; background: rgba(255,255,255,.92); color: #3b2416; font-size: 30px; font-weight: 500; }
+.product-detail-share-top { right: 12px; background: rgba(255,255,255,.92); color: #3b2416; font-size: 16px; }
+.product-detail-top-btn:active { transform: scale(.94); }
+@media (max-width: 600px) {
+  .product-detail-top-btn { width: 40px; height: 40px; top: 10px; }
+  .product-detail-close-top { left: 10px; }
+  .product-detail-share-top { right: 10px; }
+}
 .product-detail-image img { width: 100%; height: 100%; max-height: 400px; object-fit: contain; }
 .product-detail-info { padding: 30px; display: flex; flex-direction: column; gap: 12px; }
 .product-detail-info .name { font-size: 24px; font-weight: 900; color: var(--primary-dark); }
@@ -2738,7 +2767,11 @@ body.product-modal-open{
 <div class="modal-overlay product-detail-modal" id="productDetailModal">
   <div class="modal-card">
     <div class="product-detail-content">
-      <div class="product-detail-image" id="detailImageWrap"><img id="detailImage" src="" alt="Product"></div>
+      <div class="product-detail-image" id="detailImageWrap">
+        <button type="button" class="product-detail-top-btn product-detail-close-top" id="detailCloseTopBtn" aria-label="إغلاق المعاينة" title="إغلاق">×</button>
+        <button type="button" class="product-detail-top-btn product-detail-share-top" id="detailShareBtn" aria-label="مشاركة المنتج" title="مشاركة المنتج"><i class="fa-solid fa-share-nodes"></i></button>
+        <img id="detailImage" src="" alt="Product">
+      </div>
       <div class="product-detail-info">
         <h2 class="name" id="detailName">اسم المنتج</h2>
         <div class="product-rating" id="detailRating"><span class="stars">★★★★★</span> <span class="rating-text">(0 تقييم)</span></div>
@@ -2752,7 +2785,6 @@ body.product-modal-open{
         <div class="action-buttons" style="justify-content:flex-start;">
           <button class="btn btn-primary" id="detailAddToCart"><i class="fa-solid fa-cart-plus"></i> أضف للسلة</button>
           <button class="btn quick-buy-btn" id="detailQuickBuy"><i class="fa-solid fa-bolt"></i> اشترِ الآن</button>
-          <button class="btn btn-outline" id="detailCloseBtn">إغلاق</button>
         </div>
         <div id="reviewsAnchor"></div>
         <div class="mobile-review-title"><i class="fa-solid fa-star"></i> تقييمات العملاء</div>
@@ -6745,7 +6777,57 @@ function closeProductDetail(fromHistory = false) {
   modal.classList.remove('show');
 }
 
-$('#detailCloseBtn')?.addEventListener('click', closeProductDetail);
+// ===== Product preview top controls + share link =====
+async function shareCurrentProduct() {
+  const p = currentDetailProduct;
+  if (!p || !p.id) return;
+
+  const url = new URL(window.location.href);
+  url.searchParams.set('product', String(p.id));
+  url.hash = '';
+  const shareUrl = url.href;
+  const shareData = {
+    title: p.name || 'المنتج',
+    text: `شاهد هذا المنتج: ${p.name || 'منتج'}`,
+    url: shareUrl
+  };
+
+  try {
+    if (navigator.share) {
+      await navigator.share(shareData);
+      return;
+    }
+  } catch (error) {
+    if (error?.name === 'AbortError') return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(shareUrl);
+    showToast('✅ تم نسخ رابط المنتج للمشاركة', 'success');
+  } catch (error) {
+    const ta = document.createElement('textarea');
+    ta.value = shareUrl;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); showToast('✅ تم نسخ رابط المنتج للمشاركة', 'success'); }
+    catch (_) { showToast('⚠️ تعذر نسخ الرابط، يمكنك نسخه من شريط العنوان', 'error'); }
+    ta.remove();
+  }
+}
+
+$('#detailCloseTopBtn')?.addEventListener('click', () => closeProductDetail());
+$('#detailShareBtn')?.addEventListener('click', shareCurrentProduct);
+
+function handleProductUrlOnLoad() {
+  const productId = new URLSearchParams(window.location.search).get('product');
+  if (!productId) return;
+  const product = allProducts.find(x => String(x.id) === String(productId));
+  if (!product) return;
+  setTimeout(() => openProductDetail(product.id), 0);
+}
 
 $('#productDetailModal')?.addEventListener('click', function(e) { 
   if (e.target === this) closeProductDetail(); 
@@ -7125,6 +7207,10 @@ function loadProducts() {
         window.__storeBarcodeUrlHandled = true; 
         setTimeout(handleBarcodeUrlOnLoad, 0); 
       }
+      if (!window.__storeProductUrlHandled) {
+        window.__storeProductUrlHandled = true;
+        handleProductUrlOnLoad();
+      }
     }, (err) => { 
       console.error('❌ خطأ Firebase:', err); 
       loadDefaultProducts(); 
@@ -7156,6 +7242,10 @@ function loadDefaultProducts() {
   renderFlashSale();
   renderWishlistPage();
   if ($('#homePage')?.classList.contains('active-page')) renderHomeProducts();
+  if (!window.__storeProductUrlHandled) {
+    window.__storeProductUrlHandled = true;
+    handleProductUrlOnLoad();
+  }
 }
 
 function syncCartWithProducts() {
@@ -8979,10 +9069,10 @@ function loadPromotionalSlides() {
   console.log('🔄 جاري تحميل العروض الترويجية (Carousel)...');
   
   if (!database) {
-    promotionalSlides = [
-      { title: '✨ عروض حصرية', description: 'تسوق أفضل المنتجات', image: 'https://via.placeholder.com/800x400/C9A96E/1A0F07?text=عروض+حصرية', category: 'all', active: true, interval: PROMO_DEFAULT_INTERVAL_SECONDS, order: 1 }
-    ];
+    // لا توجد قاعدة بيانات متاحة، لذلك لا نعرض عرضًا وهميًا.
+    promotionalSlides = [];
     currentSlideIndex = 0;
+    stopAutoPlay();
     renderPromotionalCarousel();
     return;
   }
@@ -9023,13 +9113,10 @@ function loadPromotionalSlides() {
     
     slides.sort((a, b) => a.order - b.order);
     
-    if (slides.length === 0) {
-      promotionalSlides = [
-        { title: '✨ عروض حصرية', description: 'تسوق أفضل المنتجات', image: 'https://via.placeholder.com/800x400/C9A96E/1A0F07?text=عروض+حصرية', category: 'all', linkedProductId: null, linkedProductName: null, active: true, interval: PROMO_DEFAULT_INTERVAL_SECONDS, order: 1 }
-      ];
-    } else {
-      promotionalSlides = slides;
-    }
+    // هذا هو منطق لوحة التحكم:
+    // لا توجد عروض حصرية ظاهرة إلا إذا كان هناك عرض محفوظ وحالته active ليست false.
+    // العروض المحذوفة أو المعطلة لا تُستبدل بعرض افتراضي.
+    promotionalSlides = slides;
 
     // أي تحديث من لوحة التحكم يعيد العرض لأول شريحة ويبدأ مؤقتًا واحدًا جديدًا فقط.
     currentSlideIndex = 0;
@@ -9039,10 +9126,10 @@ function loadPromotionalSlides() {
     renderPromotionalCarousel();
   }, (error) => {
     console.error('❌ خطأ في تحميل العروض الترويجية:', error);
-    promotionalSlides = [
-      { title: '✨ عروض حصرية', description: 'تسوق أفضل المنتجات', image: 'https://via.placeholder.com/800x400/C9A96E/1A0F07?text=عروض+حصرية', category: 'all', linkedProductId: null, linkedProductName: null, active: true, interval: PROMO_DEFAULT_INTERVAL_SECONDS, order: 1 }
-    ];
+    // عند تعذر قراءة العروض من Firebase لا نعرض عرضًا وهميًا.
+    promotionalSlides = [];
     currentSlideIndex = 0;
+    stopAutoPlay();
     renderPromotionalCarousel();
   });
 }
@@ -9070,7 +9157,9 @@ function renderPromotionalCarousel() {
   if (!wrapper || !section) return;
   
   if (promotionalSlides.length === 0) {
+    // لا توجد عروض حصرية نشطة/موجودة: أخفِ القسم بالكامل وأوقف المؤقت.
     section.classList.remove('active');
+    stopAutoPlay();
     return;
   }
   
