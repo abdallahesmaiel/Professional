@@ -4414,12 +4414,96 @@ document.getElementById('closeMenu')?.addEventListener('click', () => toggleSide
 document.getElementById('sideMenuOverlay')?.addEventListener('click', () => toggleSideMenu(false));
 
 // ===== Navigation + Mobile/Tablet Back Button =====
-const STORE_HISTORY_KEY = 'smartstore-pro-history-v1';
+const STORE_HISTORY_KEY = 'smartstore-pro-history-v2';
 let suppressStoreHistory = false;
+
+// حالة واحدة فقط تحفظ موضع متجر الصفحة الرئيسية وما يجب استعادته عند الرجوع.
+// لا تنشئ هذه الحالة تاريخًا جديدًا ولا تغير بنية بيانات المتجر.
+let storeHomeRestore = {
+  scrollY: 0,
+  productId: null,
+  searchQuery: '',
+  hasAnchor: false
+};
 
 function getActiveStorePage() {
   const active = document.querySelector('.page.active-page');
   return active ? active.id.replace(/Page$/, '') : 'home';
+}
+
+function captureHomeRestoreState() {
+  try {
+    const home = document.getElementById('homePage');
+    if (!home?.classList.contains('active-page')) return;
+
+    // احفظ آخر موضع فعلي للعميل، وليس منتجًا قديمًا تم تمييزه من بحث سابق.
+    // موضع التمرير هو المرجع الأساسي عند الرجوع من السلة/المفضلة/المرتجعات.
+    storeHomeRestore.scrollY = Math.max(0, window.scrollY || 0);
+    storeHomeRestore.searchQuery = String(currentSearchQuery || '');
+    storeHomeRestore.productId = null;
+    storeHomeRestore.hasAnchor = false;
+  } catch (e) {}
+}
+
+function setHomeProductRestoreAnchor(productId, scrollY) {
+  const id = productId == null ? null : String(productId);
+  storeHomeRestore.productId = id;
+  storeHomeRestore.scrollY = Math.max(0, Number(scrollY) || window.scrollY || 0);
+  storeHomeRestore.searchQuery = String(currentSearchQuery || '');
+  storeHomeRestore.hasAnchor = !!id;
+}
+
+function restoreHomeView(fromHistory = false) {
+  const home = document.getElementById('homePage');
+  if (!home) return;
+
+  const restoreY = Math.max(0, Number(storeHomeRestore.scrollY) || 0);
+  const restoreProductId = storeHomeRestore.productId;
+  const restoreSearch = storeHomeRestore.searchQuery;
+
+  // البحث النصي في صفحة البحث المتعددة لا يعود كاستعلام عالق.
+  // أما موضع المنتج الذي تم اختياره من قبل فيظل محفوظًا.
+  if (!restoreProductId) {
+    currentSearchQuery = '';
+    isSearchResultsMode = false;
+    const inp = document.getElementById('searchInput');
+    const clr = document.getElementById('searchClear');
+    if (inp) inp.value = '';
+    clr?.classList.remove('visible');
+    updateSearchResultsMode(false);
+    renderSearchSuggestions('');
+    renderSearchSuggestions('', 'searchPageSuggestions');
+  } else if (restoreSearch) {
+    currentSearchQuery = restoreSearch;
+  }
+
+  renderHomeProducts();
+  renderRecentlyViewed();
+
+  setTimeout(() => {
+    const target = restoreProductId
+      ? document.getElementById(`product-${restoreProductId}`)
+      : null;
+
+    if (target) {
+      const headerOffset = Math.max(
+        72,
+        document.querySelector('header')?.getBoundingClientRect().height || 0
+      ) + 12;
+      const targetTop =
+        window.scrollY + target.getBoundingClientRect().top - headerOffset;
+      window.scrollTo({ top: Math.max(0, targetTop), behavior: 'auto' });
+      storeHomeRestore.scrollY = Math.max(0, targetTop);
+      targetProductId = restoreProductId;
+      targetProductIds = [restoreProductId];
+    } else {
+      window.scrollTo({ top: restoreY, behavior: 'auto' });
+    }
+
+    // لا نمسح مرجع المنتج هنا؛ فهو مقصود أن يظل صالحًا عند التنقل
+    // بين المفضلة/السلة/المرتجعات ثم العودة للمتجر.
+    isTargetingProduct = false;
+  }, 80);
 }
 
 function ensureStoreHistory() {
@@ -4440,28 +4524,40 @@ function pushStorePageHistory(page) {
   try {
     const current = history.state || {};
 
-    // Store pages are intentionally a SINGLE navigation step.
-    // Example: Home -> Wishlist -> Cart -> Back = Home (not Wishlist).
-    // Once the first page transition creates the navigation entry, every
-    // following page change replaces that same entry instead of stacking
-    // another browser-history step.
-    if (current[STORE_HISTORY_KEY] === true && current.base === false && !current.layer) {
+    // مهم: أول انتقال من الصفحة الرئيسية يجب أن يكون pushState وليس replaceState.
+    // بهذا تظل حالة Home موجودة كخطوة سابقة، فيعمل زر رجوع الهاتف بالشكل الطبيعي.
+    // بعد ذلك فقط نستبدل الحالة الحالية عند التنقل بين الصفحات الداخلية،
+    // حتى تظل كل هذه التنقلات خطوة واحدة في سجل المتصفح.
+    if (page === 'home' && current[STORE_HISTORY_KEY] === true) {
       history.replaceState({
-        ...current,
         [STORE_HISTORY_KEY]: true,
-        page,
+        page: 'home',
         scrollY: 0,
-        base: false,
-        layer: undefined
+        base: true,
+        layer: null
       }, '', location.href);
       return;
     }
 
+    // إذا كنا بالفعل داخل خطوة صفحات المتجر، غيّر الصفحة داخل نفس الخطوة.
+    if (current[STORE_HISTORY_KEY] === true && current.base === false && !current.layer) {
+      history.replaceState({
+        [STORE_HISTORY_KEY]: true,
+        page,
+        scrollY: 0,
+        base: false,
+        layer: null
+      }, '', location.href);
+      return;
+    }
+
+    // أول انتقال من Home إلى أي صفحة داخلية: أنشئ خطوة جديدة، ولا تستبدل Home.
     history.pushState({
       [STORE_HISTORY_KEY]: true,
       page,
       scrollY: 0,
-      base: false
+      base: false,
+      layer: null
     }, '', location.href);
   } catch (e) {}
 }
@@ -4490,9 +4586,25 @@ function closeStoreLayerFromButton(layer, closeFn) {
   closeFn();
 }
 
+function closeDynamicBackLayers() {
+  const dynamicReturn = document.querySelector('.return-success-overlay');
+  if (dynamicReturn) {
+    dynamicReturn.remove();
+    return true;
+  }
+
+  const refund = document.getElementById('refundSuccessModal');
+  if (refund?.classList.contains('show')) {
+    refund.classList.remove('show');
+    return true;
+  }
+
+  return false;
+}
+
 function handleStoreBackNavigation(event) {
-  // On phones/tablets, the system/browser Back button closes an open
-  // product preview first and keeps the exact scroll position underneath.
+  // طبقة واحدة في كل مرة: المعاينة/الدفع/المقارنة/الماسح/المرتجع
+  // تُغلق أولًا، ولا نسمح للرجوع بتغيير الصفحة أسفلها.
   if ($('#productDetailModal')?.classList.contains('show')) {
     closeProductDetail(true);
     return;
@@ -4509,12 +4621,27 @@ function handleStoreBackNavigation(event) {
     closeStoreBarcodeReader(true);
     return;
   }
+  if (closeDynamicBackLayers()) return;
 
   const state = event.state;
+
   if (state && state[STORE_HISTORY_KEY] === true && state.page) {
     suppressStoreHistory = true;
-    switchPage(state.page, { fromHistory: true });
+
+    if (state.page === 'home') {
+      switchPage('home', { fromHistory: true, restoreHome: true });
+    } else {
+      switchPage(state.page, { fromHistory: true });
+    }
+
     setTimeout(() => { suppressStoreHistory = false; }, 0);
+    return;
+  }
+
+  // إذا خرج المتصفح من سجل المتجر بالكامل، لا نترك الصفحة في حالة
+  // نصف انتقال؛ نرجع للمتجر الرئيسي كحالة آمنة.
+  if (!state || state[STORE_HISTORY_KEY] !== true) {
+    switchPage('home', { fromHistory: true, restoreHome: true });
   }
 }
 
@@ -4523,44 +4650,56 @@ ensureStoreHistory();
 
 function switchPage(p, options = {}) {
   const currentPage = document.querySelector('.page.active-page');
+
+  // الضغط على زر الصفحة المفتوحة من البار لا ينشئ خطوة جديدة،
+  // لكنه يعيد العميل إلى بداية الصفحة كما هو متوقع في تطبيقات المتاجر.
   if (currentPage && currentPage.id === `${p}Page`) {
     toggleSideMenu(false);
-    // الرجوع أو التنقل لنفس الصفحة يبدأ دائمًا من أول الصفحة.
-    window.scrollTo(0, 0);
+    if (p === 'home' && options.fromHistory && options.restoreHome) {
+      restoreHomeView(true);
+    } else if (!options.fromHistory) {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
     return;
+  }
+
+  // قبل مغادرة المتجر الرئيسي احفظ موضعه ومرجع المنتج المستهدف.
+  if (currentPage?.id === 'homePage' && p !== 'home' && !options.fromHistory) {
+    captureHomeRestoreState();
   }
 
   if (!options.fromHistory && !suppressStoreHistory) {
     pushStorePageHistory(p);
   }
+
   $$('.page').forEach(x => x.classList.remove('active-page'));
   $$('.nav-item').forEach(x => x.classList.remove('active'));
   $$('.menu-item').forEach(x => x.classList.remove('active'));
-  
+
   if (p === 'home') {
     $('#homePage')?.classList.add('active-page');
+    document.querySelector('.nav-item[data-page="home"]')?.classList.add('active');
+    document.querySelector('.menu-item[data-page="home"]')?.classList.add('active');
 
-    // عند الرجوع أو العودة للصفحة الرئيسية من أي صفحة: لا نعيد توجيه
-    // المستخدم إلى نتيجة بحث قديمة؛ الصفحة الرئيسية تبدأ من الأعلى.
-    // الاستثناء الوحيد هو الانتقال الداخلي المباشر من البحث إلى المنتج،
-    // والذي يمرر preserveProductTarget=true من showSingleSearchResult().
-    if (!options.preserveProductTarget) {
+    // زر المتجر في البار السفلي = بداية الصفحة دائمًا.
+    // زر رجوع الهاتف = استعادة آخر موضع محفوظ للصفحة الرئيسية.
+    if (options.fromHistory && options.restoreHome) {
+      restoreHomeView(true);
+    } else if (!options.fromHistory) {
       currentSearchQuery = '';
       isSearchResultsMode = false;
       targetProductId = null;
       targetProductIds = [];
       isTargetingProduct = false;
-      const homeSearch = document.getElementById('searchInput');
-      const homeClear = document.getElementById('searchClear');
-      if (homeSearch) homeSearch.value = '';
-      homeClear?.classList.remove('visible');
       renderSearchSuggestions('');
-      renderSearchSuggestions('','searchPageSuggestions');
+      renderSearchSuggestions('', 'searchPageSuggestions');
+      updateSearchResultsMode(false);
+      renderHomeProducts();
+      renderRecentlyViewed();
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    } else {
+      restoreHomeView(true);
     }
-    document.querySelector('.nav-item[data-page="home"]')?.classList.add('active');
-    document.querySelector('.menu-item[data-page="home"]')?.classList.add('active');
-    renderHomeProducts();
-    renderRecentlyViewed();
   } else if (p === 'search') {
     $('#searchPage')?.classList.add('active-page');
     populateSearchPageControls();
@@ -4597,13 +4736,28 @@ function switchPage(p, options = {}) {
     document.querySelector('.menu-item[data-page="contact"]')?.classList.add('active');
     renderContactPage();
   }
+
   toggleSideMenu(false);
-  // Every newly selected page starts from the top.
-  window.scrollTo(0, 0);
+
+  // الصفحات الفرعية تبدأ من أعلى الصفحة فقط.
+  // الصفحة الرئيسية لها منطق استعادة مستقل أعلاه.
+  if (p !== 'home' && !options.fromHistory) {
+    window.scrollTo(0, 0);
+  }
 }
 
-$$('.menu-item[data-page]').forEach(i => i.addEventListener('click', () => switchPage(i.getAttribute('data-page'))));
-$$('.nav-item[data-page]').forEach(i => i.addEventListener('click', () => switchPage(i.getAttribute('data-page'))));
+// ربط موحد للأزرار: يعمل حتى لو أعاد المتجر رسم/تحديث عناصر البار.
+// لا ننشئ نسخة ثانية من نظام التنقل ولا نكرر مستمعات الأحداث.
+document.addEventListener('click', (event) => {
+  const button = event.target?.closest?.('.nav-item[data-page], .menu-item[data-page]');
+  if (!button) return;
+
+  const page = button.getAttribute('data-page');
+  if (!page) return;
+
+  event.preventDefault();
+  switchPage(page);
+});
 $('#cartWidgetTop')?.addEventListener('click', () => switchPage('cart'));
 $('#wishlistBtn')?.addEventListener('click', () => switchPage('wishlist'));
 document.getElementById('authMenuBtn')?.addEventListener('click', handleAuthMenuClick);
@@ -7371,17 +7525,21 @@ function renderHomeProducts() {
         .find(Boolean);
 
       if (targetElement) {
-        // Keep the selected product fully visible below the fixed header,
-        // without the extra downward displacement caused by scrollIntoView().
+        // Keep the selected product fully visible below the fixed header.
+        // Store the exact resulting position so later page navigation can restore it.
         const headerOffset = Math.max(72, document.querySelector('header')?.getBoundingClientRect().height || 0) + 12;
         const targetTop = window.scrollY + targetElement.getBoundingClientRect().top - headerOffset;
-        window.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
+        const finalTop = Math.max(0, targetTop);
+        window.scrollTo({ top: finalTop, behavior: 'smooth' });
+        setHomeProductRestoreAnchor(targetElement.id.replace(/^product-/, ''), finalTop);
       }
 
       setTimeout(() => {
         if (targetProductId) targetProductId = null;
+        targetProductIds = [];
         isTargetingProduct = false;
-      }, 500);
+        captureHomeRestoreState();
+      }, 5000);
     }, 250);
   } else if (activeTargetIds.length === 0) {
     isTargetingProduct = false;
@@ -7653,14 +7811,16 @@ function showSingleSearchResult(product){
   if(inp) inp.value='';
   if(clr) clr.classList.remove('visible');
   renderSearchSuggestions('');
-  switchPage('home', { preserveProductTarget: true });
+  switchPage('home');
   if(document.getElementById('homePage')?.classList.contains('active-page')) renderHomeProducts();
   setTimeout(()=>{
     const el=document.getElementById(`product-${product?.id}`);
     if(el){
       const headerOffset=Math.max(72,document.querySelector('header')?.getBoundingClientRect().height||0)+12;
-      const top=window.scrollY+el.getBoundingClientRect().top-headerOffset;
-      window.scrollTo({top:Math.max(0,top),behavior:'smooth'});
+      const top=Math.max(0,window.scrollY+el.getBoundingClientRect().top-headerOffset);
+      window.scrollTo({top,behavior:'smooth'});
+      setHomeProductRestoreAnchor(product?.id, top);
+      setTimeout(() => captureHomeRestoreState(), 850);
     }
   },260);
 }
@@ -7668,13 +7828,25 @@ function showSingleSearchResult(product){
 function openSearchResultsPage(query){
   const q=String(query||'').trim();
   if(!q) return;
+
   const matches=getSearchMatches(q);
-  if(matches.length===1){
+  const categoryFromSearch=findCategoryFromSearch(normalizeStoreSearchText(q));
+
+  // البحث عن قسم (مثل "بقالة") يفتح صفحة القسم كاملة، بنفس ترتيب المتجر
+  // وليس نتيجة واحدة أو شبكة معزولة.
+  if(categoryFromSearch){
+    currentSearchQuery='';
+    currentCategory=categoryFromSearch;
+  } else if(matches.length===1){
+    // البحث عن منتج محدد فقط يبقي سلوك التمييز الحالي.
     showSingleSearchResult(matches[0]);
     return;
+  } else {
+    // البحث عن اسم/ماركة (مثل Samsung) يعرض جميع المنتجات المطابقة.
+    currentSearchQuery=q;
+    currentCategory='all';
   }
-  currentSearchQuery=q;
-  currentCategory='all';
+
   homeVisibleLimit=20;
   targetProductId=null;
   targetProductIds=[];
@@ -7707,6 +7879,12 @@ function renderSearchPage(){
   if(!container) return;
   populateSearchPageControls();
 
+  // صفحة نتائج البحث لا تحتاج اختيار قسم مرة أخرى؛ القسم/الاسم الذي بحث عنه العميل
+  // هو بالفعل سبب فتح هذه الصفحة. نُبقي فقط الترتيب والسعر كأدوات إضافية.
+  const filterBar=document.getElementById('searchPageFilterBar');
+  const categoryGroup=filterBar?.querySelector('.filter-group:first-child');
+  if(categoryGroup) categoryGroup.style.display='none';
+
   const title=document.getElementById('searchPageTitle');
   const subtitle=document.getElementById('searchPageSubtitle');
   const hint=document.getElementById('searchPageResultHint');
@@ -7714,9 +7892,10 @@ function renderSearchPage(){
   const matches=getFilteredAndSortedProducts();
   const total=matches.length;
   const visible=matches.slice(0,homeVisibleLimit);
+  const searchLabel=currentSearchQuery || (currentCategory!=='all' ? getStoreCategoryLabel(currentCategory) : '');
 
-  if(input && input.value!==currentSearchQuery) input.value=currentSearchQuery;
-  if(title) title.textContent=`نتائج البحث عن «${currentSearchQuery}»`;
+  if(input && currentSearchQuery && input.value!==currentSearchQuery) input.value=currentSearchQuery;
+  if(title) title.textContent=`نتائج البحث عن «${searchLabel}»`;
   if(subtitle) subtitle.textContent=`${total} منتج متاح — استخدم الترتيب والسعر للوصول لما تريد`;
   if(hint) hint.textContent=total?`${total} نتيجة`:'';
   const count=document.getElementById('searchPageResultsCount');
@@ -7876,10 +8055,20 @@ function setupSearch() {
     inp.value='';
     clr.classList.remove('visible');
     currentSearchQuery='';
+    currentCategory='all';
+    currentPriceMin=null;
+    currentPriceMax=null;
+    currentSort='newest';
     targetProductId=null;
     targetProductIds=[];
     isTargetingProduct=false;
     homeVisibleLimit=20;
+    syncCategoryControls('all');
+    const ss=document.getElementById('sortSelect');
+    if(ss) ss.value='newest';
+    const pm=document.getElementById('priceMin'), px=document.getElementById('priceMax');
+    if(pm) pm.value='';
+    if(px) px.value='';
     updateSearchResultsMode(false);
     setBarcodeSearchStatus('');
     renderSearchSuggestions('');
@@ -7913,6 +8102,14 @@ function setupSearch() {
     pageInput.value='';
     pageClear.classList.remove('visible');
     currentSearchQuery='';
+    currentCategory='all';
+    currentPriceMin=null;
+    currentPriceMax=null;
+    currentSort='newest';
+    homeVisibleLimit=20;
+    targetProductId=null;
+    targetProductIds=[];
+    isTargetingProduct=false;
     renderSearchSuggestions('','searchPageSuggestions');
     switchPage('home');
   });
@@ -9291,7 +9488,7 @@ if ('serviceWorker' in navigator) {
   gap:10px;padding:10px;background:linear-gradient(135deg,#fff,#fbf6f0);
   border-radius:22px;border:1px solid rgba(201,169,110,.22);
 }
-#storeFilterBar .filter-group{
+#storeFilterBar .filter-group,#searchPageFilterBar .filter-group{
   min-height:62px;padding:8px 10px;display:flex;flex-direction:column;
   align-items:stretch;justify-content:center;gap:4px;border-radius:16px;
   background:#fff;border:1px solid rgba(74,44,23,.07);box-shadow:0 4px 14px rgba(74,44,23,.05);
