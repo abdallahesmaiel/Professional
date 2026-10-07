@@ -4442,6 +4442,16 @@ function captureHomeRestoreState() {
     storeHomeRestore.searchQuery = String(currentSearchQuery || '');
     storeHomeRestore.productId = null;
     storeHomeRestore.hasAnchor = false;
+
+    // ثبّت آخر موضع داخل حالة Home نفسها، حتى لا يعتمد الرجوع على
+    // قيمة تمرير قديمة أو على استعادة المتصفح التلقائية.
+    const currentState = history.state;
+    if (currentState?.[STORE_HISTORY_KEY] === true && currentState.page === 'home') {
+      history.replaceState({
+        ...currentState,
+        scrollY: storeHomeRestore.scrollY
+      }, '', location.href);
+    }
   } catch (e) {}
 }
 
@@ -4480,6 +4490,8 @@ function restoreHomeView(fromHistory = false) {
   renderHomeProducts();
   renderRecentlyViewed();
 
+  // انتظر اكتمال إعادة رسم Home قبل إعادة موضع التمرير،
+  // حتى لا يعيد المتصفح الموضع إلى الأعلى بعد استعادته مباشرة.
   setTimeout(() => {
     const target = restoreProductId
       ? document.getElementById(`product-${restoreProductId}`)
@@ -4524,24 +4536,40 @@ function pushStorePageHistory(page) {
   try {
     const current = history.state || {};
 
-    // مهم: أول انتقال من الصفحة الرئيسية يجب أن يكون pushState وليس replaceState.
-    // بهذا تظل حالة Home موجودة كخطوة سابقة، فيعمل زر رجوع الهاتف بالشكل الطبيعي.
-    // بعد ذلك فقط نستبدل الحالة الحالية عند التنقل بين الصفحات الداخلية،
-    // حتى تظل كل هذه التنقلات خطوة واحدة في سجل المتصفح.
-    if (page === 'home' && current[STORE_HISTORY_KEY] === true) {
+    // أول انتقال من Home إلى أي صفحة داخلية:
+    // نضع ثلاث خطوات واضحة في سجل المتصفح:
+    // 1) Home من أعلى الصفحة
+    // 2) Home عند آخر موضع كان فيه العميل
+    // 3) الصفحة الداخلية الحالية
+    // وبذلك يكون الرجوع: الموضع المحفوظ ← أعلى Home ← خارج الموقع.
+    if (
+      page !== 'home' &&
+      current[STORE_HISTORY_KEY] === true &&
+      current.page === 'home' &&
+      current.base === true
+    ) {
+      const homeScrollY = Math.max(0, window.scrollY || 0);
+
       history.replaceState({
+        ...current,
         [STORE_HISTORY_KEY]: true,
         page: 'home',
         scrollY: 0,
         base: true,
-        layer: null
+        layer: null,
+        homeTopEntry: true
       }, '', location.href);
-      return;
-    }
 
-    // إذا كنا بالفعل داخل خطوة صفحات المتجر، غيّر الصفحة داخل نفس الخطوة.
-    if (current[STORE_HISTORY_KEY] === true && current.base === false && !current.layer) {
-      history.replaceState({
+      history.pushState({
+        [STORE_HISTORY_KEY]: true,
+        page: 'home',
+        scrollY: homeScrollY,
+        base: false,
+        layer: null,
+        homeRestoredEntry: true
+      }, '', location.href);
+
+      history.pushState({
         [STORE_HISTORY_KEY]: true,
         page,
         scrollY: 0,
@@ -4551,8 +4579,21 @@ function pushStorePageHistory(page) {
       return;
     }
 
-    // أول انتقال من Home إلى أي صفحة داخلية: أنشئ خطوة جديدة، ولا تستبدل Home.
+    // إذا كنا بالفعل داخل صفحات المتجر، غيّر الصفحة داخل نفس الخطوة.
+    if (current[STORE_HISTORY_KEY] === true && current.base === false && !current.layer) {
+      history.replaceState({
+        ...current,
+        [STORE_HISTORY_KEY]: true,
+        page,
+        scrollY: 0,
+        base: false,
+        layer: null
+      }, '', location.href);
+      return;
+    }
+
     history.pushState({
+      ...current,
       [STORE_HISTORY_KEY]: true,
       page,
       scrollY: 0,
@@ -4629,7 +4670,21 @@ function handleStoreBackNavigation(event) {
     suppressStoreHistory = true;
 
     if (state.page === 'home') {
-      switchPage('home', { fromHistory: true, restoreHome: true });
+      if (state.homeRestoredEntry) {
+        // أول رجوع: العودة لنفس موضع Home الذي كان محفوظًا قبل فتح الصفحة الداخلية.
+        storeHomeRestore.scrollY = Math.max(0, Number(state.scrollY) || 0);
+        storeHomeRestore.productId = null;
+        storeHomeRestore.hasAnchor = false;
+        switchPage('home', { fromHistory: true, restoreHome: true });
+      } else if (state.homeTopEntry) {
+        // ثاني رجوع: هذه هي خطوة بداية Home، وبعدها الرجوع التالي يخرج من الموقع.
+        storeHomeRestore.scrollY = 0;
+        storeHomeRestore.productId = null;
+        storeHomeRestore.hasAnchor = false;
+        switchPage('home', { fromHistory: true, restoreHome: true });
+      } else {
+        switchPage('home', { fromHistory: true, restoreHome: true });
+      }
     } else {
       switchPage(state.page, { fromHistory: true });
     }
@@ -4638,14 +4693,16 @@ function handleStoreBackNavigation(event) {
     return;
   }
 
-  // إذا خرج المتصفح من سجل المتجر بالكامل، لا نترك الصفحة في حالة
-  // نصف انتقال؛ نرجع للمتجر الرئيسي كحالة آمنة.
-  if (!state || state[STORE_HISTORY_KEY] !== true) {
-    switchPage('home', { fromHistory: true, restoreHome: true });
-  }
+  // حالة غير تابعة لسجل المتجر: اترك المتصفح يكمل الرجوع الطبيعي للخارج.
+  // لا نعيد فتح Home هنا حتى لا يتحول الرجوع الثالث إلى رجوع وهمي داخل الموقع.
 }
 
 window.addEventListener('popstate', handleStoreBackNavigation);
+try {
+  // التمرير تتم إدارته هنا يدويًا حتى لا يتعارض ترميم المتصفح التلقائي
+  // مع restoreHomeView ويسبب حركة للأعلى ثم رجوعًا للمكان السابق.
+  history.scrollRestoration = 'manual';
+} catch (e) {}
 ensureStoreHistory();
 
 function switchPage(p, options = {}) {
