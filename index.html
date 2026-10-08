@@ -4503,21 +4503,32 @@ function restoreHomeView(fromHistory = false) {
   const restoreProductId = storeHomeRestore.productId;
   const restoreSearch = storeHomeRestore.searchQuery;
 
-  // البحث النصي في صفحة البحث المتعددة لا يعود كاستعلام عالق.
-  // أما موضع المنتج الذي تم اختياره من قبل فيظل محفوظًا.
-  if (!restoreProductId) {
-    currentSearchQuery = '';
-    isSearchResultsMode = false;
-    const inp = document.getElementById('searchInput');
-    const clr = document.getElementById('searchClear');
-    if (inp) inp.value = '';
-    clr?.classList.remove('visible');
-    updateSearchResultsMode(false);
-    renderSearchSuggestions('');
-    renderSearchSuggestions('', 'searchPageSuggestions');
-  } else if (restoreSearch) {
-    currentSearchQuery = restoreSearch;
-  }
+  // عند الرجوع إلى الصفحة الرئيسية من صفحة البحث/القسم، نبدأ Home بحالتها الطبيعية:
+  // عرض جميع المنتجات بدون بقاء القسم أو السعر أو ترتيب البحث السابق.
+  // هذا لا يغيّر بيانات المنتجات ولا أي وظيفة أخرى؛ فقط يصفر حالة الفلاتر أثناء الرجوع.
+  currentSearchQuery = '';
+  isSearchResultsMode = false;
+  currentCategory = 'all';
+  currentPriceMin = null;
+  currentPriceMax = null;
+  currentSort = 'newest';
+  targetProductId = null;
+  targetProductIds = [];
+  isTargetingProduct = false;
+  syncCategoryControls('all');
+  const homeSort = document.getElementById('sortSelect');
+  if (homeSort) homeSort.value = 'newest';
+  const homePriceMin = document.getElementById('priceMin');
+  const homePriceMax = document.getElementById('priceMax');
+  if (homePriceMin) homePriceMin.value = '';
+  if (homePriceMax) homePriceMax.value = '';
+  const inp = document.getElementById('searchInput');
+  const clr = document.getElementById('searchClear');
+  if (inp) inp.value = '';
+  clr?.classList.remove('visible');
+  updateSearchResultsMode(false);
+  renderSearchSuggestions('');
+  renderSearchSuggestions('', 'searchPageSuggestions');
 
   renderHomeProducts();
   renderRecentlyViewed();
