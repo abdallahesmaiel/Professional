@@ -9477,12 +9477,22 @@ function renderPromotionalCarousel() {
   
   wrapper.innerHTML = '';
   
-  promotionalSlides.forEach((slide) => {
+  // نكرر العروض (بنفس الترتيب) لحد ما يبقى عندنا 8 عناصر على الأقل،
+  // عشان الحلقة تفضل مستمرة حتى لو العروض قليلة (مثلاً 3 صور).
+  const PROMO_MIN_ITEMS = 8;
+  const loopList = [];
+  const repeats = promotionalSlides.length > 1 ? Math.ceil(PROMO_MIN_ITEMS / promotionalSlides.length) : 1;
+  for (let r = 0; r < repeats; r++) {
+    promotionalSlides.forEach((s, i) => loopList.push({ slide: s, index: i }));
+  }
+
+  loopList.forEach(({ slide, index }) => {
     const item = document.createElement('div');
     item.className = 'promo-carousel-item';
+    item.dataset.slideIndex = String(index);
     
     const imageUrl = getSlideImageUrl(slide);
-    item.innerHTML = `<img src="${imageUrl}" alt="${slide.title || 'عرض مميز'}" loading="lazy" onerror="this.src='https://via.placeholder.com/800x400/4A2C17/C9A96E?text=🏪+عرض+مميز';">`;
+    item.innerHTML = `<img src="${imageUrl}" alt="${slide.title || 'عرض مميز'}" onerror="this.src='https://via.placeholder.com/800x400/4A2C17/C9A96E?text=🏪+عرض+مميز';">`;
     
     item.addEventListener('click', () => {
       const linkedIds = Array.isArray(slide.linkedProductIds)
@@ -9523,7 +9533,7 @@ function renderPromotionalCarousel() {
 
   currentSlideIndex = 0;
   setTimeout(() => {
-    scrollToPromotionalSlide(0, false);
+    promoNormalize();
     startAutoPlay();
   }, 0);
 }
@@ -9563,18 +9573,76 @@ function manualScrollHelper(amount) {
   isUserInteracting = true;
   clearTimeout(resumeTimeout);
 
-  const direction = amount < 0 ? -1 : 1;
-  let newIndex = currentSlideIndex + direction;
-  if (newIndex < 0) newIndex = promotionalSlides.length - 1;
-  if (newIndex >= promotionalSlides.length) newIndex = 0;
-
-  currentSlideIndex = newIndex;
-  scrollToPromotionalSlide(newIndex, true);
+  promoAdvance(amount < 0 ? -1 : 1);
 
   resumeTimeout = setTimeout(() => {
     isUserInteracting = false;
     startAutoPlay();
   }, 1500);
+}
+
+// ===== حلقة لا نهائية =====
+// القاعدة: العرض الظاهر دايماً في الخانة رقم 1، وفي خانة 0 العرض السابق له.
+// بعد كل حركة بنرتّب العناصر (أول عنصر يروح للآخر أو العكس) ونثبّت الموضع فوراً
+// من غير أي حركة مرئية، فالشريط يكمل 1⬅️2⬅️3⬅️1⬅️2⬅️3 من غير ما يرجع للأول.
+let promoNormalizeTimer = null;
+let promoIsTouching = false;
+
+function promoNearestIndex(wrapper) {
+  const wl = wrapper.getBoundingClientRect().left;
+  let best = 0, bestDist = Infinity;
+  Array.from(wrapper.children).forEach((el, i) => {
+    const d = Math.abs(el.getBoundingClientRect().left - wl);
+    if (d < bestDist) { bestDist = d; best = i; }
+  });
+  return best;
+}
+
+function promoNormalize() {
+  const wrapper = document.getElementById('promoCarouselWrapper');
+  if (!wrapper || promotionalSlides.length < 2 || wrapper.children.length < 4) return;
+
+  const k = promoNearestIndex(wrapper);
+  if (k !== 1) {
+    const wl = wrapper.getBoundingClientRect().left;
+    const keepEl = wrapper.children[k];
+    // نحفظ مكان العرض الظاهر بالضبط قبل إعادة الترتيب...
+    const offsetBefore = keepEl.getBoundingClientRect().left - wl;
+
+    const prevSnap = wrapper.style.scrollSnapType;
+    const prevBehavior = wrapper.style.scrollBehavior;
+    wrapper.style.scrollSnapType = 'none';
+    wrapper.style.scrollBehavior = 'auto';
+
+    if (k > 1) {
+      for (let i = 0; i < k - 1; i++) wrapper.appendChild(wrapper.firstElementChild);
+    } else {
+      wrapper.insertBefore(wrapper.lastElementChild, wrapper.firstElementChild);
+    }
+
+    // ...ونرجّعه لنفس المكان بالظبط بعد إعادة الترتيب، فمفيش أي هزة.
+    const offsetAfter = keepEl.getBoundingClientRect().left - wrapper.getBoundingClientRect().left;
+    const fix = offsetAfter - offsetBefore;
+    if (Math.abs(fix) > 0.01) {
+      wrapper.scrollBy({ left: fix, top: 0, behavior: 'instant' });
+    }
+
+    setTimeout(() => {
+      wrapper.style.scrollSnapType = prevSnap;
+      wrapper.style.scrollBehavior = prevBehavior;
+    }, 60);
+  }
+
+  const shown = wrapper.children[1];
+  const idx = shown ? Number(shown.dataset.slideIndex) : 0;
+  currentSlideIndex = Number.isFinite(idx) ? idx : 0;
+
+  if (!isUserInteracting && !autoPlayTimer) startAutoPlay();
+}
+
+function promoAdvance(dir) {
+  // dir = 1 → العرض التالي، dir = -1 → العرض السابق
+  scrollToPromotionalSlide(dir > 0 ? 2 : 0, true);
 }
 
 function getPromotionalInterval(slide) {
@@ -9603,7 +9671,7 @@ function scrollToPromotionalSlide(index, smooth = true) {
   wrapper.scrollBy({
     left: delta,
     top: 0,
-    behavior: smooth ? 'smooth' : 'auto'
+    behavior: smooth ? 'smooth' : 'instant'
   });
 }
 
@@ -9619,18 +9687,17 @@ function startAutoPlay() {
 
   // مؤقت واحد فقط. بعد الانتقال نقرأ مدة الشريحة التالية من Firebase/لوحة التحكم.
   autoPlayTimer = setTimeout(function timerCallback() {
+    autoPlayTimer = null;
     if (isUserInteracting || promotionalSlides.length < 2) return;
 
-    let nextIndex = currentSlideIndex + 1;
-    if (nextIndex >= promotionalSlides.length) {
-      nextIndex = 0;
-    }
+    // نتحرك للعرض التالي؛ بعد انتهاء الحركة promoNormalize() بترتّب العناصر
+    // وتبدأ مؤقت العرض الجديد (بمدته من لوحة التحكم).
+    promoAdvance(1);
 
-    currentSlideIndex = nextIndex;
-    scrollToPromotionalSlide(nextIndex, true);
-
-    // نبدأ توقيت الشريحة الجديدة من الصفر.
-    startAutoPlay();
+    // شبكة أمان لو الحركة ما حصلتش لأي سبب.
+    setTimeout(() => {
+      if (!autoPlayTimer && !isUserInteracting) startAutoPlay();
+    }, 1500);
   }, getPromotionalInterval(promotionalSlides[currentSlideIndex]));
 }
 
@@ -9660,12 +9727,16 @@ function setupCarouselInteractions() {
   });
 
   section.addEventListener('touchstart', () => {
+    promoIsTouching = true;
     stopAutoPlay();
     isUserInteracting = true;
     clearTimeout(resumeTimeout);
   });
 
   section.addEventListener('touchend', () => {
+    promoIsTouching = false;
+    clearTimeout(promoNormalizeTimer);
+    promoNormalizeTimer = setTimeout(promoNormalize, 250);
     isUserInteracting = false;
     clearTimeout(resumeTimeout);
     resumeTimeout = setTimeout(() => {
@@ -9676,6 +9747,8 @@ function setupCarouselInteractions() {
   const wrapper = document.getElementById('promoCarouselWrapper');
   if (wrapper) {
     wrapper.addEventListener('scroll', () => {
+      clearTimeout(promoNormalizeTimer);
+      promoNormalizeTimer = setTimeout(() => { if (!promoIsTouching) promoNormalize(); }, 140);
       // لا نحسب currentSlideIndex من scrollLeft؛ لأن RTL على Android/iOS
       // يستخدم قيمًا مختلفة، وهذا كان سببًا في القفز/التكرار وعدم احترام المؤقت.
       if (isUserInteracting) {
