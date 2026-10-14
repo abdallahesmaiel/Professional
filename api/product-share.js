@@ -10,6 +10,13 @@ const DEFAULT_OG_IMAGE = '';
 //   'c_pad,b_white' = تظهر الصورة كاملة مع خلفية بيضاء حولها
 //   'c_fill'        = تملأ الصورة المساحة بالكامل مع قص الأطراف
 const OG_CROP = 'c_pad,b_white';
+// رقم تطبيق فيسبوك (App ID) لإزالة تحذير fb:app_id في Sharing Debugger.
+// تجده في https://developers.facebook.com/apps (اتركه فارغاً إن لم يكن لديك تطبيق).
+const FB_APP_ID = '';
+// العملة المعروضة بجانب السعر في المعاينة (غيّرها حسب عملتك، مثلاً 'ريال' أو 'درهم')
+const CURRENCY_LABEL = 'جنيه';
+// كود العملة القياسي (EGP, SAR, AED, USD ...)
+const CURRENCY_CODE = 'EGP';
 // أقصى مدة انتظار لقاعدة Firebase
 const FETCH_TIMEOUT_MS = 6000;
 
@@ -129,6 +136,25 @@ export default async function handler(req, res) {
 
   const name = product.name || 'منتج في Professional Store';
   const description = truncate(product.description || `شاهد المنتج ${name} في Professional Store`);
+
+  // السعر: finalPrice (بعد الخصم) ثم price. عند وجود خصم نعرض السعر القديم أيضاً.
+  const toNum = (v) => {
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  };
+  const fmt = (n) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
+  const finalPrice = toNum(product.finalPrice) || toNum(product.price);
+  const oldPrice = toNum(product.price);
+  const priceText = finalPrice
+    ? (oldPrice > finalPrice
+        ? `السعر ${fmt(finalPrice)} ${CURRENCY_LABEL} (بدل ${fmt(oldPrice)})`
+        : `السعر ${fmt(finalPrice)} ${CURRENCY_LABEL}`)
+    : '';
+  const ogTitle = priceText ? `${name} | ${priceText}` : name;
+  const priceTags = finalPrice
+    ? `<meta property="product:price:amount" content="${finalPrice}">
+<meta property="product:price:currency" content="${escapeHtml(CURRENCY_CODE)}">`
+    : '';
   const og = buildOgImage(normalizeImage(product));
   const safeProductUrl = escapeHtml(productUrl);
   const safeShareUrl = escapeHtml(shareUrl);
@@ -159,13 +185,15 @@ export default async function handler(req, res) {
 <meta name="description" content="${escapeHtml(description)}">
 <meta property="og:site_name" content="Professional Store">
 <meta property="og:locale" content="ar_AR">
+${FB_APP_ID ? `<meta property="fb:app_id" content="${escapeHtml(FB_APP_ID)}">` : ''}
 <meta property="og:type" content="product">
-<meta property="og:title" content="${escapeHtml(name)}">
+<meta property="og:title" content="${escapeHtml(ogTitle)}">
 <meta property="og:description" content="${escapeHtml(description)}">
 <meta property="og:url" content="${safeShareUrl}">
+${priceTags}
 ${imageTags}
 <meta name="twitter:card" content="${og ? 'summary_large_image' : 'summary'}">
-<meta name="twitter:title" content="${escapeHtml(name)}">
+<meta name="twitter:title" content="${escapeHtml(ogTitle)}">
 <meta name="twitter:description" content="${escapeHtml(description)}">
 </head>
 <body>
