@@ -6640,7 +6640,11 @@ async function cancelOrder(oid) {
     return; 
   }
   try {
-    if (database) { await remove(ref(database, `orders/${oid}`)); }
+    if (database) {
+      const rm = { ['orders/' + oid]: null };
+      [...new Set((order.items || []).map(i => i.vendorId).filter(Boolean))].forEach(v => { rm['vendorOrders/' + v + '/' + oid] = null; });
+      await update(ref(database), rm);
+    }
     myOrders = myOrders.filter(o => o.orderId !== oid);
     OrderTimerManager.clearTimer(oid);
     saveOrders();
@@ -6850,7 +6854,8 @@ async function submitOrderImpl(e) {
       price: i.finalPrice || i.price || 0, 
       quantity: i.quantity, 
       image: i.image || '',
-      ...(i.note ? { customNote: String(i.note).slice(0, 120) } : {})
+      ...(i.note ? { customNote: String(i.note).slice(0, 120) } : {}),
+      ...(allProducts.find(x => x.id === i.productId)?.vendorId ? { vendorId: allProducts.find(x => x.id === i.productId).vendorId } : {})
     })),
     subtotal,
     deliveryFee: df,
@@ -6882,6 +6887,19 @@ async function submitOrderImpl(e) {
 
       const updates = {};
       updates['orders/' + nr.key] = orderData;
+      // تقسيم الطلب على التجار: كل تاجر يرى منتجاته فقط (بدون بيانات العميل)
+      const partsByVendor = {};
+      orderData.items.forEach(it => {
+        if (!it.vendorId) return;
+        const { vendorId, ...clean } = it;
+        (partsByVendor[vendorId] = partsByVendor[vendorId] || []).push(clean);
+      });
+      Object.entries(partsByVendor).forEach(([vid, items]) => {
+        updates['vendorOrders/' + vid + '/' + nr.key] = {
+          orderId: nr.key, shortId: String(nr.key).slice(-8), createdAt: orderData.createdAt, status: 'pending',
+          items, subtotal: items.reduce((t, x) => t + Number(x.price || 0) * Number(x.quantity || 0), 0)
+        };
+      });
       updates['orderPhoneIndex/' + phoneHash] = {
         hasOrder: true,
         createdAt: Date.now()
@@ -7463,6 +7481,8 @@ function loadProducts() {
       if (snap.exists()) {
         snap.forEach(child => {
           const d = child.val();
+          // منتجات التجار تظهر فقط بعد اعتماد المدير وطالما التاجر غير موقوف
+          if (d.vendorId && (d.approval !== 'approved' || d.vendorSuspended === true)) return;
           let img = d.image || '';
           if (d.cloudinary_public_id && !img) {
             img = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/${d.cloudinary_public_id}`;
@@ -7470,6 +7490,7 @@ function loadProducts() {
           img = optimizeCloudinaryUrl(img);
           allProducts.push({
             id: child.key,
+            vendorId: d.vendorId || '',
             name: d.name || 'منتج',
             price: Number(d.price) || 0,
             finalPrice: d.finalPrice ? Number(d.finalPrice) : null,
