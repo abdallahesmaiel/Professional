@@ -2102,6 +2102,7 @@
       <div class="admin-title"><span id="vName">—</span> <small id="vSub">VENDOR PANEL</small></div>
     </div>
     <div class="admin-actions">
+      <button class="btn btn-outline btn-sm" id="notifBtn" title="إشعارات الطلبات الجديدة"><i class="fa-solid fa-bell-slash"></i> <span id="notifLbl">تفعيل الإشعارات</span></button>
       <button class="btn btn-outline btn-sm" id="refreshBtn"><i class="fa-solid fa-rotate"></i> تحديث</button>
       <button class="btn btn-danger btn-sm" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> خروج</button>
     </div>
@@ -2147,6 +2148,7 @@
             <i class="fa-solid fa-search"></i>
           </div>
         </div>
+        <div id="ordersBulk" style="margin-bottom:10px"></div>
         <div class="orders-grid" id="ordersList"><div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><h3>جاري التحميل...</h3></div></div>
       </div>
     </div>
@@ -2582,6 +2584,7 @@ let unsubs = [];
 let registering = false;
 
 let seenParts = new Set(); let partsFirstLoad = true;
+let archived = [];        // طلبات مسلَّمة تم حذفها من القائمة (تبقى في الحسابات فقط)
 
 const inviteToken = new URLSearchParams(location.search).get('invite') || '';
 let inviteData = null;
@@ -2688,7 +2691,7 @@ async function enterApp(user) {
     startListeners();
   } catch (e) { console.error(e); await signOut(auth).catch(() => {}); showGate('login'); setMsg($('lgMsg'), 'تعذر تحميل بيانات الحساب.'); }
 }
-function cleanup() { unsubs.forEach(u => { try { u(); } catch (_) {} }); unsubs = []; me = null; uid = ''; products = []; parts = []; payouts = []; partsFirstLoad = true; seenParts = new Set(); }
+function cleanup() { unsubs.forEach(u => { try { u(); } catch (_) {} }); unsubs = []; me = null; uid = ''; products = []; parts = []; payouts = []; archived = []; partsFirstLoad = true; seenParts = new Set(); }
 $('logoutBtn').onclick = async () => { await signOut(auth); location.href = location.pathname; };
 
 /* ========= البيانات اللحظية ========= */
@@ -2703,11 +2706,18 @@ function startListeners() {
     a.sort((x, y) => (y.createdAt || 0) - (x.createdAt || 0));
     if (!partsFirstLoad) {
       const fresh = a.filter(p => p.status === 'pending' && !seenParts.has(p.id));
-      if (fresh.length) { toast(`🔔 طلب جديد #${fresh[0].shortId || fresh[0].id.slice(-8)}`, 'info'); try { navigator.vibrate?.(200); } catch (_) {} }
+      if (fresh.length) notifyNewOrders(fresh);
+    } else {
+      const waiting = a.filter(p => p.status === 'pending' && pDisp(p) === 'pending').length;
+      if (waiting) toast(`🔔 لديك ${waiting} طلب جديد في انتظارك`, 'info');
     }
     a.forEach(p => seenParts.add(p.id)); partsFirstLoad = false;
-    parts = a; renderOrders(); renderAccounts();
+    parts = a; renderOrders(); renderAccounts(); autoPurge();
   }, err => console.error(err)));
+  unsubs.push(onValue(ref(db, 'vendorArchive/' + uid), s => {
+    const a = []; s.forEach(c => { a.push({ id: c.key, ...c.val() }); });
+    archived = a; renderAccounts();
+  }, () => {}));
   unsubs.push(onValue(ref(db, 'vendorPayouts/' + uid), s => {
     const a = []; s.forEach(c => { a.push({ id: c.key, ...c.val() }); });
     a.sort((x, y) => (y.createdAt || 0) - (x.createdAt || 0)); payouts = a; renderAccounts();
@@ -3255,13 +3265,17 @@ function renderOrders() {
   updateStats();
   const box = $('ordersList'); if (!box) return;
   $('orderFilters').innerHTML = O_FILTERS.map(([k, l, f]) => {
-    const n = parts.filter(p => f(pDisp(p))).length;
+    const n = parts.filter(p => !isHiddenDone(p) && f(pDisp(p))).length;
     return `<button class="btn btn-outline btn-sm order-filter-btn ${oFilter === k ? 'active-filter' : ''}" onclick="window.filterOrders('${k}')">${l} <span class="fc">${n}</span></button>`;
   }).join('');
+  const fin = parts.filter(isFinished);
+  const bulk = $('ordersBulk');
+  if (bulk) bulk.innerHTML = fin.length ? `<button class="btn btn-danger btn-sm" id="delAllBtn"><i class="fa-solid fa-trash-can"></i> حذف كل الطلبات المكتملة (${fin.length})</button> <small style="color:var(--text-muted);margin-inline-start:8px">المسلَّمة تبقى في حساباتك</small>` : '';
+  if (bulk) bulk.innerHTML += `<div style="font-size:11px;color:var(--text-muted);margin-top:6px">ℹ️ الطلبات المكتملة تختفي من هذه الصفحة بعد 5 دقائق، وتُحذف نهائياً من قاعدة البيانات بعد 24 ساعة.</div>`;
   const flt = O_FILTERS.find(x => x[0] === oFilter)[2];
-  let list = parts.filter(p => flt(pDisp(p)));
+  let list = parts.filter(p => !isHiddenDone(p) && flt(pDisp(p)));
   if (oQuery) list = list.filter(p => (String(p.shortId || '') + ' ' + p.id + ' ' + partItems(p).map(i => i.name || '').join(' ')).toLowerCase().includes(oQuery));
-  if (!list.length) { box.innerHTML = `<div class="empty-state"><i class="fa-solid fa-inbox"></i><h3>لا توجد طلبات</h3><p style="font-size:12px;color:var(--text-muted);margin-top:8px;">${parts.length ? 'جرّب فلتر آخر' : 'ستظهر هنا الطلبات التي تحتوي على منتجاتك'}</p></div>`; return; }
+  if (!list.length) { box.innerHTML = `<div class="empty-state"><i class="fa-solid fa-inbox"></i><h3>لا توجد طلبات</h3><p style="font-size:12px;color:var(--text-muted);margin-top:8px;">${parts.some(p => !isHiddenDone(p)) ? 'جرّب فلتر آخر' : 'ستظهر هنا الطلبات التي تحتوي على منتجاتك'}</p></div>`; return; }
   box.innerHTML = list.map(p => {
     const d = pDisp(p), items = partItems(p), sub = partSub(p), isNew = p.status === 'pending';
     const acts = p.status === 'pending'
@@ -3271,6 +3285,7 @@ function renderOrders() {
       : p.status === 'preparing' && !['rejected', 'returned'].includes(d)
       ? `<button class="btn btn-success btn-sm" data-ps="ready" data-id="${p.id}"><i class="fa-solid fa-box"></i> جاهز للشحن</button>
          <button class="btn btn-danger btn-sm" data-ps="unavailable" data-id="${p.id}">غير متوفر</button>` : '';
+    const delBtn = isFinished(p) ? `<div class="status-flow" style="margin-top:10px"><button class="btn btn-outline btn-sm" data-del="${p.id}" style="color:#fca5a5;border-color:rgba(252,165,165,.4)"><i class="fa-solid fa-trash"></i> حذف الطلب</button></div>` : '';
     const idx = FLOW.indexOf(d);
     const tl = idx >= 0
       ? `<div class="vx-timeline">${FLOW_L.map((l, i) => `<div class="vx-step ${i < idx || d === 'delivered' ? 'done' : (i === idx ? 'cur' : '')}">${i < idx || d === 'delivered' ? '✓ ' : ''}${l}</div>`).join('')}</div>`
@@ -3288,10 +3303,54 @@ function renderOrders() {
       <div class="order-items-list" style="max-height:none">${items.map(i => `<div class="vx-oi"><span class="nm"><img src="${esc(thumb(i.image, 120))}" alt="" loading="lazy"><span>${esc(i.name)}${i.customNote ? `<small>📝 ${esc(i.customNote)}</small>` : ''}</span></span><span>× ${Number(i.quantity) || 0} — <b>${money((Number(i.price) || 0) * (Number(i.quantity) || 0))} ج</b></span></div>`).join('')}</div>
       <div class="order-detail-breakdown">${delivered}</div>
       ${waitMsg}${unav}${cancelled}
-      ${acts ? `<div class="status-flow" style="margin-top:10px">${acts}</div>` : ''}
+      ${acts ? `<div class="status-flow" style="margin-top:10px">${acts}</div>` : ''}${delBtn}
     </div>`;
   }).join('');
 }
+/* ===== حذف الطلبات المنتهية (مسلَّمة / مرتجعة / ملغاة) =====
+   المسلَّم يُنسخ أولاً مختصراً إلى vendorArchive ثم يُحذف من vendorOrders في عملية واحدة،
+   فتبقى مبيعاتك ورصيدك وعمولة المتجر محفوظة. الحذف المتعدد يتم كله أو لا يتم منه شيء. */
+function isFinished(p) { return ['delivered', 'returned', 'cancelled'].includes(p.status); }
+const HIDE_AFTER = 5 * 60 * 1000, PURGE_AFTER = 24 * 60 * 60 * 1000;   // تختفي من الصفحة بعد 5 دقائق | تُحذف من القاعدة بعد 24 ساعة
+const doneAt = p => Number(p.deliveredAt || p.returnedAt || p.cancelledAt || p.orderStatusAt || p.createdAt) || 0;
+const isHiddenDone = p => isFinished(p) && doneAt(p) > 0 && Date.now() - doneAt(p) >= HIDE_AFTER;
+let purging = false;
+async function autoPurge() {
+  if (purging || !uid) return;
+  const old = parts.filter(p => isFinished(p) && doneAt(p) > 0 && Date.now() - doneAt(p) >= PURGE_AFTER);
+  if (!old.length) return;
+  purging = true;
+  try { await deleteParts(old); } catch (e) { console.warn('auto purge', e); } finally { setTimeout(() => { purging = false; }, 60000); }
+}
+setInterval(() => { if (uid) { renderOrders(); autoPurge(); } }, 30000);
+function archiveRec(p) {
+  return { status: 'delivered', shortId: p.shortId || '', createdAt: p.createdAt || 0, deliveredAt: p.deliveredAt || 0,
+    commissionRate: Number(p.commissionRate) || 0, commissionMode: p.commissionMode || 'minus',
+    commissionAmount: Number(p.commissionAmount) || 0, netAmount: Number(p.netAmount) || 0, grossAmount: Number(p.grossAmount) || partSub(p),
+    items: partItems(p).map(i => ({ name: String(i.name || '').slice(0, 120), price: Number(i.price) || 0, quantity: Number(i.quantity) || 0 })), archivedAt: Date.now() };
+}
+async function deleteParts(list) {
+  const up = {};
+  list.forEach(p => { up[`vendorOrders/${uid}/${p.id}`] = null; if (p.status === 'delivered') up[`vendorArchive/${uid}/${p.id}`] = archiveRec(p); });
+  await update(ref(db), up);
+}
+$('ordersBulk').addEventListener('click', async e => {
+  if (!e.target.closest('#delAllBtn')) return;
+  const list = parts.filter(isFinished); if (!list.length) return;
+  if (!await window.proConfirm(`حذف ${list.length} طلب مكتمل نهائياً من قاعدة البيانات؟\nالطلبات المسلَّمة تبقى محسوبة في حساباتك، لكن تفاصيلها لن تظهر هنا.`, { type: 'danger', title: 'حذف الطلبات المكتملة', okText: 'نعم، احذف الكل' })) return;
+  showPageLoading('جاري الحذف...', 'يرجى الانتظار');
+  try { await deleteParts(list); showToast(`🗑️ تم حذف ${list.length} طلب`); }
+  catch (er) { console.error(er); showToast('❌ تعذر الحذف (لم يُحذف شيء) — راجع صلاحيات Firebase', 'error'); }
+  finally { hidePageLoading(); }
+});
+$('ordersList').addEventListener('click', async e => {
+  const db_ = e.target.closest('[data-del]'); if (!db_) return;
+  const p = parts.find(x => x.id === db_.dataset.del); if (!p || !isFinished(p)) return;
+  if (!await window.proConfirm(`حذف الطلب #${p.shortId || p.id.slice(-8)} نهائياً من قاعدة البيانات؟${p.status === 'delivered' ? '\nسيبقى محسوباً في حساباتك.' : ''}`, { type: 'danger', title: 'حذف الطلب', okText: 'احذف' })) return;
+  db_.disabled = true;
+  try { await deleteParts([p]); showToast('🗑️ تم حذف الطلب'); }
+  catch (er) { console.error(er); db_.disabled = false; showToast('❌ تعذر الحذف — راجع صلاحيات Firebase', 'error'); }
+});
 $('ordersList').addEventListener('click', async e => {
   const b = e.target.closest('[data-ps]'); if (!b) return;
   const id = b.dataset.id, st = b.dataset.ps, p = parts.find(x => x.id === id); if (!p) return;
@@ -3315,7 +3374,7 @@ let balNow = 0;
 function renderAccounts() {
   const rate = Number(me?.commission) || 0;
   $('rateLbl').textContent = `عمولة المتجر ${money(rate)}%`;
-  const del = parts.filter(p => p.status === 'delivered');
+  const del = parts.filter(p => p.status === 'delivered').concat(archived).sort((x, y) => (y.deliveredAt || 0) - (x.deliveredAt || 0));
   const gross = r2(del.reduce((s, p) => s + partSub(p), 0));
   const comm = r2(del.reduce((s, p) => s + Number(p.commissionAmount || 0), 0));
   const net = r2(del.reduce((s, p) => s + Number(p.netAmount || 0), 0));
@@ -3344,6 +3403,48 @@ function updateStats() {
   const lb = $('lowStockBadge'); if (lb) { lb.textContent = low; lb.classList.toggle('hidden', !low); }
   document.title = (nNew > 0 ? `(${nNew}) ` : '') + 'لوحة التاجر — بروفيشنال';
 }
+
+/* ================================================================
+   ===== إشعارات الطلبات الجديدة =====
+   ================================================================ */
+let swReg = null;
+const notifOn = () => 'Notification' in window && Notification.permission === 'granted' && localStorage.getItem('vx_notif') === '1';
+function updateNotifBtn() {
+  const b = $('notifBtn'), l = $('notifLbl'); if (!b) return;
+  const supported = 'Notification' in window, on = notifOn();
+  b.querySelector('i').className = 'fa-solid ' + (on ? 'fa-bell' : 'fa-bell-slash');
+  l.textContent = !supported ? 'غير مدعوم' : (Notification.permission === 'denied' ? 'محظور من المتصفح' : (on ? 'الإشعارات مفعّلة' : 'تفعيل الإشعارات'));
+  b.style.color = on ? '#6ee7b7' : '';
+}
+async function registerSw() {
+  try { if ('serviceWorker' in navigator && !swReg) swReg = await navigator.serviceWorker.register('vendor-sw.js'); } catch (e) { console.warn('sw', e); }
+}
+async function showPush(title, body, tag) {
+  if (!notifOn()) return;
+  const opts = { body, tag, renotify: true, icon: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><text y="52" font-size="52">🏪</text></svg>'), dir: 'rtl', lang: 'ar', vibrate: [200, 100, 200] };
+  try { if (swReg) { await swReg.showNotification(title, opts); return; } } catch (_) {}
+  try { new Notification(title, opts); } catch (_) {}
+}
+function notifyNewOrders(fresh) {
+  const f = fresh[0], n = fresh.length;
+  const total = r2(fresh.reduce((s, p) => s + partSub(p), 0));
+  toast(n > 1 ? `🔔 ${n} طلبات جديدة` : `🔔 طلب جديد #${f.shortId || f.id.slice(-8)}`, 'info');
+  try { navigator.vibrate?.([200, 100, 200]); } catch (_) {}
+  if (localStorage.getItem('vx_sound') !== '0') { try { window.playNewOrderSound(); } catch (_) {} }
+  showPush(n > 1 ? `🔔 ${n} طلبات جديدة` : '🔔 طلب جديد', n > 1 ? `إجمالي ${money(total)} ج — افتح اللوحة لتجهيزها` : `#${f.shortId || f.id.slice(-8)} — ${partItems(f).length} صنف — ${money(total)} ج`, 'vx-new-order');
+}
+$('notifBtn').onclick = async () => {
+  if (!('Notification' in window)) { showToast('المتصفح لا يدعم الإشعارات', 'error'); return; }
+  if (notifOn()) { localStorage.setItem('vx_notif', '0'); updateNotifBtn(); showToast('🔕 تم إيقاف الإشعارات'); return; }
+  if (Notification.permission === 'denied') { showToast('الإشعارات محظورة — فعّلها من إعدادات الموقع في المتصفح', 'error'); return; }
+  const perm = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
+  if (perm !== 'granted') { updateNotifBtn(); showToast('لم يتم السماح بالإشعارات', 'warning'); return; }
+  localStorage.setItem('vx_notif', '1'); await registerSw(); updateNotifBtn();
+  try { window.playNewOrderSound(); } catch (_) {}
+  showPush('✅ تم تفعيل الإشعارات', 'ستصلك إشعارات فور وصول أي طلب جديد.', 'vx-test');
+  showToast('🔔 تم تفعيل إشعارات الطلبات الجديدة');
+};
+updateNotifBtn(); if (notifOn()) registerSw();
 
 initInvite();
 
