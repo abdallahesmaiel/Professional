@@ -2062,6 +2062,20 @@
 .modal-dialog{max-height:92vh;overflow-y:auto}
 
 </style>
+<style>
+.acc-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 14px}
+.acc-chip{padding:7px 14px;border-radius:999px;border:1px solid var(--border-color,rgba(255,255,255,.15));background:transparent;color:var(--text-secondary,#cbd5e1);font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+.acc-chip.on{background:var(--gold-300,#d4af37);color:#111;border-color:transparent}
+.acc-banner{background:rgba(252,211,77,.12);border:1px solid rgba(252,211,77,.35);color:#fcd34d;border-radius:12px;padding:10px 14px;font-size:12px;font-weight:700;margin-bottom:12px;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.acc-chart{display:flex;align-items:flex-end;gap:8px;height:130px;padding:10px 4px 0}
+.acc-bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;min-width:0}
+.acc-bar i{display:block;width:100%;max-width:38px;border-radius:8px 8px 3px 3px;background:linear-gradient(180deg,var(--gold-300,#d4af37),rgba(212,175,55,.35));min-height:3px}
+.acc-bar b{font-size:10px;color:var(--text-secondary,#cbd5e1);white-space:nowrap}
+.acc-bar span{font-size:10px;color:var(--text-muted,#94a3b8)}
+.acc-top{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed rgba(255,255,255,.08);font-size:13px}
+.acc-top .rk{width:24px;height:24px;border-radius:50%;background:rgba(212,175,55,.18);color:var(--gold-300,#d4af37);display:grid;place-items:center;font-weight:900;font-size:12px;flex:none}
+.acc-top .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+</style>
 </head>
 <body>
 <!-- ============ GATE ============ -->
@@ -2073,7 +2087,7 @@
     <div id="inviteNote" class="invite-note hidden"></div>
 
     <form id="loginForm" autocomplete="on">
-      <input class="login-input" id="lgUser" dir="ltr" placeholder="اسم المستخدم" autocomplete="username" autocapitalize="none" required>
+      <input class="login-input" id="lgUser" dir="auto" placeholder="اسم المستخدم" autocomplete="username" autocapitalize="none" required>
       <input class="login-input" id="lgPass" type="password" dir="ltr" placeholder="الرقم السري" autocomplete="current-password" required>
       <div class="login-error" id="lgMsg"></div>
       <button class="btn btn-gold btn-block" id="lgBtn" type="submit"><i class="fa-solid fa-right-to-bracket"></i> دخول</button>
@@ -2081,7 +2095,7 @@
 
     <form id="regForm" class="hidden" autocomplete="off">
       <input class="login-input" id="rgName" maxlength="60" placeholder="اسمك / اسم متجرك" required>
-      <input class="login-input" id="rgUser" dir="ltr" maxlength="20" autocapitalize="none" placeholder="اسم المستخدم للدخول (مثال: ahmed_store)" required>
+      <input class="login-input" id="rgUser" dir="auto" maxlength="20" autocapitalize="none" placeholder="اسم المستخدم للدخول (عربي أو إنجليزي، مثال: متجر_أحمد)" required>
       <div class="login-hint">حروف إنجليزية وأرقام و _ فقط (من 3 إلى 20).</div>
       <input class="login-input" id="rgPhone" type="tel" dir="ltr" placeholder="رقم الهاتف 01xxxxxxxxx" required>
       <input class="login-input" id="rgPass" type="password" dir="ltr" autocomplete="new-password" minlength="6" placeholder="الرقم السري (6 أحرف على الأقل)" required>
@@ -2103,6 +2117,7 @@
     </div>
     <div class="admin-actions">
       <button class="btn btn-outline btn-sm" id="notifBtn" title="إشعارات الطلبات الجديدة"><i class="fa-solid fa-bell-slash"></i> <span id="notifLbl">تفعيل الإشعارات</span></button>
+      <button class="btn btn-outline btn-sm" id="soundBtn" title="صوت تنبيه الطلب الجديد"><i class="fa-solid fa-volume-high"></i></button>
       <button class="btn btn-outline btn-sm" id="refreshBtn"><i class="fa-solid fa-rotate"></i> تحديث</button>
       <button class="btn btn-danger btn-sm" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> خروج</button>
     </div>
@@ -2317,11 +2332,16 @@
           <div class="card-title"><i class="fa-solid fa-wallet"></i> حساباتي</div>
           <span class="order-status-badge badge-delivering" id="rateLbl">العمولة —</span>
         </div>
+        <div id="accBanner"></div>
+        <div class="acc-tools" id="accTools"></div>
         <div class="stats-row-compact" id="accStats"></div>
+        <div id="accInsights"></div>
         <div class="vx-sub">🧾 طلبات تم تسليمها</div>
         <div id="accOrders"></div>
         <div class="vx-sub">💸 الدفعات المستلمة</div>
         <div id="accPay"></div>
+        <div class="vx-sub" style="color:#fca5a5">⚠️ منطقة الخطر</div>
+        <div class="vx-row"><div><b>حذف حسابي نهائياً</b><div class="m">يحذف حسابك وكل منتجاتك من قاعدة البيانات ولا يمكن التراجع.</div></div><button class="btn btn-danger btn-sm" data-acc="delacc"><i class="fa-solid fa-user-xmark"></i> حذف الحساب</button></div>
       </div>
     </div>
   </div>
@@ -2590,8 +2610,14 @@ const inviteToken = new URLSearchParams(location.search).get('invite') || '';
 let inviteData = null;
 
 /* ========= الدخول / التسجيل ========= */
-const usernameOk = u => /^[a-z0-9_]{3,20}$/.test(u);
-const toEmail = u => `${u}@${EMAIL_DOMAIN}`;
+// اسم المستخدم: حروف عربية أو إنجليزية وأرقام و _ (3–20). يُوحَّد الشكل (تشكيل/تطويل/أرقام هندية) قبل الاستخدام
+const normUser = raw => String(raw || '').trim().toLowerCase()
+  .replace(/[\u064B-\u0652\u0640]/g, '')
+  .replace(/[\u0660-\u0669]/g, d => String(d.charCodeAt(0) - 0x660))
+  .replace(/[\u06F0-\u06F9]/g, d => String(d.charCodeAt(0) - 0x6F0));
+const usernameOk = u => /^[a-z0-9_\u0621-\u063A\u0641-\u064A\u066E\u066F\u0671-\u06D3]{3,20}$/.test(u);
+// Firebase Auth لا يقبل حروفاً عربية في البريد، فيُحوَّل الاسم العربي إلى صيغة ASCII ثابتة (الأسماء الإنجليزية القديمة كما هي)
+const toEmail = u => /^[a-z0-9_]+$/.test(u) ? `${u}@${EMAIL_DOMAIN}` : `ar-${[...u].map(c => c.codePointAt(0).toString(36).padStart(3, '0')).join('')}@${EMAIL_DOMAIN}`;
 function authErr(e) {
   const c = e?.code || '';
   if (c === 'auth/email-already-in-use') return 'اسم المستخدم محجوز، اختر اسماً آخر.';
@@ -2631,7 +2657,7 @@ $('goLogin').onclick = () => { $('inviteNote').classList.add('hidden'); showGate
 
 $('loginForm').addEventListener('submit', async e => {
   e.preventDefault(); setMsg($('lgMsg'), '');
-  const u = $('lgUser').value.trim().toLowerCase(), p = $('lgPass').value;
+  const u = normUser($('lgUser').value), p = $('lgPass').value;
   if (!usernameOk(u)) return setMsg($('lgMsg'), 'اسم المستخدم غير صحيح.');
   const b = $('lgBtn'); b.disabled = true; const h = b.innerHTML; b.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الدخول...';
   try { await signInWithEmailAndPassword(auth, toEmail(u), p); }
@@ -2641,11 +2667,11 @@ $('loginForm').addEventListener('submit', async e => {
 
 $('regForm').addEventListener('submit', async e => {
   e.preventDefault(); setMsg($('rgMsg'), '');
-  const name = $('rgName').value.trim(), u = $('rgUser').value.trim().toLowerCase(), phone = $('rgPhone').value.trim();
+  const name = $('rgName').value.trim(), u = normUser($('rgUser').value), phone = $('rgPhone').value.trim();
   const p = $('rgPass').value, p2 = $('rgPass2').value;
   if (!inviteData) return setMsg($('rgMsg'), 'رابط الدعوة غير صالح.');
   if (!name) return setMsg($('rgMsg'), 'اكتب اسمك أو اسم متجرك.');
-  if (!usernameOk(u)) return setMsg($('rgMsg'), 'اسم المستخدم: حروف إنجليزية وأرقام و _ (من 3 إلى 20).');
+  if (!usernameOk(u)) return setMsg($('rgMsg'), 'اسم المستخدم: حروف عربية أو إنجليزية وأرقام و _ بدون مسافات (من 3 إلى 20).');
   if (!/^01[0-9]{9}$/.test(phone)) return setMsg($('rgMsg'), 'رقم الهاتف غير صحيح.');
   if (p.length < 6) return setMsg($('rgMsg'), 'الرقم السري 6 أحرف على الأقل.');
   if (p !== p2) return setMsg($('rgMsg'), 'الرقم السري غير متطابق.');
@@ -2691,7 +2717,7 @@ async function enterApp(user) {
     startListeners();
   } catch (e) { console.error(e); await signOut(auth).catch(() => {}); showGate('login'); setMsg($('lgMsg'), 'تعذر تحميل بيانات الحساب.'); }
 }
-function cleanup() { unsubs.forEach(u => { try { u(); } catch (_) {} }); unsubs = []; me = null; uid = ''; products = []; parts = []; payouts = []; archived = []; partsFirstLoad = true; seenParts = new Set(); }
+function cleanup() { unsubs.forEach(u => { try { u(); } catch (_) {} }); unsubs = []; me = null; uid = ''; products = []; parts = []; payouts = []; archived = []; resetInfo = { at: 0, prev: 0 }; partsFirstLoad = true; seenParts = new Set(); }
 $('logoutBtn').onclick = async () => { await signOut(auth); location.href = location.pathname; };
 
 /* ========= البيانات اللحظية ========= */
@@ -2714,6 +2740,7 @@ function startListeners() {
     a.forEach(p => seenParts.add(p.id)); partsFirstLoad = false;
     parts = a; renderOrders(); renderAccounts(); autoPurge();
   }, err => console.error(err)));
+  unsubs.push(onValue(ref(db, 'vendorReset/' + uid), s => { resetInfo = s.val() || { at: 0, prev: 0 }; renderAccounts(); }, () => {}));
   unsubs.push(onValue(ref(db, 'vendorArchive/' + uid), s => {
     const a = []; s.forEach(c => { a.push({ id: c.key, ...c.val() }); });
     archived = a; renderAccounts();
@@ -2887,7 +2914,7 @@ function renderProducts() {
     let lvl = 'good', lbl = 'متوفر', cls = '', barCls = 'stock-bar-good';
     if (cur === 0) { lvl = 'danger'; lbl = 'نفذ'; cls = 'out-stock'; barCls = 'stock-bar-danger'; }
     else if (cur <= Math.max(1, Math.ceil(init * 0.05))) { lvl = 'warning'; lbl = 'منخفض'; cls = 'low-stock'; barCls = 'stock-bar-warning'; }
-    const bp = Number(p.price || 0), dt = p.discountType || 'none', dv = parseFloat(p.discountValue) || 0;
+    const bp = Number(p.mk ? p.mk.basePrice : p.price || 0), dt = p.discountType || 'none', dv = parseFloat(p.discountValue) || 0;
     const fp = calculateFinalPrice(bp, dt, dv), hd = dt !== 'none' && dv > 0 && fp < bp;
     const cat = p.category || 'أجهزة شخصية', s = pState(p);
     const ph = hd
@@ -3150,7 +3177,7 @@ window.editSelectDiscountType = function(type) {
 window.openEditModal = function(pid) {
   const p = products.find(x => x.id === pid); if (!p) { showToast('❌ لم يتم العثور على المنتج', 'error'); return; }
   $('editProductId').value = pid; $('editProdName').value = p.name || ''; $('editProdCategory').value = p.category || 'أجهزة شخصية';
-  $('editProdPrice').value = p.price || 0; $('editProdQty').value = p.quantity || 0; $('editProdBarcode').value = p.barcode || '';
+  $('editProdPrice').value = p.mk ? p.mk.basePrice : (p.price || 0); $('editProdQty').value = p.quantity || 0; $('editProdBarcode').value = p.barcode || '';
   $('editProdDesc').value = p.description || ''; window.fillDetailsFields('edit', p);
   editCurrentDiscountType = p.discountType || 'none'; $('editProdDiscountValue').value = p.discountValue || '';
   window.editSelectDiscountType(editCurrentDiscountType);
@@ -3371,22 +3398,115 @@ $('ordersList').addEventListener('click', async e => {
    ===== الحسابات =====
    ================================================================ */
 let balNow = 0;
+/* ===== الحسابات: فترة زمنية + تصفير + رسم بياني + أفضل المنتجات + تصدير ===== */
+let accRange = 'all';
+const ACC_RANGES = [['today', 'اليوم'], ['7', '7 أيام'], ['30', '30 يوماً'], ['all', 'الكل']];
+let resetInfo = { at: 0, prev: 0 };       // يُقرأ من vendorReset/{uid}
+const getReset = () => Number(resetInfo?.at) || 0;
+const dayStart = t => { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); };
+function accFrom() { const t = dayStart(Date.now()); return accRange === 'today' ? t : accRange === '7' ? t - 6 * 864e5 : accRange === '30' ? t - 29 * 864e5 : 0; }
+function accData() {
+  const rs = getReset(), m = new Map();
+  parts.filter(p => p.status === 'delivered').concat(archived).forEach(p => { if (!m.has(p.id)) m.set(p.id, p); });
+  const all = [...m.values()].filter(p => (p.deliveredAt || 0) >= rs).sort((x, y) => (y.deliveredAt || 0) - (x.deliveredAt || 0));
+  const pays = payouts.filter(p => (p.createdAt || 0) >= rs);
+  const from = accFrom();
+  return { rs, all, pays, del: all.filter(p => (p.deliveredAt || 0) >= from) };
+}
 function renderAccounts() {
-  const rate = Number(me?.commission) || 0;
-  $('rateLbl').textContent = `عمولة المتجر ${money(rate)}%`;
-  const del = parts.filter(p => p.status === 'delivered').concat(archived).sort((x, y) => (y.deliveredAt || 0) - (x.deliveredAt || 0));
+  const rate = Number(me?.commission) || 0, plus = rate < 0, ar = Math.abs(rate);
+  $('rateLbl').textContent = plus ? `نسبة المتجر +${money(ar)}% (جملة)` : `عمولة المتجر ${money(ar)}%`;
+  const { rs, all, pays, del } = accData();
   const gross = r2(del.reduce((s, p) => s + partSub(p), 0));
   const comm = r2(del.reduce((s, p) => s + Number(p.commissionAmount || 0), 0));
   const net = r2(del.reduce((s, p) => s + Number(p.netAmount || 0), 0));
-  const paid = r2(payouts.reduce((s, p) => s + Number(p.amount || 0), 0));
-  balNow = r2(net - paid);
-  const pend = r2(parts.filter(p => ['pending', 'preparing', 'ready'].includes(p.status) && !['rejected', 'returned'].includes(pDisp(p))).reduce((s, p) => s + partSub(p) * (1 - rate / 100), 0));
+  const netAll = r2(all.reduce((s, p) => s + Number(p.netAmount || 0), 0));
+  const paid = r2(pays.reduce((s, p) => s + Number(p.amount || 0), 0));
+  balNow = r2(netAll - paid);
+  const factor = plus ? 1 / (1 + ar / 100) : 1 - ar / 100;
+  const pend = r2(parts.filter(p => ['pending', 'preparing', 'ready'].includes(p.status) && !['rejected', 'returned'].includes(pDisp(p))).reduce((s, p) => s + partSub(p) * factor, 0));
   const card = (ic, v, l, extra = '') => `<div class="stat-mini ${extra}"><div class="icon-box">${ic}</div><div class="text-box"><div class="value">${money(v)} ج</div><div class="label">${l}</div></div></div>`;
-  $('accStats').innerHTML = card('💰', balNow, 'الرصيد المستحق لك') + card('🛒', gross, 'مبيعات مسلَّمة') + card('💼', comm, 'عمولة المتجر') + card('📈', net, 'صافي أرباحك') + card('✅', paid, 'تم استلامه') + card('⏳', pend, 'قيد التنفيذ (تقديري)');
-  $('accOrders').innerHTML = del.length ? del.map(p => `<div class="vx-row"><div><b style="color:var(--gold-300)">#${esc(p.shortId || p.id.slice(-8))}</b><div class="m">${fmtDate(p.deliveredAt)} — عمولة ${money(p.commissionRate)}%</div></div><b style="color:#6ee7b7">+${money(p.netAmount)} ج</b></div>`).join('') : `<div class="vx-row" style="color:var(--text-muted)">لا توجد طلبات مسلَّمة بعد.</div>`;
-  $('accPay').innerHTML = payouts.length ? payouts.map(p => `<div class="vx-row"><div><b>${fmtDate(p.createdAt)}</b><div class="m">${esc(p.note || '')}</div></div><b>${money(p.amount)} ج</b></div>`).join('') : `<div class="vx-row" style="color:var(--text-muted)">لم تُسجَّل دفعات بعد.</div>`;
+  const rl = ACC_RANGES.find(r => r[0] === accRange)[1];
+  $('accStats').innerHTML = card('💰', balNow, 'الرصيد المستحق لك') + card('✅', paid, 'تم استلامه') + card('⏳', pend, 'قيد التنفيذ (تقديري)')
+    + card('🛒', gross, `مبيعات (${rl})`) + card('💼', comm, `عمولة المتجر (${rl})`) + card('📈', net, `صافي أرباحك (${rl})`);
+
+  $('accBanner').innerHTML = rs ? `<div class="acc-banner"><span>🧹 تم تصفير الحسابات بتاريخ ${fmtDate(rs)} — الأرقام تُحسب من بعده فقط.</span><button class="acc-chip" data-acc="undo">↩️ استرجاع</button></div>` : '';
+  $('accTools').innerHTML = ACC_RANGES.map(r => `<button class="acc-chip ${accRange === r[0] ? 'on' : ''}" data-range="${r[0]}">${r[1]}</button>`).join('')
+    + `<span style="flex:1"></span><button class="acc-chip" data-acc="csv">⬇️ Excel</button><button class="acc-chip" data-acc="print">🖨️ طباعة</button><button class="acc-chip" data-acc="reset" style="color:#fca5a5">🧹 تصفير الحسابات</button>`;
+
+  // مبيعات آخر 7 أيام
+  const days = [], t0 = dayStart(Date.now());
+  for (let i = 6; i >= 0; i--) { const st = t0 - i * 864e5; days.push({ st, v: 0 }); }
+  all.forEach(p => { const d = days.find(x => (p.deliveredAt || 0) >= x.st && (p.deliveredAt || 0) < x.st + 864e5); if (d) d.v += partSub(p); });
+  const mx = Math.max(...days.map(d => d.v), 1);
+  const chart = days.map(d => `<div class="acc-bar"><b>${d.v ? money(d.v) : ''}</b><i style="height:${Math.round(d.v / mx * 100)}%"></i><span>${new Date(d.st).toLocaleDateString('ar-EG', { weekday: 'short' })}</span></div>`).join('');
+  // أفضل المنتجات
+  const tp = {};
+  del.forEach(p => partItems(p).forEach(i => { const k = i.name || '—'; (tp[k] = tp[k] || { q: 0, v: 0 }); tp[k].q += Number(i.quantity) || 0; tp[k].v += (Number(i.price) || 0) * (Number(i.quantity) || 0); }));
+  const top = Object.entries(tp).sort((a, b) => b[1].q - a[1].q).slice(0, 5);
+  $('accInsights').innerHTML = `<div class="vx-sub">📊 مبيعات آخر 7 أيام</div><div class="acc-chart">${chart}</div>`
+    + `<div class="vx-sub">🏆 الأكثر مبيعاً (${rl})</div>` + (top.length ? top.map((t, i) => `<div class="acc-top"><span class="rk">${i + 1}</span><span class="nm">${esc(t[0])}</span><b>${t[1].q} قطعة</b><span style="color:var(--text-muted)">${money(t[1].v)} ج</span></div>`).join('') : `<div class="vx-row" style="color:var(--text-muted)">لا توجد مبيعات في هذه الفترة.</div>`);
+
+  $('accOrders').innerHTML = del.length ? del.map(p => `<div class="vx-row"><div><b style="color:var(--gold-300)">#${esc(p.shortId || p.id.slice(-8))}</b><div class="m">${fmtDate(p.deliveredAt)} — عمولة ${money(p.commissionRate)}%</div></div><b style="color:#6ee7b7">+${money(p.netAmount)} ج</b></div>`).join('') : `<div class="vx-row" style="color:var(--text-muted)">لا توجد طلبات مسلَّمة في هذه الفترة.</div>`;
+  $('accPay').innerHTML = pays.length ? pays.map(p => `<div class="vx-row"><div><b>${fmtDate(p.createdAt)}</b><div class="m">${esc(p.note || '')}</div></div><b>${money(p.amount)} ج</b></div>`).join('') : `<div class="vx-row" style="color:var(--text-muted)">لم تُسجَّل دفعات بعد.</div>`;
   updateStats();
 }
+function accRows() {
+  const { del, pays } = accData();
+  return { del, pays, tot: { g: r2(del.reduce((s, p) => s + partSub(p), 0)), c: r2(del.reduce((s, p) => s + Number(p.commissionAmount || 0), 0)), n: r2(del.reduce((s, p) => s + Number(p.netAmount || 0), 0)) } };
+}
+function accExport() {
+  const { del, pays } = accRows(), q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const lines = [['رقم الطلب', 'التاريخ', 'المبيعات', 'نسبة المتجر %', 'عمولة المتجر', 'صافيك'].map(q).join(',')];
+  del.forEach(p => lines.push([p.shortId || p.id.slice(-8), fmtDate(p.deliveredAt), partSub(p), p.commissionRate || 0, p.commissionAmount || 0, p.netAmount || 0].map(q).join(',')));
+  lines.push(''); lines.push([q('الدفعات المستلمة')].join(','));
+  pays.forEach(p => lines.push([fmtDate(p.createdAt), p.amount, p.note || ''].map(q).join(',')));
+  const url = URL.createObjectURL(new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
+  const a = document.createElement('a'); a.href = url; a.download = `كشف-حساب-${new Date().toISOString().slice(0, 10)}.csv`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
+  showToast('⬇️ تم تنزيل كشف الحساب');
+}
+function accPrint() {
+  const { del, pays, tot } = accRows(), w = window.open('', '_blank'); if (!w) { showToast('اسمح بالنوافذ المنبثقة للطباعة', 'warning'); return; }
+  const tr = del.map(p => `<tr><td>#${esc(p.shortId || p.id.slice(-8))}</td><td>${fmtDate(p.deliveredAt)}</td><td>${money(partSub(p))}</td><td>${money(p.commissionAmount)}</td><td>${money(p.netAmount)}</td></tr>`).join('');
+  const pr = pays.map(p => `<tr><td colspan="2">${fmtDate(p.createdAt)} ${esc(p.note || '')}</td><td colspan="3">${money(p.amount)} ج</td></tr>`).join('');
+  w.document.write(`<html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>كشف حساب</title><style>body{font-family:Tahoma,Arial,sans-serif;padding:24px}table{width:100%;border-collapse:collapse;margin:10px 0}td,th{border:1px solid #bbb;padding:6px 8px;font-size:13px;text-align:right}th{background:#f1f1f1}</style></head><body><h2>كشف حساب — ${esc(me?.name || '')}</h2><p>الفترة: ${ACC_RANGES.find(r => r[0] === accRange)[1]} — الرصيد المستحق: <b>${money(balNow)} ج</b></p><table><tr><th>الطلب</th><th>التاريخ</th><th>المبيعات</th><th>العمولة</th><th>صافيك</th></tr>${tr}<tr><th colspan="2">الإجمالي</th><th>${money(tot.g)}</th><th>${money(tot.c)}</th><th>${money(tot.n)}</th></tr></table>${pays.length ? `<h3>الدفعات المستلمة</h3><table>${pr}</table>` : ''}<script>onload=()=>print()<\/script></body></html>`);
+  w.document.close();
+}
+async function deleteMyAccount() {
+  const open = parts.filter(p => !isFinished(p));
+  if (open.length) { showToast(`⚠️ عندك ${open.length} طلب غير مكتمل — أنهِه أو انتظر قبل حذف الحساب`, 'error'); return; }
+  const m = new Map(); parts.filter(p => p.status === 'delivered').concat(archived).forEach(p => { if (!m.has(p.id)) m.set(p.id, p); });
+  const trueBal = r2([...m.values()].reduce((s, p) => s + Number(p.netAmount || 0), 0) - payouts.reduce((s, p) => s + Number(p.amount || 0), 0));
+  const debt = trueBal > 0 ? `\n\n⚠️ لك رصيد مستحق ${money(trueBal)} ج لم تستلمه — سيضيع حقك عند حذف الحساب!` : '';
+  if (!await window.proConfirm(`حذف حسابك و${products.length} منتج نهائياً من قاعدة البيانات؟ لا يمكن التراجع.${debt}`, { type: 'danger', title: 'حذف الحساب', okText: 'متابعة' })) return;
+  if (!await window.proConfirm('تأكيد أخير: سيتم حذف حسابك الآن وتسجيل خروجك.', { type: 'danger', title: 'هل أنت متأكد؟', okText: 'نعم، احذف حسابي' })) return;
+  showPageLoading('جاري حذف الحساب...', 'يرجى الانتظار');
+  try {
+    const up = { ['vendors/' + uid]: null, ['vendorReset/' + uid]: null };
+    products.forEach(p => { up['products/' + p.id] = null; });
+    await update(ref(db), up);
+    try { await auth.currentUser?.delete(); } catch (_) {}
+    try { await signOut(auth); } catch (_) {}
+    location.href = location.pathname;
+  } catch (er) { console.error(er); hidePageLoading(); showToast('❌ تعذر حذف الحساب — حدّث قواعد Firebase', 'error'); }
+}
+$('panel-accounts').addEventListener('click', async e => {
+  const r = e.target.closest('[data-range]'); if (r) { accRange = r.dataset.range; renderAccounts(); return; }
+  const b = e.target.closest('[data-acc]'); if (!b) return;
+  const act = b.dataset.acc;
+  if (act === 'csv') accExport();
+  else if (act === 'print') accPrint();
+  else if (act === 'undo') {
+    try { await set(ref(db, 'vendorReset/' + uid), { at: Number(resetInfo.prev) || 0, prev: 0 }); showToast('↩️ تم استرجاع الحسابات'); }
+    catch (er) { console.error(er); showToast('❌ تعذر الاسترجاع — حدّث قواعد Firebase', 'error'); }
+  }
+  else if (act === 'delacc') await deleteMyAccount();
+  else if (act === 'reset') {
+    if (!await window.proConfirm(`تصفير الحسابات والمبالغ؟\nالرصيد المستحق الآن: ${money(balNow)} ج\n\nستبدأ الأرقام من الصفر من هذه اللحظة (المبيعات والعمولة والصافي والدفعات والرسم البياني) على كل أجهزتك. ويمكنك الاسترجاع لاحقاً.`, { type: 'danger', title: 'تصفير الحسابات', okText: 'نعم، صفّر' })) return;
+    try { await set(ref(db, 'vendorReset/' + uid), { at: Date.now(), prev: getReset() }); showToast('🧹 تم تصفير الحسابات'); }
+    catch (er) { console.error(er); showToast('❌ تعذر التصفير — حدّث قواعد Firebase', 'error'); }
+  }
+});
 
 /* ================================================================
    ===== إحصائيات الرأس =====
@@ -3445,6 +3565,9 @@ $('notifBtn').onclick = async () => {
   showToast('🔔 تم تفعيل إشعارات الطلبات الجديدة');
 };
 updateNotifBtn(); if (notifOn()) registerSw();
+function updateSoundBtn() { const on = localStorage.getItem('vx_sound') !== '0'; const b = $('soundBtn'); b.querySelector('i').className = 'fa-solid ' + (on ? 'fa-volume-high' : 'fa-volume-xmark'); b.style.color = on ? '#6ee7b7' : ''; }
+$('soundBtn').onclick = () => { const on = localStorage.getItem('vx_sound') !== '0'; localStorage.setItem('vx_sound', on ? '0' : '1'); updateSoundBtn(); if (!on) { try { window.playNewOrderSound(); } catch (_) {} } showToast(on ? '🔇 تم كتم صوت الطلبات' : '🔊 تم تشغيل صوت الطلبات'); };
+updateSoundBtn();
 
 initInvite();
 
