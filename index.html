@@ -2299,6 +2299,7 @@ body.product-modal-open{
 .sim-title{font-weight:900;font-size:15px;color:var(--primary);margin-bottom:10px;display:flex;align-items:center;gap:7px}
 .sim-row{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
 .sim-card{flex:0 0 136px;scroll-snap-align:start;background:var(--white);border:1px solid rgba(74,44,23,.1);border-radius:16px;padding:8px;cursor:pointer;text-align:center;transition:var(--transition)}
+.sim-card.out{opacity:.55}
 .sim-card:hover{border-color:var(--accent);box-shadow:var(--shadow-md)}
 .sim-card .im{aspect-ratio:1/1;border-radius:12px;background:var(--milk);display:grid;place-items:center;overflow:hidden;margin-bottom:7px;color:var(--primary-light);font-size:26px}
 .sim-card .im img{width:100%;height:100%;object-fit:contain}
@@ -7055,22 +7056,113 @@ document.addEventListener('keydown', e => {
 // ============================================================
 // ===== تحسينات المتجر: مشابهة / اطلب مرة أخرى / سجل البحث =====
 // ============================================================
+// ===== محرك "المنتجات المشابهة الذكي": تشابه الاسم والوصف (عربي/إنجليزي) =====
+const SIM_STOP = new Set(('في من علي الي عن مع او ثم هذا هذه ذلك تلك هو هي ده دي كل بعد قبل حتي لكل جدا ايضا كما اي ان لا ما لم لن قد تم يتم بدون ضد حسب مثل بين عند علي the and for with from your you this that new pro original اصلي جديد عرض خصم سعر جوده عاليه افضل مميز مميزه خاص خاصه للبيع متوفر متوفره قطعه قطع حبه عدد منتج منتجات مناسب مناسبه يناسب استخدام يستخدم').split(/\s+/));
+function simNorm(t) {
+  return String(t || '').toLowerCase()
+    .replace(/[\u064B-\u0652\u0640]/g, '')
+    .replace(/[إأآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/ؤ/g, 'و').replace(/ئ/g, 'ي')
+    .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim();
+}
+function simStem(w) {
+  if (/^(وال|بال|كال|فال)/.test(w) && w.length > 5) w = w.slice(3);
+  else if (/^لل/.test(w) && w.length > 4) w = w.slice(2);
+  else if (/^ال/.test(w) && w.length > 4) w = w.slice(2);
+  if (w.length > 4 && /ات$/.test(w)) w = w.slice(0, -2);
+  else if (w.length > 4 && /(ين|ون)$/.test(w)) w = w.slice(0, -2);
+  if (w.length > 3 && /ه$/.test(w)) w = w.slice(0, -1);
+  return w;
+}
+function simTokens(text) {
+  const out = [];
+  simNorm(text).split(' ').forEach(w => {
+    if (!w || w.length < 2 || /^\d+$/.test(w)) return;
+    const s = simStem(w);
+    if (s.length < 2 || SIM_STOP.has(w) || SIM_STOP.has(s)) return;
+    out.push(s);
+  });
+  return out;
+}
+function simTrigrams(text) {
+  const set = new Set();
+  simNorm(text).split(' ').forEach(w => { if (w.length < 3) return; const x = ' ' + w + ' '; for (let i = 0; i < x.length - 2; i++) set.add(x.substr(i, 3)); });
+  return set;
+}
+let _simIdx = null;
+function simBuildIndex(products) {
+  const N = products.length, df = new Map(), docs = new Map();
+  products.forEach(p => {
+    const nt = simTokens(p.name), dt = simTokens(String(p.description || '').slice(0, 400));
+    const uniq = new Set([...nt, ...dt]); uniq.forEach(t => df.set(t, (df.get(t) || 0) + 1));
+    docs.set(p.id, { nt, dt, tri: simTrigrams(p.name) });
+  });
+  const idf = t => Math.log(1 + N / (1 + (df.get(t) || 0)));
+  const vec = (tokens, mult, into) => { tokens.forEach(t => into.set(t, (into.get(t) || 0) + mult)); return into; };
+  docs.forEach(d => {
+    const vn = vec(d.nt, 1, new Map()), va = vec(d.dt, 1, vec(d.nt, 3, new Map()));
+    const wn = new Map(), wa = new Map(); let nn = 0, na = 0;
+    vn.forEach((tf, t) => { const w = (1 + Math.log(tf)) * idf(t); wn.set(t, w); nn += w * w; });
+    va.forEach((tf, t) => { const w = (1 + Math.log(tf)) * idf(t); wa.set(t, w); na += w * w; });
+    d.wn = wn; d.wa = wa; d.nn = Math.sqrt(nn) || 1; d.na = Math.sqrt(na) || 1;
+  });
+  return { docs, key: products, n: N };
+}
+function simCos(a, an, b, bn) {
+  if (!a.size || !b.size) return 0;
+  const [s, l] = a.size <= b.size ? [a, b] : [b, a]; let dot = 0;
+  s.forEach((w, t) => { const x = l.get(t); if (x) dot += w * x; });
+  return dot / (an * bn);
+}
+function findSimilarProducts(p, products, opts = {}) {
+  if (!_simIdx || _simIdx.key !== products || _simIdx.n !== products.length) _simIdx = simBuildIndex(products);
+  const A = _simIdx.docs.get(p.id); if (!A) return [];
+  const catOf = opts.catKey || (x => x.category || ''), priceOf = opts.price || (x => Number(x.price) || 0);
+  const myCat = catOf(p), base = priceOf(p), max = opts.max || 20, MIN = opts.min ?? 0.22;
+  const scored = [];
+  products.forEach(x => {
+    if (x.id === p.id) return;
+    const B = _simIdx.docs.get(x.id); if (!B) return;
+    const cosN = simCos(A.wn, A.nn, B.wn, B.nn), cosA = simCos(A.wa, A.na, B.wa, B.na);
+    let tri = 0; if (A.tri.size && B.tri.size) { let i = 0; A.tri.forEach(g => { if (B.tri.has(g)) i++; }); tri = i / (A.tri.size + B.tri.size - i); }
+    const cat = catOf(x) === myCat ? 1 : 0, pd = Math.abs(priceOf(x) - base), price = 1 / (1 + pd / Math.max(base, 1));
+    const score = 0.40 * cosN + 0.30 * cosA + 0.12 * tri + 0.12 * cat + 0.06 * price;
+    scored.push({ x, score, text: cosN + cosA + tri, cat });
+  });
+  scored.forEach(o => { o.rank = o.score * ((o.x.quantity || 0) > 0 ? 1 : 0.75); });   // النافد أقل أولوية لكن لا يختفي
+  let good = scored.filter(o => o.score >= MIN && o.text > 0.12);
+  if (good.length < 2) {   // اسم فريد/قسم صغير: كمّل بأقرب منتجات نفس القسم
+    const have = new Set(good.map(o => o.x.id));
+    scored.filter(o => o.cat && !have.has(o.x.id)).sort((a, b) => b.rank - a.rank).slice(0, 4 - good.length).forEach(o => good.push(o));
+  }
+  good.sort((a, b) => b.rank - a.rank);
+  return good.slice(0, max).map(o => o.x);
+}
+
 function renderSimilarProducts(p) {
-  const wrap = document.getElementById('similarWrap'), row = document.getElementById('similarRow');
-  if (!wrap || !row) return;
-  const key = getStoreCategoryKey(p.category || '');
-  const base = getEffectivePrice(p).finalPrice || 0;
-  const list = allProducts
-    .filter(x => x.id !== p.id && (x.quantity || 0) > 0 && getStoreCategoryKey(x.category || '') === key)
-    .map(x => ({ x, d: Math.abs((getEffectivePrice(x).finalPrice || 0) - base) }))
-    .sort((a, b) => a.d - b.d).slice(0, 10).map(o => o.x);
+  const wrap = document.getElementById('similarWrap'), oldRow = document.getElementById('similarRow');
+  if (!wrap || !oldRow) return;
+  // عنصر جديد في كل مرة: يضمن أن التمرير يبدأ من أول منتج ولا يتذكر آخر موضع
+  const row = oldRow.cloneNode(false); row.innerHTML = '';
+  oldRow.replaceWith(row);
+  const list = findSimilarProducts(p, allProducts, { catKey: x => getStoreCategoryKey(x.category || ''), price: x => getEffectivePrice(x).finalPrice || 0, max: 20 });
   if (!list.length) { wrap.hidden = true; row.innerHTML = ''; return; }
   row.innerHTML = list.map(x => {
     const pi = getEffectivePrice(x), id = escapeStoreHtml(String(x.id));
-    return `<div class="sim-card" data-sim-id="${id}"><div class="im">${x.image ? `<img loading="lazy" decoding="async" src="${getThumbnailUrl(x.image, 240)}" alt="">` : `<i class="fas ${x.icon || 'fa-box'}"></i>`}</div><div class="nm">${escapeStoreHtml(x.name || '')}</div><div class="pr">${pi.hasDiscount ? `<s>${pi.basePrice.toFixed(0)}</s>` : ''}${pi.finalPrice.toFixed(2)} ج</div></div>`;
+    const oos = (x.quantity || 0) <= 0;
+    return `<div class="sim-card${oos ? ' out' : ''}" data-sim-id="${id}"><div class="im">${x.image ? `<img loading="lazy" decoding="async" src="${getThumbnailUrl(x.image, 240)}" alt="">` : `<i class="fas ${x.icon || 'fa-box'}"></i>`}</div><div class="nm">${escapeStoreHtml(x.name || '')}</div><div class="pr">${oos ? '<small style="color:var(--discount);font-weight:800">نفد</small>' : `${pi.hasDiscount ? `<s>${pi.basePrice.toFixed(0)}</s>` : ''}${pi.finalPrice.toFixed(2)} ج`}</div></div>`;
   }).join('');
   row.querySelectorAll('[data-sim-id]').forEach(el => el.addEventListener('click', () => openProductDetail(el.getAttribute('data-sim-id'))));
   wrap.hidden = false;
+  // ابدأ دائماً من أول منتج مشابه، وارجع لأعلى المعاينة عند فتح منتج جديد
+  resetSimilarScroll();
+  ['#productDetailModal', '#productDetailModal .modal-card'].forEach(sel => { const el = document.querySelector(sel); if (el) el.scrollTop = 0; });
+  // المعاينة قد تكون مخفية الآن (display:none) فلا يُطبَّق التمرير — نعيده بعد ظهورها
+  [0, 60, 250, 600].forEach(t => setTimeout(resetSimilarScroll, t));
+}
+function resetSimilarScroll() {
+  const r = document.getElementById('similarRow'); if (!r) return;
+  r.scrollLeft = 0; try { r.scrollTo({ left: 0, behavior: 'auto' }); } catch (_) {}
 }
 
 function reorderOrder(oid) {
@@ -7189,6 +7281,7 @@ function closeProductDetail(fromHistory = false) {
   const modal = $('#productDetailModal');
   const modalCard = modal?.querySelector('.modal-card');
   if (modalCard) modalCard.scrollTop = 0;
+  try { resetSimilarScroll(); } catch (_) {}
   if (!modal) return;
 
   if (!fromHistory && modal.classList.contains('show')) {
