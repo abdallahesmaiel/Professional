@@ -7121,12 +7121,18 @@ async function submitOrderImpl(e) {
       if (serverCode === 'PERMISSION_DENIED' || serverCode === 'permission-denied') {
         NotificationSystem.error('تم تسجيل الدخول، لكن قواعد Firebase تمنع حفظ الطلب. يجب تحديث صلاحيات العملاء في Realtime Database.');
       } else {
-        NotificationSystem.error('تعذر إرسال الطلب إلى الخادم. حاول مرة أخرى.');
+        NotificationSystem.error('تعذر إرسال الطلب إلى الخادم. سلتك محفوظة، تأكد من اتصالك وحاول مرة أخرى.');
       }
+      // لا نفرّغ السلة ولا نعرض نجاحًا كاذبًا: الطلب لم يصل للخادم
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '🚀 إرسال الطلب';
+      }
+      return;
     }
   }
   
-  // Local fallback
+  // Local fallback (فقط عند عدم توفر قاعدة البيانات أصلًا)
   const lid = 'LOCAL-' + Date.now().toString(36).toUpperCase().slice(-6);
   myOrders.unshift({ orderId: lid, ...orderData, rejectionReason: '' });
   cartItems = [];
@@ -8162,6 +8168,7 @@ function getFilteredAndSortedProducts() {
 // ============================================================
 // ===== Render Home Products =====
 // ============================================================
+var homeAppendFrom = 0; // var لتفادي خطأ الاستدعاء المبكر
 function renderHomeProducts() {
   const g = $('#productsContainer');
   const rc = $('#resultsCount');
@@ -8213,7 +8220,7 @@ function renderHomeProducts() {
     return; 
   }
   
-  let productsHtml = visibleProducts.map(p => {
+  let cardsArr = visibleProducts.map(p => {
     const av = (p.quantity || 0) > 0;
     const img = getThumbnailUrl(p.image, 400);
     const hi = p.image && p.image.length > 0;
@@ -8274,9 +8281,27 @@ function renderHomeProducts() {
         </div>
       </div>
     `;
-  }).join('');
+  });
   
-  g.innerHTML = productsHtml;
+  // وضع الإضافة فقط: نُبقي البطاقات الحالية كما هي ونضيف الجديدة بعدها
+  const appendFrom = homeAppendFrom; homeAppendFrom = 0;
+  const existingCards = g.querySelectorAll(':scope > .product-card');
+  const canAppend = appendFrom > 0
+    && existingCards.length === appendFrom
+    && cardsArr.length > appendFrom
+    && existingCards[appendFrom - 1].id === 'product-' + visibleProducts[appendFrom - 1].id;
+  let bindRoot = g;
+  if (canAppend) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = cardsArr.slice(appendFrom).join('');
+    bindRoot = document.createDocumentFragment();
+    while (tmp.firstChild) bindRoot.appendChild(tmp.firstChild);
+    const newNodes = [...bindRoot.querySelectorAll('.product-card')];
+    g.appendChild(bindRoot);
+    bindRoot = { querySelectorAll: sel => newNodes.flatMap(n => [...n.querySelectorAll(sel)]) };
+  } else {
+    g.innerHTML = cardsArr.join('');
+  }
 
   const moreWrap=document.getElementById('loadMoreWrap');
   const moreBtn=document.getElementById('loadMoreBtn');
@@ -8286,13 +8311,13 @@ function renderHomeProducts() {
   if(moreBtn) moreBtn.disabled=!hasMore;
   if(moreCount) moreCount.textContent=hasMore?`عرض ${visibleProducts.length} من ${totalMatches} منتج`:'';
 
-  g.querySelectorAll('[data-add-id]').forEach(b => 
+  bindRoot.querySelectorAll('[data-add-id]').forEach(b => 
     b.addEventListener('click', () => addToCart(b.getAttribute('data-add-id')))
   );
-  g.querySelectorAll('[data-wishlist-id]').forEach(b => 
+  bindRoot.querySelectorAll('[data-wishlist-id]').forEach(b => 
     b.addEventListener('click', () => toggleWishlist(b.getAttribute('data-wishlist-id')))
   );
-  g.querySelectorAll('[data-compare-id]').forEach(b => 
+  bindRoot.querySelectorAll('[data-compare-id]').forEach(b => 
     b.addEventListener('click', (e) => {
       e.stopPropagation(); 
       toggleCompare(b.getAttribute('data-compare-id'));
@@ -8529,7 +8554,10 @@ function setupCategoriesAndFilters() {
   });
   $('#resetFilters')?.addEventListener('click',resetAllFilters);
   $('#loadMoreBtn')?.addEventListener('click',()=>{
+    // إضافة المنتجات الجديدة فقط بعد آخر منتج ظاهر دون إعادة بناء الشبكة (بلا اهتزاز ولا قفز)
+    homeAppendFrom=document.querySelectorAll('#productsContainer > .product-card').length;
     homeVisibleLimit+=20;
+    targetProductId=null;targetProductIds=[];isTargetingProduct=false;
     renderHomeProducts();
   });
 }
