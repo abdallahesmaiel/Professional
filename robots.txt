@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /?order=
+Disallow: /?checkout
+
+Sitemap: https://professional-rose.vercel.app/sitemap.xml
