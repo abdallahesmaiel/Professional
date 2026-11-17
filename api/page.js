@@ -21,13 +21,13 @@ module.exports = async (req, res) => {
     const host = req.headers['x-forwarded-host'] || req.headers.host;
     const origin = 'https://' + host, url = `${origin}/?product=${encodeURIComponent(id)}`;
     const name = String(d.name || 'منتج');
-    const desc = String(d.description || ('اشترِ ' + name + ' من متجر بروفيشنال بأفضل سعر مع توصيل سريع.')).replace(/\s+/g, ' ').slice(0, 160);
+    const desc = String(d.description || ('اشترِ ' + name + ' من سوق بروفيشنال بأفضل سعر مع توصيل سريع.')).replace(/\s+/g, ' ').slice(0, 160);
     let img = d.image || (d.cloudinary_public_id ? `https://res.cloudinary.com/${CLOUD}/image/upload/${d.cloudinary_public_id}` : '');
     if (img && img.startsWith('/')) img = origin + img;
     const price = Number(d.finalPrice || d.price) || 0;
     const stock = d.stock !== undefined ? Number(d.stock) : (d.quantity !== undefined ? Number(d.quantity) : null);
     const avail = (d.inStock === false || (stock !== null && stock <= 0)) ? 'OutOfStock' : 'InStock';
-    const title = `${name} | بروفيشنال`;
+    const title = `${name} | سوق بروفيشنال`;
     const prod = { '@context': 'https://schema.org', '@type': 'Product', name, description: desc, sku: String(d.barcode || id), url,
       ...(img ? { image: [img] } : {}), ...(d.brand ? { brand: { '@type': 'Brand', name: String(d.brand) } } : {}),
       offers: { '@type': 'Offer', url, priceCurrency: 'EGP', price: price.toFixed(2), availability: 'https://schema.org/' + avail, itemCondition: 'https://schema.org/NewCondition' } };
