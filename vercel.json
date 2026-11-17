@@ -1,31 +1,9 @@
 {
-  "headers": [
-    {
-      "source": "/index.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate, max-age=0"
-        }
-      ]
-    },
-    {
-      "source": "/sw.js",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate, max-age=0"
-        }
-      ]
-    },
-    {
-      "source": "/manifest.json",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate, max-age=0"
-        }
-      ]
-    }
-  ]
+  "routes": [
+    { "src": "/robots.txt", "dest": "/api/robots" },
+    { "src": "/sitemap.xml", "dest": "/api/sitemap" },
+    { "src": "/", "has": [{ "type": "query", "key": "product" }], "dest": "/api/page" },
+    { "handle": "filesystem" }
+  ],
+  "functions": { "api/page.js": { "includeFiles": "index.html" } }
 }
