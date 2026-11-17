@@ -10,14 +10,14 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="professional-store-build" content="v5-marketplace-upgrade">
-<meta name="description" content="بروفيشنال — متجر إلكتروني عربي احترافي للمنتجات المميزة مع عروض، مفضلة، مقارنة، سلة، دفع وطلب وتتبع الطلبات.">
-<meta name="keywords" content="بروفيشنال, متجر إلكتروني, تسوق, عروض, منتجات, مصر, Professional Store">
+<meta name="description" content="سوق بروفيشنال (Professional Souq) — متجر إلكتروني يجمع البقالة ومنتجات التجميل والعناية الطبيعية والأجهزة الكهربائية والملابس في مكان واحد، مع عروض وتوصيل سريع.">
+<meta name="keywords" content="سوق بروفيشنال, Professional Souq, بروفيشنال سوق, متجر إلكتروني, بقالة, منتجات تجميل, عناية طبيعية, أجهزة كهربائية, ملابس, عروض, مصر">
 <meta name="robots" content="index,follow">
 <meta property="og:type" content="website">
-<meta property="og:title" content="بروفيشنال | Professional Store">
-<meta property="og:description" content="تسوق منتجات مميزة وتجربة شراء عصرية وسريعة.">
+<meta property="og:title" content="سوق بروفيشنال | Professional Souq">
+<meta property="og:description" content="تسوق البقالة والتجميل والعناية الطبيعية والأجهزة الكهربائية والملابس في مكان واحد بأسعار مناسبة وتوصيل سريع.">
 <meta name="twitter:card" content="summary_large_image">
-<title>بروفيشنال | متجر المنتجات الاحترافية - Professional Store</title>
+<title>سوق بروفيشنال | Professional Souq — بقالة وتجميل وأجهزة وملابس</title>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4449572474961813" crossorigin="anonymous"></script>
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png">
@@ -2368,7 +2368,7 @@ img{max-width:100%;height:auto}
 <!-- Side Menu -->
 <div class="side-menu" id="sideMenu">
   <button class="close-menu" id="closeMenu"><i class="fa-solid fa-xmark"></i></button>
-  <div class="menu-brand">بروفيشنال <span class="highlight">✦</span></div>
+  <div class="menu-brand">سوق بروفيشنال <span class="highlight">✦</span></div>
   <button class="menu-item active" data-page="home"><i class="fa-solid fa-store"></i> المتجر</button>
   <button class="menu-item" data-page="deals"><i class="fa-solid fa-bolt"></i> عروض وخصومات</button>
   <button class="menu-item" data-page="wishlist"><i class="fa-solid fa-heart"></i> المفضلة <span class="badge-menu hidden" id="menuWishlistBadge">0</span></button>
@@ -2386,8 +2386,8 @@ img{max-width:100%;height:auto}
     <div class="top-left">
       <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
       <div class="brand-name">
-        <span class="main">بروفيشنال <span class="highlight">✦</span></span>
-        <span class="sub">Professional Store</span>
+        <span class="main">سوق بروفيشنال <span class="highlight">✦</span></span>
+        <span class="sub">Professional Souq</span>
         <span class="sub-en">Premium • Quality • Luxury</span>
       </div>
     </div>
@@ -2536,7 +2536,7 @@ img{max-width:100%;height:auto}
     </div>
 
     <section class="store-bottom-panel" aria-label="مميزات وروابط المتجر">
-      <div class="sbp-head"><span class="sbp-eyebrow"><i class="fa-solid fa-gem"></i> بروفيشنال</span><h3>لماذا تتسوق معنا؟</h3></div>
+      <div class="sbp-head"><span class="sbp-eyebrow"><i class="fa-solid fa-gem"></i> سوق بروفيشنال</span><h3>لماذا تتسوق معنا؟</h3></div>
       <div class="trust-strip" aria-label="مميزات المتجر">
         <div class="trust-item"><i class="fa-solid fa-shield-halved"></i><div><span>تجربة شراء آمنة</span><small>بياناتك محمية</small></div></div>
         <div class="trust-item"><i class="fa-solid fa-truck-fast"></i><div><span>التوصيل</span><small>لحد باب بيتك</small></div></div>
@@ -2554,7 +2554,7 @@ img{max-width:100%;height:auto}
           <a href="#" aria-label="البريد الإلكتروني" data-social="email"><i class="fa-solid fa-envelope"></i><span>البريد</span></a>
         </div>
       </div>
-      <div class="sbp-copy">© بروفيشنال — جميع الحقوق محفوظة</div>
+      <div class="sbp-copy">© سوق بروفيشنال — جميع الحقوق محفوظة</div>
     </section>
   </div>
 
@@ -3147,7 +3147,7 @@ async function initFirebaseWebPush() {
     onMessage(fcmMessaging, payload => {
       const n = payload?.notification || {};
       const d = payload?.data || {};
-      const title = n.title || d.title || 'بروفيشنال ستور';
+      const title = n.title || d.title || 'سوق بروفيشنال';
       const body = n.body || d.body || 'لديك إشعار جديد';
       NotificationSystem.info(body, title);
     });
@@ -9466,17 +9466,17 @@ function setupLanguage() {
         const mainEl = document.querySelector('.brand-name .main');
         const subEl = document.querySelector('.brand-name .sub');
         const subEnEl = document.querySelector('.brand-name .sub-en');
-        if (mainEl) mainEl.innerHTML = 'Professional <span class="highlight">✦</span>';
+        if (mainEl) mainEl.innerHTML = 'Professional Souq <span class="highlight">✦</span>';
         if (subEl) subEl.textContent = 'Premium Store';
-        if (subEnEl) subEnEl.textContent = 'بروفيشنال • فخامة • جودة';
+        if (subEnEl) subEnEl.textContent = 'سوق بروفيشنال • تنوع • جودة';
       } else {
         document.documentElement.dir = 'rtl';
         document.documentElement.lang = 'ar';
         const mainEl = document.querySelector('.brand-name .main');
         const subEl = document.querySelector('.brand-name .sub');
         const subEnEl = document.querySelector('.brand-name .sub-en');
-        if (mainEl) mainEl.innerHTML = 'بروفيشنال <span class="highlight">✦</span>';
-        if (subEl) subEl.textContent = 'Professional Store';
+        if (mainEl) mainEl.innerHTML = 'سوق بروفيشنال <span class="highlight">✦</span>';
+        if (subEl) subEl.textContent = 'Professional Souq';
         if (subEnEl) subEnEl.textContent = 'Premium • Quality • Luxury';
       }
     });
@@ -9495,26 +9495,26 @@ function renderAboutPage() {
         const data = snap.val();
         container.innerHTML = `
           <h2>${data.title || 'من نحن'}</h2>
-          <p>${data.content || 'نحن متجر بروفيشنال نقدم لكم أفضل المنتجات الفاخرة والعصرية بجودة عالية وأسعار تنافسية.'}</p>
+          <p>${data.content || 'نحن سوق بروفيشنال نقدم لكم أفضل المنتجات الفاخرة والعصرية بجودة عالية وأسعار تنافسية.'}</p>
           ${data.extra ? `<p>${data.extra}</p>` : ''}
         `;
       } else {
         container.innerHTML = `
           <h2>من نحن</h2>
-          <p>نحن متجر بروفيشنال نقدم لكم أفضل المنتجات الفاخرة والعصرية بجودة عالية وأسعار تنافسية. نسعى دائماً لتوفير تجربة تسوق مميزة لعملائنا الكرام.</p>
+          <p>نحن سوق بروفيشنال نقدم لكم أفضل المنتجات الفاخرة والعصرية بجودة عالية وأسعار تنافسية. نسعى دائماً لتوفير تجربة تسوق مميزة لعملائنا الكرام.</p>
           <p>نؤمن بأن الجودة هي أساس الثقة، ولذلك نختار بعناية كل منتج نضيفه إلى متجرنا.</p>
         `;
       }
     }).catch(() => {
       container.innerHTML = `
         <h2>من نحن</h2>
-        <p>نحن متجر بروفيشنال نقدم لكم أفضل المنتجات الفاخرة والعصرية بجودة عالية وأسعار تنافسية. نسعى دائماً لتوفير تجربة تسوق مميزة لعملائنا الكرام.</p>
+        <p>نحن سوق بروفيشنال نقدم لكم أفضل المنتجات الفاخرة والعصرية بجودة عالية وأسعار تنافسية. نسعى دائماً لتوفير تجربة تسوق مميزة لعملائنا الكرام.</p>
       `;
     });
   } else {
     container.innerHTML = `
       <h2>من نحن</h2>
-      <p>نحن متجر بروفيشنال نقدم لكم أفضل المنتجات الفاخرة والعصرية بجودة عالية وأسعار تنافسية.</p>
+      <p>نحن سوق بروفيشنال نقدم لكم أفضل المنتجات الفاخرة والعصرية بجودة عالية وأسعار تنافسية.</p>
     `;
   }
 }
@@ -12116,7 +12116,7 @@ function enhanceDetail(){
  x.innerHTML='<div><i class="fa-solid fa-truck-fast"></i><span>توصيل متوقع <b>'+f(new Date(Date.now()+2*864e5))+' – '+f(new Date(Date.now()+4*864e5))+'</b></span></div><div><i class="fa-solid fa-rotate-left"></i><span>استرجاع خلال 24 ساعة من الاستلام</span></div><div><i class="fa-solid fa-shield-halved"></i><span>فحص المنتج عند الاستلام</span></div><div><i class="fa-solid fa-hand-holding-dollar"></i><span>الدفع عند الاستلام متاح</span></div>';
  var st=$('#detailStock');if(st)st.insertAdjacentElement('afterend',x);
  var sh=document.createElement('button');sh.type='button';sh.className='mk-share';sh.innerHTML='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg> مشاركة المنتج';
- sh.onclick=function(){var u=location.origin+location.pathname+'?product='+encodeURIComponent(p.id),d={title:p.name,text:p.name+' - بروفيشنال',url:u};
+ sh.onclick=function(){var u=location.origin+location.pathname+'?product='+encodeURIComponent(p.id),d={title:p.name,text:p.name+' - سوق بروفيشنال',url:u};
   if(navigator.share){navigator.share(d).catch(function(){})}else if(navigator.clipboard){navigator.clipboard.writeText(u).then(function(){toast('تم نسخ رابط المنتج')})}else{prompt('انسخي الرابط',u)}};
  x.appendChild(sh);
 }
@@ -12128,10 +12128,10 @@ function seo(){
  var o=location.origin+location.pathname,h=document.head;
  function add(tag,at){var k=Object.keys(at)[0],sel=tag+'['+k+'="'+at[k]+'"]';if(h.querySelector(sel))return;var e=document.createElement(tag);for(var a in at)e.setAttribute(a,at[a]);h.appendChild(e)}
  add('link',{rel:'canonical',href:o});add('link',{rel:'alternate',hreflang:'ar',href:o});add('link',{rel:'alternate',hreflang:'x-default',href:o});
- add('meta',{property:'og:url',content:o});add('meta',{property:'og:locale',content:'ar_EG'});add('meta',{property:'og:site_name',content:'بروفيشنال'});
+ add('meta',{property:'og:url',content:o});add('meta',{property:'og:locale',content:'ar_EG'});add('meta',{property:'og:site_name',content:'سوق بروفيشنال'});
  var items=P().slice(0,30).map(function(p,i){return {'@type':'ListItem',position:i+1,url:o+'?product='+encodeURIComponent(p.id),name:p.name}});
- var j={'@context':'https://schema.org','@graph':[{'@type':'Organization',name:'بروفيشنال Professional Store',url:o},
-  {'@type':'WebSite',name:'بروفيشنال',url:o,inLanguage:'ar',potentialAction:{'@type':'SearchAction',target:o+'?q={search_term_string}','query-input':'required name=search_term_string'}},
+ var j={'@context':'https://schema.org','@graph':[{'@type':'Organization',name:'سوق بروفيشنال Professional Souq',alternateName:['Professional Souq','بروفيشنال سوق'],url:o},
+  {'@type':'WebSite',name:'سوق بروفيشنال',alternateName:['Professional Souq','بروفيشنال سوق'],url:o,inLanguage:'ar',potentialAction:{'@type':'SearchAction',target:o+'?q={search_term_string}','query-input':'required name=search_term_string'}},
   {'@type':'ItemList',itemListElement:items}]};
  var s=document.getElementById('mkJsonLd');if(!s){s=document.createElement('script');s.type='application/ld+json';s.id='mkJsonLd';h.appendChild(s)}s.textContent=JSON.stringify(j);
 }
@@ -12863,7 +12863,7 @@ function invoice(id){
   var o=order(id);if(!o)return note('تعذر إيجاد الطلب','error');
   var rows=(o.items||[]).map(function(i){return '<tr><td>'+esc(i.name)+'</td><td>'+i.quantity+'</td><td>'+fmt(i.price||i.finalPrice)+'</td><td>'+fmt((i.price||i.finalPrice||0)*i.quantity)+'</td></tr>'}).join('');
   var w=window.open('','_blank');if(!w)return note('اسمح بالنوافذ المنبثقة لطباعة الفاتورة','warning');
-  w.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>فاتورة #'+esc(String(id).slice(-8))+'</title><style>body{font-family:Tahoma,Arial,sans-serif;padding:24px;color:#222}table{width:100%;border-collapse:collapse;margin:14px 0}td,th{border:1px solid #ccc;padding:8px;text-align:right;font-size:13px}th{background:#f4ede0}h1{color:#8a5a1f;margin:0}</style></head><body><h1>بروفيشنال | Professional Store</h1><p>فاتورة رقم #'+esc(String(id).slice(-8))+'<br>التاريخ: '+(o.createdAt?new Date(o.createdAt).toLocaleDateString('ar-EG'):'')+'<br>العميل: '+esc(o.recipientName||'')+'</p><table><tr><th>المنتج</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr>'+rows+'</table><p>المجموع: '+fmt(o.subtotal)+'<br>الشحن: '+fmt(o.deliveryFee)+(o.codFee?'<br>رسوم الدفع عند الاستلام: '+fmt(o.codFee):'')+(o.coupon?'<br>خصم الكوبون: -'+fmt(o.coupon.discount):'')+'<br><b>الإجمالي: '+fmt(o.total)+'</b></p><script>onload=function(){setTimeout(function(){print()},300)}<\/script></body></html>');
+  w.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>فاتورة #'+esc(String(id).slice(-8))+'</title><style>body{font-family:Tahoma,Arial,sans-serif;padding:24px;color:#222}table{width:100%;border-collapse:collapse;margin:14px 0}td,th{border:1px solid #ccc;padding:8px;text-align:right;font-size:13px}th{background:#f4ede0}h1{color:#8a5a1f;margin:0}</style></head><body><h1>سوق بروفيشنال | Professional Souq</h1><p>فاتورة رقم #'+esc(String(id).slice(-8))+'<br>التاريخ: '+(o.createdAt?new Date(o.createdAt).toLocaleDateString('ar-EG'):'')+'<br>العميل: '+esc(o.recipientName||'')+'</p><table><tr><th>المنتج</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr>'+rows+'</table><p>المجموع: '+fmt(o.subtotal)+'<br>الشحن: '+fmt(o.deliveryFee)+(o.codFee?'<br>رسوم الدفع عند الاستلام: '+fmt(o.codFee):'')+(o.coupon?'<br>خصم الكوبون: -'+fmt(o.coupon.discount):'')+'<br><b>الإجمالي: '+fmt(o.total)+'</b></p><script>onload=function(){setTimeout(function(){print()},300)}<\/script></body></html>');
   w.document.close();
 }
 
@@ -12877,7 +12877,7 @@ function payLabel(k){
   return t||PAYLBL[k]||k||'';
 }
 function waOrderText(o){
-  var L=['🛒 *طلب جديد — متجر بروفيشنال*','رقم الطلب: #'+String(o.orderId||'').slice(-8),'━━━━━━━━━━'];
+  var L=['🛒 *طلب جديد — سوق بروفيشنال*','رقم الطلب: #'+String(o.orderId||'').slice(-8),'━━━━━━━━━━'];
   (o.items||[]).forEach(function(i,k){
     var pr=+i.price||0,q=+i.quantity||0;
     L.push((k+1)+') *'+i.name+'*');
@@ -13226,7 +13226,7 @@ function meta(sel,attr,key,val){var e=$(sel);if(!e){e=document.createElement('me
 function canon(href){var l=$('link[rel=canonical]');if(!l){l=document.createElement('link');l.rel='canonical';document.head.appendChild(l)}l.href=href}
 function setMeta(p){
   var o=location.origin+location.pathname,url=p?o+'?product='+encodeURIComponent(p.id):o;
-  var title=p?p.name+' | بروفيشنال':base.title;
+  var title=p?p.name+' | سوق بروفيشنال':base.title;
   var d=p?((p.description||p.name)+'').replace(/\s+/g,' ').slice(0,155):base.desc;
   var img=p&&p.image?p.image:base.img;
   document.title=title;
