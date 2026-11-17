@@ -1,9 +1,40 @@
 {
   "routes": [
-    { "src": "/robots.txt", "dest": "/api/robots" },
-    { "src": "/sitemap.xml", "dest": "/api/sitemap" },
-    { "src": "/", "has": [{ "type": "query", "key": "product" }], "dest": "/api/page" },
-    { "handle": "filesystem" }
+    {
+      "src": "/robots.txt",
+      "dest": "/api/robots"
+    },
+    {
+      "src": "/sitemap.xml",
+      "dest": "/api/sitemap"
+    },
+    {
+      "src": "/",
+      "has": [
+        {
+          "type": "query",
+          "key": "product"
+        }
+      ],
+      "dest": "/api/page"
+    },
+    {
+      "src": "/index.html",
+      "has": [
+        {
+          "type": "query",
+          "key": "product"
+        }
+      ],
+      "dest": "/api/page"
+    },
+    {
+      "handle": "filesystem"
+    }
   ],
-  "functions": { "api/page.js": { "includeFiles": "index.html" } }
+  "functions": {
+    "api/page.js": {
+      "includeFiles": "index.html"
+    }
+  }
 }
