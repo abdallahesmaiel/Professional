@@ -1,0 +1,67 @@
+  <!-- Dedicated Search Results Page -->
+  <div id="searchPage" class="page">
+    <div class="search-page-shell">
+      <div class="search-page-top">
+<div class="search-page-title">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <div>
+            <h2 id="searchPageTitle">نتائج البحث</h2>
+            <span id="searchPageSubtitle">اكتشف المنتجات المطابقة لبحثك</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="search-page-search">
+        <div class="search-wrapper">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" class="search-input" id="searchPageInput" placeholder="ابحث عن منتج، قسم أو باركود..." autocomplete="off" inputmode="search">
+          <button type="button" class="barcode-search-camera-btn" id="searchPageCameraBtn" aria-label="قراءة الباركود بالكاميرا"><i class="fa-solid fa-camera"></i></button>
+          <button type="button" class="search-clear" id="searchPageClear"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="search-suggestions" id="searchPageSuggestions" hidden></div>
+      </div>
+
+      <div class="search-page-filters filter-bar" id="searchPageFilterBar">
+        <div class="filter-group">
+          <span class="filter-label"><i class="fa-solid fa-layer-group"></i><span>الأقسام</span></span>
+          <div class="pretty-select-wrap" data-select-id="searchPageCategorySelect">
+          <select class="filter-select pretty-select-native" id="searchPageCategorySelect" aria-label="الأقسام"><option value="all">الكل</option><option value="مستلزمات شخصية">البقالة</option><option value="أجهزة كهربائية">أجهزة كهربائية</option><option value="أجهزة شخصية">أجهزة شخصية</option><option value="عناية طبيعية">عناية طبيعية</option><option value="ملابس">ملابس</option><option value="ألعاب وإكسسوارات">ألعاب وإكسسوارات</option></select>
+          <button type="button" class="pretty-select-trigger" aria-haspopup="listbox" aria-expanded="false"><span class="pretty-select-value">الكل</span><i class="fa-solid fa-chevron-down pretty-arrow"></i></button>
+          <ul class="pretty-select-menu" role="listbox"><li><button type="button" class="pretty-select-option active" data-value="all" role="option">الكل <i class="fa-solid fa-check option-check"></i></button></li><li><button type="button" class="pretty-select-option" data-value="مستلزمات شخصية" role="option">البقالة <i class="fa-solid fa-check option-check"></i></button></li><li><button type="button" class="pretty-select-option" data-value="أجهزة كهربائية" role="option">أجهزة كهربائية <i class="fa-solid fa-check option-check"></i></button></li><li><button type="button" class="pretty-select-option" data-value="أجهزة شخصية" role="option">أجهزة شخصية <i class="fa-solid fa-check option-check"></i></button></li><li><button type="button" class="pretty-select-option" data-value="عناية طبيعية" role="option">عناية طبيعية <i class="fa-solid fa-check option-check"></i></button></li><li><button type="button" class="pretty-select-option" data-value="ملابس" role="option">ملابس <i class="fa-solid fa-check option-check"></i></button></li><li><button type="button" class="pretty-select-option" data-value="ألعاب وإكسسوارات" role="option">ألعاب وإكسسوارات <i class="fa-solid fa-check option-check"></i></button></li></ul>
+        </div>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label"><i class="fa-solid fa-arrow-down-wide-short"></i><span>الترتيب</span></span>
+          <div class="pretty-select-wrap" data-select-id="searchPageSortSelect">
+          <select class="filter-select pretty-select-native" id="searchPageSortSelect" aria-label="الترتيب"><option value="newest">الأحدث أولاً</option><option value="oldest">الأقدم أولاً</option><option value="price-asc">الأقل سعراً أولاً</option><option value="price-desc">الأعلى سعراً أولاً</option><option value="name-asc">الاسم: أ - ي</option><option value="discount">الأكثر خصماً</option><option value="rating">الأعلى تقييماً</option></select>
+          <button type="button" class="pretty-select-trigger" aria-haspopup="listbox" aria-expanded="false"><span class="pretty-select-value">الأحدث أولاً</span><i class="fa-solid fa-chevron-down pretty-arrow"></i></button>
+          <ul class="pretty-select-menu" role="listbox"><li><button type="button" class="pretty-select-option active" data-value="newest" role="option">الأحدث أولاً <i class="fa-solid fa-check option-check"></i></button></li><li><button type="button" class="pretty-select-option" data-value="oldest" role="option">الأقدم أولاً <i class="fa-solid fa-check option-check"></i></button></li><li><button type="button" class="pretty-select-option" data-value="price-asc" role="option">الأقل سعراً أولاً <i class="fa-solid fa-check option-check"></i></button></li><li><button type="button" class="pretty-select-option" data-value="price-desc" role="option">الأعلى سعراً أولاً <i class="fa-solid fa-check option-check"></i></button></li><li><button type="button" class="pretty-select-option" data-value="name-asc" role="option">الاسم: أ - ي <i class="fa-solid fa-check option-check"></i></button></li><li><button type="button" class="pretty-select-option" data-value="discount" role="option">الأكثر خصماً <i class="fa-solid fa-check option-check"></i></button></li><li><button type="button" class="pretty-select-option" data-value="rating" role="option">الأعلى تقييماً <i class="fa-solid fa-check option-check"></i></button></li></ul>
+        </div>
+        </div>
+        <div class="filter-group filter-price-group">
+          <span class="filter-label"><i class="fa-solid fa-tag"></i><span>السعر</span></span>
+          <div class="price-inline">
+            <input type="number" class="price-range-input" id="searchPagePriceMin" placeholder="من" min="0">
+            <span class="price-separator">—</span>
+            <input type="number" class="price-range-input" id="searchPagePriceMax" placeholder="إلى" min="0">
+            <button class="filter-apply-btn" id="searchPageApplyPrice">تطبيق</button>
+            <button class="filter-reset-btn" id="searchPageResetFilters" title="إعادة ضبط"><i class="fa-solid fa-rotate-left"></i></button>
+          </div>
+        </div>
+        <span class="results-count" id="searchPageResultsCount">0 منتج</span>
+      </div>
+
+      <div class="search-page-results-head">
+        <span><i class="fa-solid fa-list"></i> المنتجات المطابقة</span>
+        <span id="searchPageResultHint"></span>
+      </div>
+      <div class="products-grid" id="searchPageProductsContainer">
+        <div class="loading-spinner" style="grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i> جاري البحث...</div>
+      </div>
+      <div class="load-more-wrap" id="searchPageLoadMoreWrap" hidden>
+        <button type="button" class="load-more-btn" id="searchPageLoadMoreBtn"><span>المزيد</span><i class="fa-solid fa-chevron-down"></i></button>
+        <div class="load-more-count" id="searchPageLoadMoreCount"></div>
+      </div>
+    </div>
+  </div>
+

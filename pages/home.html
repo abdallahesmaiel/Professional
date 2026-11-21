@@ -1,0 +1,142 @@
+  <!-- Home Page -->
+  <div id="homePage" class="page active-page">
+    <div class="hero-banner">
+      <div class="hero-content">
+        <div class="hero-badge">🎉 عروض حصرية</div>
+        <h1 class="hero-title">اكتشف <span class="highlight">الفخامة</span> في كل منتج</h1>
+        <p class="hero-desc">تشكيلة مميزة من المنتجات العصرية والعالية الجودة بأسعار تنافسية</p>
+        <ul class="hero-perks"><li><i class="fa-solid fa-truck-fast"></i> توصيل لحد باب بيتك</li><li><i class="fa-solid fa-hand-holding-dollar"></i> الدفع عند الاستلام</li><li><i class="fa-solid fa-tags"></i> عروض وخصومات يومية</li></ul>
+        <button class="hero-btn" onclick="document.getElementById('productsContainer')?.scrollIntoView({behavior:'smooth',block:'start'})">
+          <i class="fa-solid fa-arrow-left"></i> تسوق الآن
+        </button>
+      </div>
+      <div class="hero-image">✦</div>
+    </div>
+
+    <div class="discovery-tools">
+      <button class="discovery-btn" id="showBestRatedBtn"><i class="fa-solid fa-star"></i> الأعلى تقييماً</button>
+      <button class="discovery-btn" id="showDiscountsBtn"><i class="fa-solid fa-tags"></i> أكبر الخصومات</button>
+      <button class="discovery-btn" id="showAvailableBtn"><i class="fa-solid fa-box-open"></i> المتوفر الآن</button>
+      <button class="discovery-btn" id="clearDiscoveryBtn"><i class="fa-solid fa-rotate-left"></i> كل المنتجات</button>
+    </div>
+
+    <!-- شريط العروض الحصرية -->
+    <div class="promo-carousel-section" id="promoCarousel">
+      <div class="promo-carousel-title">
+        <span class="icon-big">✨</span>
+        <div>
+          عروض حصرية
+          <span class="sub-text">سارع في الحصول عليها 🏃</span>
+        </div>
+      </div>
+      <div class="promo-carousel-wrapper" id="promoCarouselWrapper"></div>
+      <button class="promo-carousel-btn prev" id="promoCarouselPrev" aria-label="السابق"><i class="fa-solid fa-chevron-right"></i></button>
+      <button class="promo-carousel-btn next" id="promoCarouselNext" aria-label="التالي"><i class="fa-solid fa-chevron-left"></i></button>
+    </div>
+
+    <!-- Flash Sale -->
+    <div class="flash-sale-section" id="flashSaleSection">
+      <div class="flash-sale-header">
+        <div class="flash-sale-title">⚡ عروض الخصم السريع</div>
+        <div class="flash-sale-timer" id="flashSaleTimer">
+          <div class="time-unit"><span class="num" id="fsDays">00</span><span class="label">أيام</span></div>
+          <span class="separator">:</span>
+          <div class="time-unit"><span class="num" id="fsHours">00</span><span class="label">ساعات</span></div>
+          <span class="separator">:</span>
+          <div class="time-unit"><span class="num" id="fsMinutes">00</span><span class="label">دقائق</span></div>
+          <span class="separator">:</span>
+          <div class="time-unit"><span class="num" id="fsSeconds">00</span><span class="label">ثواني</span></div>
+        </div>
+      </div>
+      <div class="products-grid" id="flashSaleProducts" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;"></div>
+    </div>
+
+
+    <!-- Search -->
+    <div class="search-container">
+      <div class="search-wrapper">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" class="search-input" id="searchInput" placeholder="ابحث عن منتج أو باركود" autocomplete="off" inputmode="search">
+        <button type="button" class="barcode-search-camera-btn" id="barcodeSearchCameraBtn" aria-label="قراءة الباركود بالكاميرا" title="قراءة الباركود بالكاميرا"><i class="fa-solid fa-camera"></i></button>
+        <button class="search-clear" id="searchClear"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="search-suggestions" id="searchSuggestions" hidden></div>
+      <div class="barcode-scan-status" id="barcodeSearchStatus"></div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar" id="storeFilterBar" aria-label="تصفية المنتجات">
+      <div class="filter-group filter-category-group">
+        <span class="filter-label"><i class="fa-solid fa-layer-group"></i><span>الأقسام</span></span>
+        <div class="pretty-select-wrap" data-select-id="categorySelect">
+          <select class="filter-select pretty-select-native" id="categorySelect" aria-label="الأقسام"><option value="all">الكل</option><option value="مستلزمات شخصية">البقالة</option><option value="أجهزة كهربائية">أجهزة كهربائية</option><option value="أجهزة شخصية">أجهزة شخصية</option><option value="عناية طبيعية">عناية طبيعية</option><option value="ملابس">ملابس</option><option value="ألعاب وإكسسوارات">ألعاب وإكسسوارات</option></select>
+          <button type="button" class="pretty-select-trigger" aria-haspopup="listbox" aria-expanded="false"><span class="pretty-select-value">الكل</span><i class="fa-solid fa-chevron-down pretty-arrow"></i></button>
+          <ul class="pretty-select-menu" role="listbox"><li><button type="button" class="pretty-select-option active" data-value="all" role="option">الكل <i class="fa-solid fa-check option-check"></i></button></li><li><button type="button" class="pretty-select-option" data-value="مستلزمات شخصية" role="option">البقالة <i class="fa-solid fa-check option-check"></i></button></li><li><button type="button" class="pretty-select-option" data-value="أجهزة كهربائية" role="option">أجهزة كهربائية <i class="fa-solid fa-check option-check"></i></button></li><li><button type="button" class="pretty-select-option" data-value="أجهزة شخصية" role="option">أجهزة شخصية <i class="fa-solid fa-check option-check"></i></button></li><li><button type="button" class="pretty-select-option" data-value="عناية طبيعية" role="option">عناية طبيعية <i class="fa-solid fa-check option-check"></i></button></li><li><button type="button" class="pretty-select-option" data-value="ملابس" role="option">ملابس <i class="fa-solid fa-check option-check"></i></button></li><li><button type="button" class="pretty-select-option" data-value="ألعاب وإكسسوارات" role="option">ألعاب وإكسسوارات <i class="fa-solid fa-check option-check"></i></button></li></ul>
+        </div>
+      </div>
+      <div class="filter-group filter-sort-group">
+        <span class="filter-label"><i class="fa-solid fa-arrow-down-wide-short"></i><span>الترتيب</span></span>
+        <div class="pretty-select-wrap" data-select-id="sortSelect">
+          <select class="filter-select pretty-select-native" id="sortSelect" aria-label="الترتيب"><option value="newest">الأحدث أولاً</option><option value="oldest">الأقدم أولاً</option><option value="price-asc">الأقل سعراً أولاً</option><option value="price-desc">الأعلى سعراً أولاً</option><option value="name-asc">الاسم: أ - ي</option><option value="discount">الأكثر خصماً</option><option value="rating">الأعلى تقييماً</option></select>
+          <button type="button" class="pretty-select-trigger" aria-haspopup="listbox" aria-expanded="false"><span class="pretty-select-value">الأحدث أولاً</span><i class="fa-solid fa-chevron-down pretty-arrow"></i></button>
+          <ul class="pretty-select-menu" role="listbox"><li><button type="button" class="pretty-select-option active" data-value="newest" role="option">الأحدث أولاً <i class="fa-solid fa-check option-check"></i></button></li><li><button type="button" class="pretty-select-option" data-value="oldest" role="option">الأقدم أولاً <i class="fa-solid fa-check option-check"></i></button></li><li><button type="button" class="pretty-select-option" data-value="price-asc" role="option">الأقل سعراً أولاً <i class="fa-solid fa-check option-check"></i></button></li><li><button type="button" class="pretty-select-option" data-value="price-desc" role="option">الأعلى سعراً أولاً <i class="fa-solid fa-check option-check"></i></button></li><li><button type="button" class="pretty-select-option" data-value="name-asc" role="option">الاسم: أ - ي <i class="fa-solid fa-check option-check"></i></button></li><li><button type="button" class="pretty-select-option" data-value="discount" role="option">الأكثر خصماً <i class="fa-solid fa-check option-check"></i></button></li><li><button type="button" class="pretty-select-option" data-value="rating" role="option">الأعلى تقييماً <i class="fa-solid fa-check option-check"></i></button></li></ul>
+        </div>
+      </div>
+      <div class="filter-group filter-price-group">
+        <span class="filter-label"><i class="fa-solid fa-tag"></i><span>السعر</span></span>
+        <div class="price-inline">
+          <input type="number" class="price-range-input" id="priceMin" placeholder="من" min="0" aria-label="أقل سعر">
+          <span class="price-separator">—</span>
+          <input type="number" class="price-range-input" id="priceMax" placeholder="إلى" min="0" aria-label="أعلى سعر">
+          <button class="filter-apply-btn" id="applyPriceFilter">تطبيق</button>
+          <button class="filter-reset-btn" id="resetFilters" title="إعادة ضبط"><i class="fa-solid fa-rotate-left"></i></button>
+        </div>
+      </div>
+      <span class="results-count" id="resultsCount">0 منتج</span>
+    </div>
+
+    <div class="search-results-heading" id="searchResultsHeading" hidden>
+      
+       </div>
+
+    <div class="recent-section" id="recentSection" style="display:none;">
+      <div class="section-header">
+        <div class="section-title"><span class="icon">🕘</span> شاهدتها مؤخراً</div>
+        <button class="discovery-btn" id="clearRecentBtn"><i class="fa-solid fa-trash-can"></i> مسح</button>
+      </div>
+      <div class="recent-grid" id="recentProductsContainer"></div>
+    </div>
+
+    <!-- Products -->
+    <div class="products-grid" id="productsContainer">
+      <div class="sk-card"><div class="sk-img"></div><div class="sk-line w70"></div><div class="sk-line w40"></div><div class="sk-line w55"></div></div><div class="sk-card"><div class="sk-img"></div><div class="sk-line w70"></div><div class="sk-line w40"></div><div class="sk-line w55"></div></div><div class="sk-card"><div class="sk-img"></div><div class="sk-line w70"></div><div class="sk-line w40"></div><div class="sk-line w55"></div></div><div class="sk-card"><div class="sk-img"></div><div class="sk-line w70"></div><div class="sk-line w40"></div><div class="sk-line w55"></div></div><div class="sk-card"><div class="sk-img"></div><div class="sk-line w70"></div><div class="sk-line w40"></div><div class="sk-line w55"></div></div><div class="sk-card"><div class="sk-img"></div><div class="sk-line w70"></div><div class="sk-line w40"></div><div class="sk-line w55"></div></div><div class="sk-card"><div class="sk-img"></div><div class="sk-line w70"></div><div class="sk-line w40"></div><div class="sk-line w55"></div></div><div class="sk-card"><div class="sk-img"></div><div class="sk-line w70"></div><div class="sk-line w40"></div><div class="sk-line w55"></div></div>
+    </div>
+
+    <div class="load-more-wrap" id="loadMoreWrap" hidden>
+      <button type="button" class="load-more-btn" id="loadMoreBtn"><span>المزيد</span><i class="fa-solid fa-chevron-down"></i></button>
+      <div class="load-more-count" id="loadMoreCount"></div>
+    </div>
+
+    <section class="store-bottom-panel" aria-label="مميزات وروابط المتجر">
+      <div class="sbp-head"><span class="sbp-eyebrow"><i class="fa-solid fa-gem"></i> سوق بروفيشنال</span><h3>لماذا تتسوق معنا؟</h3></div>
+      <div class="trust-strip" aria-label="مميزات المتجر">
+        <div class="trust-item"><i class="fa-solid fa-shield-halved"></i><div><span>تجربة شراء آمنة</span><small>بياناتك محمية</small></div></div>
+        <div class="trust-item"><i class="fa-solid fa-truck-fast"></i><div><span>التوصيل</span><small>لحد باب بيتك</small></div></div>
+        <div class="trust-item"><i class="fa-solid fa-location-dot"></i><div><span>متابعة الطلب</span><small>تابع حالة طلبك</small></div></div>
+        <div class="trust-item"><i class="fa-solid fa-medal"></i><div><span>منتجات مختارة بعناية</span><small>جودة نضمنها</small></div></div>
+        <div class="trust-item"><i class="fa-solid fa-headset"></i><div><span>دعم سريع للعملاء</span><small>بنرد عليك بسرعة</small></div></div>
+      </div>
+      <div class="sbp-contact">
+        <div class="sbp-contact-head"><span class="store-social-title">تواصل معنا</span><small>اختر الطريقة الأنسب لك</small></div>
+        <div class="store-social-links" id="storeSocialLinks">
+          <a href="#" aria-label="اتصال هاتفي" data-social="phone"><i class="fa-solid fa-phone"></i><span>اتصال</span></a>
+          <a href="#" aria-label="واتساب" data-social="whatsapp"><i class="fa-brands fa-whatsapp"></i><span>واتساب</span></a>
+          <a href="#" aria-label="فيسبوك" data-social="facebook"><i class="fa-brands fa-facebook-f"></i><span>فيسبوك</span></a>
+          <a href="#" aria-label="إنستجرام" data-social="instagram"><i class="fa-brands fa-instagram"></i><span>إنستجرام</span></a>
+          <a href="#" aria-label="البريد الإلكتروني" data-social="email"><i class="fa-solid fa-envelope"></i><span>البريد</span></a>
+        </div>
+      </div>
+      <div class="sbp-copy">© سوق بروفيشنال — جميع الحقوق محفوظة</div>
+    </section>
+  </div>
+

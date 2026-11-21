@@ -1,0 +1,20 @@
+  <!-- Wishlist Page -->
+  <div id="wishlistPage" class="page">
+    <div class="section-header">
+      <div class="section-title"><span class="icon">❤️</span> المفضلة <span class="wl-count" id="wlCount"></span></div>
+    </div>
+    <div class="wl-tools" id="wlTools" style="display:none">
+      <select id="wlSort" aria-label="ترتيب المفضلة">
+        <option value="new">الأحدث إضافة</option>
+        <option value="avail">المتوفر أولاً</option>
+        <option value="low">الأقل سعراً</option>
+        <option value="high">الأعلى سعراً</option>
+      </select>
+      <button type="button" id="wlAddAll" class="wl-btn main"><i class="fa-solid fa-cart-plus"></i> أضف المتوفر للسلة</button>
+      <button type="button" id="wlClear" class="wl-btn"><i class="fa-solid fa-trash"></i> مسح الكل</button>
+    </div>
+    <div class="products-grid" id="wishlistContainer">
+      <div class="loading-spinner" style="grid-column:1/-1;"><i class="fa-solid fa-spinner fa-spin"></i> جاري التحميل...</div>
+    </div>
+  </div>
+
