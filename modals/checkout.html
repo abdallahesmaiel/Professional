@@ -1,0 +1,124 @@
+<!-- Checkout Modal -->
+<div class="modal-overlay" id="checkoutModalOverlay">
+  <div class="modal-card">
+    <form id="checkoutForm" onsubmit="return false;" data-step="1">
+      <div class="ck-top"><button type="button" class="ck-x" id="ckClose" aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button><h3 id="ckTitle">بيانات التوصيل</h3><span style="width:38px"></span></div>
+      <div class="ck-steps"><div class="s on"><i>1</i> بياناتك</div><span class="l"></span><div class="s"><i>2</i> الدفع</div><span class="l"></span><div class="s"><i>3</i> الإرسال</div></div>
+      <div class="ck-body">
+        <div class="ck-pane on" data-pane="1"><h4>📦 بيانات التوصيل</h4><div class="sub">أخبرنا أين نوصّل طلبك</div>
+      <div id="checkoutSavedNote" class="checkout-saved-note" style="display:none;">
+        <span>💾 سنستخدم بياناتك المحفوظة لتسريع الطلب القادم.</span>
+        <button type="button" id="clearSavedCheckout">مسح</button>
+      </div>
+      <div class="form-group"><label>👤 اسم المستلم</label><input type="text" id="custName" placeholder="الاسم الكامل" required autocomplete="name"></div>
+      <div class="form-group zone-group">
+        <label for="custZone">🚚 منطقة التوصيل</label>
+        <div class="zone-select-wrap">
+          <select id="custZone" required>
+            <option value="" disabled selected>اختر المحافظة أو المنطقة…</option>
+            <optgroup label="توصيل محلي">
+            <option value="edfu" data-zone-name="داخل مركز أدفو">داخل مركز أدفو</option>
+            </optgroup>
+            <optgroup label="شحن للمحافظات">
+            <option value="cairo" data-zone-name="القاهرة">القاهرة</option>
+            <option value="giza" data-zone-name="الجيزة">الجيزة</option>
+            <option value="alexandria" data-zone-name="الإسكندرية">الإسكندرية</option>
+            <option value="qalyubia" data-zone-name="القليوبية">القليوبية</option>
+            <option value="sharqia" data-zone-name="الشرقية">الشرقية</option>
+            <option value="dakahlia" data-zone-name="الدقهلية">الدقهلية</option>
+            <option value="gharbia" data-zone-name="الغربية">الغربية</option>
+            <option value="monufia" data-zone-name="المنوفية">المنوفية</option>
+            <option value="beheira" data-zone-name="البحيرة">البحيرة</option>
+            <option value="kafr_el_sheikh" data-zone-name="كفر الشيخ">كفر الشيخ</option>
+            <option value="damietta" data-zone-name="دمياط">دمياط</option>
+            <option value="port_said" data-zone-name="بورسعيد">بورسعيد</option>
+            <option value="ismailia" data-zone-name="الإسماعيلية">الإسماعيلية</option>
+            <option value="suez" data-zone-name="السويس">السويس</option>
+            <option value="north_sinai" data-zone-name="شمال سيناء">شمال سيناء</option>
+            <option value="south_sinai" data-zone-name="جنوب سيناء">جنوب سيناء</option>
+            <option value="fayoum" data-zone-name="الفيوم">الفيوم</option>
+            <option value="beni_suef" data-zone-name="بني سويف">بني سويف</option>
+            <option value="minya" data-zone-name="المنيا">المنيا</option>
+            <option value="assiut" data-zone-name="أسيوط">أسيوط</option>
+            <option value="sohag" data-zone-name="سوهاج">سوهاج</option>
+            <option value="qena" data-zone-name="قنا">قنا</option>
+            <option value="luxor" data-zone-name="الأقصر">الأقصر</option>
+            <option value="aswan" data-zone-name="أسوان">أسوان</option>
+            <option value="new_valley" data-zone-name="الوادي الجديد">الوادي الجديد</option>
+            <option value="red_sea" data-zone-name="البحر الأحمر">البحر الأحمر</option>
+            <option value="matrouh" data-zone-name="مطروح">مطروح</option>
+            </optgroup>
+          </select>
+          <i class="fa-solid fa-chevron-down zone-chev"></i>
+        </div>
+        <div class="zone-price" id="zonePrice"><i class="fa-solid fa-truck-fast"></i><span>اختر المنطقة لتظهر لك رسوم التوصيل</span></div>
+      </div>
+      <div class="form-group"><label>📍 العنوان بالتفصيل</label><textarea id="custAddress" placeholder="المدينة / القرية - الشارع - رقم العمارة - رقم الشقة" required autocomplete="street-address"></textarea></div>
+      <div class="form-group"><label>📞 رقم الهاتف</label><input type="tel" id="custPhone" placeholder="01xxxxxxxxx" required dir="ltr" autocomplete="tel"></div>
+        </div>
+        <div class="ck-pane" data-pane="2"><h4>💳 اختر طريقة الدفع</h4><div class="sub">اختر الأنسب لك — يمكنك تغييرها قبل الإرسال</div>
+      <div class="pay-due"><div><small>المبلغ المستحق</small><b id="payDueAmt">0 ج</b></div><span class="pay-secure"><i class="fa-solid fa-lock"></i> دفع آمن</span></div>
+      <details class="pm-coupon" id="pmCoupon"><summary><i class="fa-solid fa-ticket"></i> عندك كود خصم؟ <em>اضغط لإدخاله</em></summary><div class="form-group">
+        <label>🎫 كود الخصم</label>
+        <div class="coupon-section">
+          <input type="text" id="couponInput" placeholder="أدخل كود الخصم" autocomplete="off" autocapitalize="characters" spellcheck="false">
+          <button type="button" class="apply-coupon-btn" id="applyCouponBtn">تطبيق</button>
+        </div>
+        <div id="couponStatus" style="margin-top:6px;font-size:13px;font-weight:600;"></div>
+      </div></details>
+      <div class="payment-methods-section">
+        <div class="payment-methods-title"><i class="fa-solid fa-credit-card"></i> طرق الدفع</div>
+        <div class="payment-methods-grid" id="paymentMethodsGrid"><div class="pm-gh">الدفع عند الاستلام</div><div class="payment-method-option selected" data-payment="cod" role="radio" tabindex="0" aria-checked="true"><span class="pm-ico" style="--c:#4A2C17"><i class="fa-solid fa-hand-holding-dollar"></i></span><span class="pm-txt"><span class="method-name">الدفع عند الاستلام</span><span class="method-desc">ادفع نقداً للمندوب بعد فحص الطلب</span></span><span class="cod-fee-badge" id="codFeeBadge">+رسوم</span><span class="pm-tag ok">الأسهل</span><span class="pm-radio"></span></div><div class="pm-gh">محافظ إلكترونية <small>تحويل فوري</small></div><div class="payment-method-option" data-payment="vodafone" role="radio" tabindex="0" aria-checked="false"><span class="pm-ico" style="--c:#E60000"><i class="fa-solid fa-mobile-screen-button"></i></span><span class="pm-txt"><span class="method-name">فودافون كاش</span><span class="method-desc">حوّل من محفظتك في ثوانٍ</span></span><span class="pm-tag">فوري</span><span class="pm-radio"></span></div><div class="payment-method-option" data-payment="etisalat" role="radio" tabindex="0" aria-checked="false"><span class="pm-ico" style="--c:#0054A6"><i class="fa-solid fa-mobile-screen-button"></i></span><span class="pm-txt"><span class="method-name">اتصالات كاش</span><span class="method-desc">حوّل من محفظتك في ثوانٍ</span></span><span class="pm-tag">فوري</span><span class="pm-radio"></span></div><div class="payment-method-option" data-payment="orange" role="radio" tabindex="0" aria-checked="false"><span class="pm-ico" style="--c:#FF6600"><i class="fa-solid fa-mobile-screen-button"></i></span><span class="pm-txt"><span class="method-name">أورنج كاش</span><span class="method-desc">حوّل من محفظتك في ثوانٍ</span></span><span class="pm-tag">فوري</span><span class="pm-radio"></span></div><div class="payment-method-option" data-payment="we" role="radio" tabindex="0" aria-checked="false"><span class="pm-ico" style="--c:#7B3FAF"><i class="fa-solid fa-wallet"></i></span><span class="pm-txt"><span class="method-name">وي باي</span><span class="method-desc">حوّل من محفظتك في ثوانٍ</span></span><span class="pm-tag">فوري</span><span class="pm-radio"></span></div><div class="pm-gh">تحويل وبطاقات</div><div class="payment-method-option" data-payment="instapay" role="radio" tabindex="0" aria-checked="false"><span class="pm-ico" style="--c:#00BFA5"><i class="fa-solid fa-bolt"></i></span><span class="pm-txt"><span class="method-name">إنستا باي</span><span class="method-desc">تحويل لحظي من أي بنك</span></span><span class="pm-tag">فوري</span><span class="pm-radio"></span></div><div class="payment-method-option" data-payment="bank" role="radio" tabindex="0" aria-checked="false"><span class="pm-ico" style="--c:#2E7D32"><i class="fa-solid fa-building-columns"></i></span><span class="pm-txt"><span class="method-name">تحويل بنكي</span><span class="method-desc">حوّل على الحساب البنكي</span></span><span class="pm-tag"></span><span class="pm-radio"></span></div><div class="payment-method-option" data-payment="visa" role="radio" tabindex="0" aria-checked="false"><span class="pm-ico" style="--c:#1A1F71"><i class="fa-brands fa-cc-visa"></i></span><span class="pm-txt"><span class="method-name">فيزا كارد</span><span class="method-desc">حوّل على بطاقة المتجر</span></span><span class="pm-tag"></span><span class="pm-radio"></span></div></div>
+        <div class="pm-guide" id="pmGuide" aria-live="polite"></div>
+        <div class="wallet-info-box" id="walletInfoBox">
+          <div class="wallet-label" id="walletLabel"></div>
+          <div class="wallet-number" id="walletNumber"></div>
+          <button type="button" class="wallet-copy-btn" id="copyWalletBtn"><i class="fa-solid fa-copy"></i> نسخ الرقم</button>
+          <p class="payment-note">⚠️ يرجى إرسال إيصال التحويل عبر واتساب بعد الدفع</p>
+        </div>
+        <div class="deposit-notice" id="depositNotice" style="display:none;">
+          <div class="dn-head"><i class="fa-solid fa-shield-halved"></i><span>إثبات الجدية — مطلوب لطلبات الشحن</span></div>
+          <p class="dn-text">لتأكيد طلبك خارج مركز أدفو، يرجى <b>تحويل رسوم الشحن <span id="dnFee">0</span> ج أولاً</b> كإثبات للجدية، ثم إرسال <b>لقطة شاشة التحويل</b> عبر واتساب. سيتم <b>خصم المبلغ المحوَّل من إجمالي فاتورتك</b>.</p>
+          <div class="dn-calc">
+            <div><span>إجمالي الطلب</span><b id="dnTotal">0 ج</b></div>
+            <div class="dn-pay"><span>تحوّله الآن (إثبات الجدية)</span><b id="dnPay">0 ج</b></div>
+            <div class="dn-rest"><span>المتبقي عند الاستلام</span><b id="dnRest">0 ج</b></div>
+          </div>
+          <div class="dn-numbers-title">حوّل على أحد الأرقام التالية:</div>
+          <ul class="dn-numbers" id="dnNumbers"></ul>
+          <a class="dn-wa" id="dnWhatsapp" href="#" target="_blank" rel="noopener noreferrer" style="display:none;"><i class="fa-brands fa-whatsapp"></i> إرسال لقطة شاشة التحويل على واتساب</a>
+          <p class="dn-warn">⚠️ رسوم الشحن <b>غير قابلة للاسترداد</b> في حالة عدم الرد أو عدم استلام الطلب.</p>
+        </div>
+        </div></div>
+        <div class="ck-pane" data-pane="3"><h4>✅ راجع طلبك وأرسله</h4><div class="sub">تأكد من كل شيء قبل الإرسال</div>
+          <div class="ck-box"><div class="hd">بيانات التوصيل <button type="button" data-goto="1">تعديل</button></div><div id="rvShip"></div></div>
+          <div class="ck-box"><div class="hd">طريقة الدفع <button type="button" data-goto="2">تعديل</button></div><div id="rvPay"></div></div>
+          <div class="ck-box"><div class="hd">المنتجات</div><div id="rvItems"></div></div>
+      
+          <div class="payment-methods-section" style="margin-top:12px">
+        <div class="total-summary" id="totalSummary">
+          <div class="total-summary-row subtotal"><span>🛒 إجمالي المنتجات:</span><span id="subtotalAmount">0.00 ج</span></div>
+          <div class="total-summary-row delivery-row" id="deliveryRow"><span>🚚 رسوم التوصيل:</span><span class="delivery-amount" id="deliveryAmount">0.00 ج</span></div>
+          <div class="total-summary-row cod-fee-row" id="codFeeRow"><span>💳 رسوم الدفع عند الاستلام:</span><span class="fee-amount" id="codFeeAmount">0.00 ج</span></div>
+          <div class="total-summary-row" id="couponDiscountRow" style="color:var(--success);font-weight:700;display:none;"><span>🎫 خصم الكوبون:</span><span id="couponDiscountAmount" class="fee-amount" style="background:rgba(5,150,105,0.1);padding:2px 10px;border-radius:var(--radius-full);">-0.00 ج</span></div>
+          <div class="total-summary-row grand-total"><span>💰 المبلغ الإجمالي:</span><span id="grandTotalAmount">0.00 ج</span></div>
+        </div>
+          </div>
+      <div class="free-ship-hint" style="display:none;"></div>
+      <div id="firstOrderFreeBadge" style="display:none;align-items:center;gap:8px;margin:10px 0;padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,#ecfdf5,#f0fdf4);border:1px solid #a7f3d0;color:#047857;font-weight:800;font-size:13px;">
+        <i class="fa-solid fa-gift"></i><span>التوصيل مجاني للطلب الأول</span>
+      </div>
+      <div id="checkoutFeedback" style="display:none;padding:12px;border-radius:var(--radius-md);margin-bottom:10px;font-weight:700;text-align:center;"></div>
+        </div>
+      </div>
+      <div class="ck-foot">
+        <button type="button" class="ck-back" id="ckBack" aria-label="رجوع" title="رجوع"><i class="fa-solid fa-arrow-right"></i></button>
+        <div class="tot"><small>الإجمالي</small><b id="ckMiniTotal">0.00 ج</b></div>
+        <button type="button" class="ck-next" id="ckNext">التالي <i class="fa-solid fa-arrow-left"></i></button>
+        <button type="submit" class="btn btn-primary" id="confirmOrder">🚀 إرسال الطلب</button>
+        <button type="button" id="cancelCheckout">إلغاء</button>
+      </div>
+    </form>
+  </div>
+</div>
+

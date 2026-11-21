@@ -1,0 +1,20 @@
+<!-- Barcode Reader Modal -->
+<div class="barcode-reader-modal" id="storeBarcodeReaderModal" aria-hidden="true">
+  <div class="barcode-reader-card" role="dialog" aria-modal="true" aria-label="قارئ الباركود">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      <strong style="font-size:18px;color:var(--primary-dark);">قراءة الباركود</strong>
+      <button type="button" class="btn btn-outline" id="closeStoreBarcodeReader" style="padding:8px 14px;">✕</button>
+    </div>
+    <div class="barcode-reader-video-wrap">
+      <video id="storeBarcodeVideo" playsinline muted></video>
+      <div class="barcode-reader-frame"></div>
+    </div>
+    <div id="storeBarcodeReaderStatus" style="text-align:center;font-size:13px;font-weight:700;color:var(--primary-light);margin-bottom:10px;">وجّه الكاميرا إلى الباركود</div>
+    <div class="barcode-reader-actions">
+      <button type="button" class="btn btn-primary" id="restartStoreBarcodeReader"><i class="fa-solid fa-camera"></i> تشغيل الكاميرا</button>
+      <button type="button" class="btn btn-outline" id="uploadStoreBarcodeImage"><i class="fa-solid fa-image"></i> اختيار صورة</button>
+    </div>
+    <input type="file" id="storeBarcodeImageInput" accept="image/*" style="display:none">
+  </div>
+</div>
+

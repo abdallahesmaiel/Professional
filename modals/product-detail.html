@@ -1,0 +1,55 @@
+<!-- Product Detail Modal -->
+<div class="modal-overlay product-detail-modal" id="productDetailModal">
+  <div class="modal-card">
+    <div class="product-detail-content">
+      <div class="product-detail-image" id="detailImageWrap">
+        <button type="button" class="product-detail-top-btn product-detail-close-top" id="detailCloseTopBtn" aria-label="إغلاق المعاينة" title="إغلاق">×</button>
+        <button type="button" class="product-detail-top-btn product-detail-share-top" id="detailShareBtn" aria-label="مشاركة المنتج" title="مشاركة المنتج"><i class="fa-solid fa-share-nodes"></i></button>
+        <img loading="lazy" decoding="async" id="detailImage" src="" alt="Product">
+      </div>
+      <div class="product-detail-info">
+        <h2 class="name" id="detailName">اسم المنتج</h2>
+        <div class="product-rating" id="detailRating"><span class="stars">★★★★★</span> <span class="rating-text">(0 تقييم)</span></div>
+        <p class="desc" id="detailDesc">وصف المنتج</p>
+        <div class="price-detail" id="detailPrice">0.00 ج</div>
+        <div class="stock-info" id="detailStock">متوفر</div>
+        <div class="barcode-detail" id="detailBarcodeRow" style="display:none;">
+          <span class="barcode-detail-label">الباركود</span>
+          <span class="barcode-detail-value" id="detailBarcode"></span>
+        </div>
+        <div class="action-buttons" style="justify-content:flex-start;">
+          <button class="btn btn-primary" id="detailAddToCart"><i class="fa-solid fa-cart-plus"></i> أضف للسلة</button>
+          <button class="btn quick-buy-btn" id="detailQuickBuy"><i class="fa-solid fa-bolt"></i> اشترِ الآن</button>
+        </div>
+        <div class="sim-wrap" id="similarWrap" hidden><div class="sim-title"><i class="fa-solid fa-layer-group"></i> منتجات مشابهة قد تعجبك</div><div class="sim-row" id="similarRow"></div></div>
+        <div id="reviewsAnchor"></div>
+        <div class="mobile-review-title"><i class="fa-solid fa-star"></i> تقييمات العملاء</div>
+        <div class="review-panel" id="productReviewPanel">
+          <div class="review-summary">
+            <div class="review-score">
+              <div class="review-score-number" id="reviewAverage">0.0</div>
+              <div class="review-stars" id="reviewAverageStars">☆☆☆☆☆</div>
+              <div class="review-count" id="reviewCount">0 تقييم</div>
+            </div>
+            <div class="rating-bars" id="ratingBars"></div>
+          </div>
+          <div class="review-form">
+            <h4>⭐ قيّم هذا المنتج</h4>
+            <div id="reviewEligibility" style="font-size:11px;color:var(--gray-500);margin-bottom:7px;">شاركنا رأيك ليساعد العملاء الآخرين.</div>
+            <div class="star-picker" id="starPicker">
+              <button type="button" data-rating="5" aria-label="5 نجوم">★</button>
+              <button type="button" data-rating="4" aria-label="4 نجوم">★</button>
+              <button type="button" data-rating="3" aria-label="3 نجوم">★</button>
+              <button type="button" data-rating="2" aria-label="2 نجوم">★</button>
+              <button type="button" data-rating="1" aria-label="1 نجوم">★</button>
+            </div>
+            <textarea id="reviewText" class="review-input" maxlength="500" placeholder="اكتب تقييمك للمنتج..."></textarea>
+            <button class="btn btn-primary" id="submitReviewBtn" style="margin-top:9px;width:100%;"><i class="fa-solid fa-paper-plane"></i> إرسال التقييم</button>
+          </div>
+          <div class="review-list" id="reviewList"><div class="review-loading">اختر منتجاً لعرض التقييمات...</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

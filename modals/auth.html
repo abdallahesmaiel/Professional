@@ -1,0 +1,24 @@
+<!-- ===== Firebase Authentication: Google only ===== -->
+<div class="modal-overlay" id="authModalOverlay" aria-hidden="true">
+  <div class="modal-card auth-modal-card" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <button type="button" class="auth-close-btn" id="authCloseBtn" aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button>
+    <div class="auth-header">
+      <div class="auth-icon"><i class="fa-solid fa-user-shield"></i></div>
+      <h3 id="authTitle">الموافقة على الشروط</h3>
+      <p id="authSubtitle">للمتابعة في أول طلب، يرجى الموافقة على سياسة الخصوصية والشروط والأحكام.</p>
+    </div>
+
+    <div id="authLoginStep" class="auth-step">
+      <div class="auth-consent-box">
+        <label class="auth-consent-row" for="authTermsConsent">
+          <input type="checkbox" id="authTermsConsent" aria-describedby="authConsentText">
+          <span id="authConsentText">أوافق على <button type="button" class="auth-policy-link" data-legal-page="privacy">سياسة الخصوصية</button> و <button type="button" class="auth-policy-link" data-legal-page="terms">الشروط والأحكام</button>.</span>
+        </label>
+      </div>
+      <button type="button" class="auth-primary-btn" id="authConsentBtn"><i class="fa-solid fa-check"></i> موافقة ومتابعة الطلب</button>
+    </div>
+
+    <div id="authFeedback" class="auth-feedback" style="display:none;"></div>
+  </div>
+</div>
+
