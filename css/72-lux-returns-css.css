@@ -1,0 +1,65 @@
+/* ===== الخطوة 4: المرتجعات والتقييمات ===== */
+:root{--e4:cubic-bezier(.22,.8,.24,1)}
+/* ---- صفحة المرتجعات ---- */
+body #returnsPage .section-title{font-weight:900;color:#1A0F07}
+body #returnsPage>div[style*="border-radius"]{position:relative;overflow:hidden;padding:18px 18px 16px!important;border-radius:22px!important;border:1px solid rgba(231,207,152,.45)!important;
+  background:linear-gradient(160deg,#1A0F07,#3A2212 60%,#4A2C17)!important;box-shadow:0 14px 32px rgba(26,15,7,.25)!important}
+body #returnsPage>div[style*="border-radius"] strong[style*="primary-dark"]{color:#F4E3B6!important;font-size:16px!important}
+body #returnsPage>div[style*="border-radius"]>div{color:#EBDDBF!important;font-size:13.5px!important;line-height:2!important}
+body #returnsPage>div[style*="border-radius"]>div strong{color:#FFF3D6!important}
+body #returnsPage>div[style*="border-radius"]>div strong[style*="accent-dark"]{color:#F4D58D!important}
+body #returnsPage>div[style*="border-radius"]>div strong[style*="danger"]{color:#FFB4C0!important}
+body #returnsPage>div[style*="border-radius"]>div strong[style*="warning"]{color:#FFD58A!important}
+/* التبويبات: صف أفقي قابل للسحب */
+body .returns-tabs{display:flex!important;flex-wrap:nowrap!important;overflow-x:auto;gap:8px!important;padding:6px!important;border-radius:18px!important;background:rgba(255,255,255,.85)!important;
+  border:1px solid rgba(201,169,110,.35)!important;scrollbar-width:none;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}
+body .returns-tabs::-webkit-scrollbar{display:none}
+body .returns-tab{flex:0 0 auto!important;min-width:0!important;min-height:46px;padding:0 16px!important;border-radius:14px!important;display:inline-flex;align-items:center;gap:7px;font-weight:800;scroll-snap-align:start;white-space:nowrap;touch-action:manipulation;transition:background .25s,color .25s,box-shadow .25s!important}
+body .returns-tab.active{background:linear-gradient(135deg,#2A180C,#6B3A2A)!important;color:#F4E3B6!important;border-color:#2A180C!important;box-shadow:0 8px 18px rgba(74,44,23,.32)!important}
+body .returns-tab .count-badge{min-width:22px;text-align:center}
+/* بطاقة طلب الاسترجاع */
+body .return-request-card{border-radius:24px!important;padding:16px!important;margin-bottom:16px;background:#fff!important;border:1px solid rgba(201,169,110,.4)!important;box-shadow:0 10px 26px rgba(26,15,7,.09)!important;animation:none}
+body .return-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding-bottom:12px;border-bottom:1px dashed rgba(201,169,110,.55)}
+body .return-countdown{background:linear-gradient(135deg,#FFF3D2,#FDE4A6)!important;color:#7A4B0E!important;border:1px solid rgba(201,169,110,.6);font-weight:900}
+body .return-item-row{position:relative;gap:12px!important;padding:12px 14px!important;border-radius:18px!important;border:1.5px solid #EADFCB!important;background:#FFFCF7;transition:border-color .25s,box-shadow .25s,background .25s;cursor:pointer}
+body .return-item-row.selected{border-color:#C9A96E!important;background:linear-gradient(135deg,#FFF9EA,#FFFFFF)!important;box-shadow:0 0 0 4px rgba(201,169,110,.22)!important}
+body .return-item-row input[type=checkbox]{width:24px!important;height:24px!important;border-radius:8px;accent-color:#6B3A2A}
+body .return-qty-input{min-height:46px;width:84px;border-radius:14px!important;border:1.5px solid #D9C28F!important;background:#fff!important;text-align:center;font-size:16px!important;font-weight:900}
+body .return-reason-select,body .return-request-card select,body .return-request-card textarea{min-height:48px;border-radius:14px!important;border:1.5px solid #D9C28F!important;background:#fff!important;font-size:16px!important}
+body .return-total-box{border-radius:18px!important;background:linear-gradient(135deg,#1A0F07,#4A2C17)!important;border:1px solid rgba(231,207,152,.45)!important;color:#F4E3B6!important}
+body .return-total-box *{color:inherit}
+body .return-total-amount{font-size:26px!important;font-weight:900;color:#F4E3B6!important;-webkit-text-fill-color:#F4E3B6!important}
+body .return-request-card .btn{width:100%;min-height:52px;justify-content:center;border-radius:16px!important;font-weight:900;font-size:15.5px}
+body .return-request-card .btn-primary,body .return-request-card .btn-gold{background:linear-gradient(135deg,#F4E3B6,#C9A96E 55%,#E7CF98)!important;color:#1A0F07!important;border:0!important;box-shadow:0 12px 26px rgba(201,169,110,.45)}
+body .returns-empty-state{border-radius:26px!important;background:rgba(255,255,255,.88)!important;border:1.5px dashed rgba(201,169,110,.7)!important;padding:42px 20px!important}
+body .returns-empty-state .empty-icon{opacity:1;animation:luxFloat 4s ease-in-out infinite}
+/* ---- التقييمات ---- */
+body .review-panel{margin-top:20px!important;padding-top:18px!important;border-top:1px solid rgba(201,169,110,.4)!important}
+body .review-summary{display:grid;grid-template-columns:128px 1fr;gap:16px;align-items:center;padding:16px!important;border-radius:22px!important;background:linear-gradient(145deg,#FFFBF2,#FFF3D9)!important;border:1px solid rgba(201,169,110,.5)!important;box-shadow:0 8px 20px rgba(166,134,75,.15)}
+body .review-score{text-align:center;border-inline-end:1px solid rgba(201,169,110,.45);padding-inline-end:14px;border-left:0!important;padding-left:0!important}
+body .review-score-number{font-size:42px!important;font-weight:900;line-height:1;color:#2A180C!important}
+body .review-stars{color:#F59E0B!important;font-size:18px!important;letter-spacing:2px;margin:6px 0!important}
+body .review-count{font-size:12px;font-weight:800;color:#7a6a58}
+body .rating-bar-row{grid-template-columns:34px 1fr 34px!important;gap:8px!important;font-size:12px!important;font-weight:800;color:#5a4636!important}
+body .rating-bar{height:9px!important;border-radius:99px;background:#EFE2C6!important;overflow:hidden}
+body .rating-bar>*{background:linear-gradient(90deg,#F59E0B,#FBBF24)!important;border-radius:99px;transition:width .8s var(--e4)}
+body .review-form{margin-top:14px;padding:16px!important;border-radius:22px!important;background:#fff!important;border:1px solid rgba(201,169,110,.45)!important;box-shadow:0 8px 22px rgba(26,15,7,.07)}
+body .review-form h4{font-weight:900;font-size:17px;color:#1A0F07;margin:0 0 4px}
+body .star-picker{display:flex!important;direction:rtl;justify-content:center!important;gap:6px!important;margin:10px 0 4px!important;padding:8px;border-radius:18px;background:#FFFBF2;border:1px dashed rgba(201,169,110,.6)}
+body .star-picker button{font-size:34px!important;min-width:46px!important;min-height:46px!important;padding:0!important;line-height:1;color:#D9D2C5!important;transition:transform .2s var(--e4),color .2s!important;touch-action:manipulation}
+body .star-picker button.active,body .star-picker button.active~button{color:#F59E0B!important;filter:drop-shadow(0 3px 5px rgba(245,158,11,.45))}
+@media(hover:hover){body .star-picker button:hover,body .star-picker button:hover~button{color:#FBBF24!important;transform:scale(1.15)}}
+body .star-picker button:active{transform:scale(.88)!important}
+#luxStarLabel{min-height:22px;text-align:center;font-size:13.5px;font-weight:900;color:#8B5E3C;margin-bottom:8px;transition:opacity .2s}
+body .review-input{min-height:104px;border-radius:16px!important;border:1.5px solid #D9C28F!important;background:#FFFDF8!important;padding:12px 14px!important;font-size:16px!important;line-height:1.7;resize:vertical}
+#luxRevCount{text-align:left;direction:ltr;font-size:11.5px;font-weight:700;color:#9a8b7a;margin-top:4px}
+body #submitReviewBtn{min-height:52px;border-radius:16px!important;font-size:15.5px;font-weight:900;justify-content:center;background:linear-gradient(135deg,#F4E3B6,#C9A96E 55%,#E7CF98)!important;color:#1A0F07!important;border:0!important;box-shadow:0 12px 26px rgba(201,169,110,.45)!important}
+body .review-list{display:grid;gap:10px;margin-top:14px}
+body .review-item{padding:14px!important;border-radius:18px!important;background:#fff!important;border:1px solid #EADFCB!important;box-shadow:0 4px 12px rgba(26,15,7,.05)}
+body .review-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+body .reviewer-name{font-weight:900;color:#1A0F07}
+body .review-date{font-size:11.5px;color:#9a8b7a;font-weight:700}
+body .review-body{font-size:13.5px;line-height:1.8;color:#3a2e22}
+body .review-empty{text-align:center;padding:22px;border-radius:18px;background:#FFFBF2;border:1px dashed rgba(201,169,110,.6);color:#7a6a58;font-weight:700}
+body .rv-pay-note{border-radius:14px}
+@media(max-width:480px){body .review-summary{grid-template-columns:104px 1fr;gap:12px}body .review-score-number{font-size:36px!important}body .star-picker button{font-size:31px!important;min-width:42px!important}}

@@ -1,0 +1,17 @@
+.pm-ico{overflow:hidden}
+.pm-ico.has-logo{background:#fff;border:1px solid rgba(74,44,23,.1)}
+.pm-logo{width:100%;height:100%;object-fit:contain;padding:5px;display:block}
+.pm-ico.sm{width:34px;height:34px;border-radius:11px;display:inline-flex;vertical-align:middle;flex:none}
+.pm-ico.sm i{font-size:16px}
+.pm-head{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+.pm-head h5{margin:0!important}
+.pm-tag.last{background:#e0f2fe;color:#0369a1}
+.od-top{position:sticky;top:-22px;z-index:3;margin:-22px -18px 6px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;background:var(--bg,#fffaf3);border-radius:28px 28px 0 0}
+.od-top b{font-size:13px;font-weight:900;color:var(--gray-500)}
+.od-x{width:40px;height:40px;border-radius:50%;border:0;background:var(--milk,#faf5ee);color:var(--primary-dark);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.od-x:active{transform:scale(.92)}
+.od-after{margin-top:12px;padding-top:12px;border-top:1px dashed rgba(201,169,110,.5)}
+.od-after label{display:block;font-size:12px;font-weight:800;color:var(--primary-medium);margin-bottom:6px}
+.od-after input{width:100%;min-height:46px;border:1.5px solid rgba(74,44,23,.15);border-radius:13px;padding:0 12px;font:700 15px Cairo,sans-serif;direction:ltr;text-align:right;background:#fff}
+.od-after input:focus{outline:none;border-color:var(--accent)}
+.od-wa.paid{margin-top:10px}

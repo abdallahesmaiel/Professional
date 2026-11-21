@@ -1,0 +1,77 @@
+/* ===== صفحة الدفع الجديدة ===== */
+.payment-methods-title{display:none}
+.pay-due{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-radius:18px;margin-bottom:12px;color:#fff;background:linear-gradient(135deg,var(--primary-dark),var(--primary-medium));box-shadow:0 8px 20px rgba(26,15,7,.22)}
+.pay-due small{display:block;font-size:11px;font-weight:700;color:#E0CBA0}
+.pay-due b{font-size:24px;font-weight:900;letter-spacing:.3px}
+.pay-secure{font-size:11px;font-weight:800;background:rgba(255,255,255,.12);padding:6px 12px;border-radius:99px;white-space:nowrap}
+.pm-coupon{background:#fff;border:1.5px dashed rgba(201,169,110,.55);border-radius:16px;margin-bottom:14px;overflow:hidden}
+.pm-coupon summary{cursor:pointer;list-style:none;padding:12px 14px;font-weight:800;font-size:13.5px;color:var(--primary-dark);display:flex;align-items:center;gap:8px}
+.pm-coupon summary::-webkit-details-marker{display:none}
+.pm-coupon summary i{color:var(--accent)}
+.pm-coupon summary em{font-style:normal;font-size:11.5px;color:var(--accent-dark);margin-inline-start:auto}
+.pm-coupon[open] summary em{display:none}
+.pm-coupon .form-group{padding:0 14px 12px;margin:0}
+.pm-coupon .form-group>label{display:none}
+#paymentMethodsGrid{display:block!important}
+.pm-gh{font-size:12px;font-weight:900;color:var(--gray-500);margin:14px 2px 8px;display:flex;align-items:center;gap:8px}
+.pm-gh small{font-weight:700;color:var(--accent-dark);background:var(--gold-light,#f6ecd6);padding:2px 9px;border-radius:99px;font-size:10.5px}
+#paymentMethodsGrid .payment-method-option{flex-direction:row;align-items:center;gap:12px;padding:12px 14px;margin-bottom:8px;border-radius:18px;border:2px solid rgba(74,44,23,.09);background:#fff;text-align:start;cursor:pointer;transition:border-color .2s,box-shadow .2s,transform .15s;position:relative}
+#paymentMethodsGrid .payment-method-option:active{transform:scale(.985)}
+#paymentMethodsGrid .payment-method-option.selected{border-color:var(--accent);background:linear-gradient(135deg,#fffdf8,#fff7e8);box-shadow:0 6px 18px rgba(201,169,110,.28)}
+#paymentMethodsGrid .payment-method-option:focus-visible{outline:3px solid rgba(201,169,110,.5);outline-offset:2px}
+.pm-ico{flex:none;width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--c) 12%,#fff);}
+#paymentMethodsGrid .pm-ico i{font-size:21px;color:var(--c)!important}
+.pm-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+#paymentMethodsGrid .method-name{font-size:14px;font-weight:900;color:var(--primary-dark)}
+#paymentMethodsGrid .method-desc{font-size:11.5px;font-weight:600;color:var(--gray-500)}
+.pm-tag{flex:none;font-size:10.5px;font-weight:900;padding:3px 10px;border-radius:99px;background:var(--gold-light,#f6ecd6);color:var(--accent-dark)}
+.pm-tag:empty{display:none}
+.pm-tag.ok{background:var(--success-light,#d1fae5);color:var(--success,#059669)}
+#paymentMethodsGrid .cod-fee-badge{position:static!important;transform:none!important;flex:none;font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:99px;background:#fef3c7;color:#b45309}
+.pm-radio{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--gray-300,#d1d5db);position:relative;transition:.2s}
+.payment-method-option.selected .pm-radio{border-color:var(--accent);background:var(--accent)}
+.payment-method-option.selected .pm-radio::after{content:'';position:absolute;inset:4px;border-radius:50%;background:#fff}
+.wallet-info-box,.wallet-info-box.show{display:none!important}
+/* دليل الدفع */
+.pm-guide{margin-top:14px;border-radius:20px;background:#fff;border:1.5px solid rgba(201,169,110,.4);padding:16px;box-shadow:0 6px 18px rgba(74,44,23,.08);animation:pmIn .3s ease both}
+@keyframes pmIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.pm-guide h5{font-size:14.5px;font-weight:900;color:var(--primary-dark);margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.pm-guide p{font-size:12.5px;font-weight:700;color:var(--gray-600);line-height:1.8;margin:0}
+.pm-guide.cod{background:linear-gradient(135deg,#f0fdf4,#fff)}
+.pm-nudge{margin-top:10px;padding:10px 12px;border-radius:12px;background:#fffbeb;color:#92400e;font-size:12px;font-weight:800;line-height:1.7}
+.pm-steps{list-style:none;padding:0;margin:0 0 12px;counter-reset:s;display:grid;gap:8px}
+.pm-steps li{counter-increment:s;display:flex;gap:10px;align-items:flex-start;font-size:12.5px;font-weight:700;color:var(--primary-medium);line-height:1.7}
+.pm-steps li::before{content:counter(s);flex:none;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:11.5px;font-weight:900;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.pm-copy{display:flex;align-items:center;gap:10px;background:var(--milk,#faf5ee);border-radius:14px;padding:10px 12px;margin-bottom:8px}
+.pm-copy>div{flex:1;min-width:0}
+.pm-copy small{display:block;font-size:10.5px;font-weight:800;color:var(--gray-500)}
+.pm-copy b{display:block;font-size:17px;font-weight:900;color:var(--primary-dark);direction:ltr;text-align:right;letter-spacing:1px;word-break:break-all}
+.pm-copy b.amt{direction:rtl;letter-spacing:0}
+.pm-copy button{flex:none;border:0;border-radius:11px;background:var(--primary);color:#fff;font:800 12px Cairo,sans-serif;padding:9px 14px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.pm-copy button.done{background:var(--success,#059669)}
+.pm-copy button:active{transform:scale(.95)}
+.pm-note{font-size:11.5px;font-weight:700;color:var(--gray-500);margin-top:8px;line-height:1.7}
+.pm-toast{position:fixed;left:50%;bottom:calc(var(--nav-h,72px) + 96px);transform:translate(-50%,16px);opacity:0;pointer-events:none;z-index:100000;background:#1a0f07;color:#fff;font-weight:800;font-size:13px;padding:10px 20px;border-radius:99px;transition:.25s}
+.pm-toast.on{opacity:1;transform:translate(-50%,0)}
+.rv-pay-note{margin-top:8px;padding:10px 12px;border-radius:12px;background:#fffbeb;color:#92400e;font-size:12px;font-weight:800;line-height:1.8}
+/* شاشة نجاح الطلب */
+.od-ov{position:fixed;inset:0;z-index:99990;background:rgba(26,15,7,.62);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .25s}
+.od-ov.on{opacity:1}
+.od-sheet{width:100%;max-width:520px;max-height:92dvh;overflow-y:auto;background:var(--bg,#fffaf3);border-radius:28px 28px 0 0;padding:22px 18px calc(18px + env(safe-area-inset-bottom));transform:translateY(40px);transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.od-ov.on .od-sheet{transform:none}
+@media(min-width:600px){.od-ov{align-items:center}.od-sheet{border-radius:28px}}
+.od-check{width:76px;height:76px;margin:0 auto 10px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:36px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 26px rgba(5,150,105,.4);animation:odPop .6s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes odPop{from{transform:scale(0) rotate(-40deg)}to{transform:none}}
+.od-sheet h3{text-align:center;font-size:20px;font-weight:900;color:var(--primary-dark);margin:0 0 4px}
+.od-sub{text-align:center;font-size:13px;font-weight:700;color:var(--gray-500);margin-bottom:14px}
+.od-meta{display:flex;justify-content:space-between;gap:10px;background:#fff;border:1px solid rgba(74,44,23,.08);border-radius:16px;padding:12px 14px;margin-bottom:12px}
+.od-meta div{text-align:center;flex:1}
+.od-meta small{display:block;font-size:10.5px;color:var(--gray-500);font-weight:700}
+.od-meta b{font-size:15px;font-weight:900;color:var(--primary-dark)}
+.od-pay{background:#fff;border:1.5px solid rgba(201,169,110,.45);border-radius:20px;padding:14px;margin-bottom:12px}
+.od-wa{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;padding:13px;border-radius:14px;background:#25D366;color:#fff!important;font:900 14px Cairo,sans-serif;text-decoration:none}
+.od-btns{display:flex;gap:10px}
+.od-btns button{flex:1;min-height:50px;border-radius:16px;font:900 14px Cairo,sans-serif;cursor:pointer;border:1.5px solid rgba(74,44,23,.18);background:#fff;color:var(--primary)}
+.od-btns button.main{border:0;background:linear-gradient(135deg,var(--primary),var(--primary-medium));color:#fff}
+/* ===== أداء: لا تُرسَم البطاقات خارج الشاشة ===== */
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}

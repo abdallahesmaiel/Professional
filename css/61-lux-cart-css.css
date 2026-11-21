@@ -1,0 +1,117 @@
+/* ===== الخطوة 2: السلة وإتمام الطلب ===== */
+body #cartPage .page-title{background:linear-gradient(90deg,#6B3A2A,#C9A96E,#6B3A2A);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-weight:900!important}
+body .cx-wrap{max-width:760px;margin:0 auto}
+body .cx-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-radius:20px;background:linear-gradient(135deg,#1A0F07,#4A2C17);border:1px solid rgba(231,207,152,.4);box-shadow:0 12px 28px rgba(26,15,7,.25)}
+body .cx-head h3{color:#F4E3B6!important;font-weight:900}
+body .cx-clear{background:rgba(255,255,255,.1)!important;color:#FFD6D6!important;border:1px solid rgba(255,255,255,.25)!important;border-radius:999px!important;padding:8px 14px!important;font-weight:800;min-height:40px;transition:.25s}
+body .cx-clear:hover{background:#dc2626!important;color:#fff!important}
+/* شريط الشحن المجاني */
+body .free-ship-hint{border-radius:18px!important;padding:12px 14px!important;background:rgba(255,255,255,.85)!important;border:1px solid rgba(201,169,110,.45)!important;backdrop-filter:blur(10px);font-weight:800}
+body .free-ship-hint.reached{background:linear-gradient(135deg,#ecfdf5,#d1fae5)!important;border-color:#34d399!important;color:#065f46}
+body .free-ship-bar{height:10px!important;border-radius:99px!important;background:rgba(201,169,110,.22)!important;overflow:hidden}
+body .free-ship-bar>*{height:100%;border-radius:99px;background:linear-gradient(90deg,#C9A96E,#E7CF98,#10b981)!important;transition:width .9s cubic-bezier(.22,.8,.24,1)!important;background-size:200% 100%;animation:luxBar 2.4s linear infinite}
+@keyframes luxBar{to{background-position:-200% 0}}
+/* عناصر السلة */
+body .cx-list{display:flex;flex-direction:column;gap:12px}
+body .cx-card{background:rgba(255,255,255,.88)!important;backdrop-filter:blur(10px);border:1px solid rgba(201,169,110,.35)!important;border-radius:22px!important;box-shadow:0 8px 22px rgba(26,15,7,.08)!important;transition:transform .35s cubic-bezier(.22,.8,.24,1),box-shadow .35s!important}
+body .cx-card:hover{transform:translateY(-3px);box-shadow:0 16px 34px rgba(166,134,75,.25)!important}
+body .cx-img{width:96px;height:96px;object-fit:contain;border-radius:16px;background:radial-gradient(circle at 50% 30%,#fff,#F5ECDD);padding:6px;border:1px solid rgba(201,169,110,.25)}
+body .cx-name{font-weight:900;color:#1A0F07;font-size:15px}
+body .cx-price span{font-weight:900;color:#8B5E3C}
+body .cx-price s{color:#9a8b7a}
+body .cx-off{background:linear-gradient(135deg,#f43f5e,#be123c)!important;color:#fff!important;border-radius:999px!important;padding:2px 10px!important;font-size:11px!important;font-weight:800}
+body .cx-low{color:#b45309;background:#FEF3C7;border-radius:999px;padding:2px 10px;font-weight:800;font-size:11.5px;width:fit-content}
+body .cx-qty{display:inline-flex;align-items:center;gap:2px;background:#FBF3E4;border:1px solid rgba(201,169,110,.5);border-radius:999px;padding:3px}
+body .cx-qty button{width:38px;height:38px;border:0;border-radius:50%;background:#fff;color:#4A2C17;font-size:20px;font-weight:900;cursor:pointer;box-shadow:0 2px 6px rgba(26,15,7,.12);transition:transform .2s,background .2s}
+body .cx-qty button:hover:not(:disabled){background:linear-gradient(135deg,#E7CF98,#C9A96E);transform:scale(1.1)}
+body .cx-qty button:active:not(:disabled){transform:scale(.88)}
+body .cx-qty button:disabled{opacity:.35;cursor:not-allowed}
+body .cx-qty b{min-width:34px;text-align:center;font-size:16px}
+body .cx-line{font-weight:900;font-size:18px;color:#1A0F07}
+body .cx-del,body .cx-fav{width:40px;height:40px;border-radius:50%!important;border:1px solid rgba(201,169,110,.4)!important;background:#fff!important;transition:transform .25s,background .25s,color .25s}
+body .cx-del:hover{background:#dc2626!important;color:#fff!important;transform:rotate(-8deg) scale(1.08)}
+body .cx-fav:hover,body .cx-fav.on{color:#e11d48!important;transform:scale(1.12)}
+/* ملخص الطلب */
+body .cx-sum{margin-top:14px;padding:18px!important;border-radius:24px!important;background:linear-gradient(180deg,#fff,#FBF3E4)!important;border:1px solid rgba(201,169,110,.45)!important;box-shadow:0 14px 32px rgba(26,15,7,.1)!important}
+body .cx-sum h4{font-weight:900;color:#4A2C17;margin-bottom:8px}
+body .cx-sum .r{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed rgba(201,169,110,.45);font-weight:700}
+body .cx-sum .r.t{border-bottom:0;font-size:20px;font-weight:900;color:#1A0F07;padding-top:12px}
+body .cx-sum .r.t span:last-child{background:linear-gradient(135deg,#8B5E3C,#C9A96E);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+body .cx-trust{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+body .cx-trust>div{text-align:center;padding:10px 4px;border-radius:16px;background:rgba(255,255,255,.85);border:1px solid rgba(201,169,110,.35);font-size:11.5px;font-weight:800;transition:transform .3s}
+body .cx-trust>div:hover{transform:translateY(-3px)}
+body .cx-trust span{display:block;font-size:20px}
+body .cx-sug-card{border-radius:18px!important;border:1px solid rgba(201,169,110,.35)!important;background:#fff!important;transition:transform .3s}
+body .cx-sug-card:hover{transform:translateY(-4px)}
+body .cx-more button{border-radius:999px!important;border:1.5px dashed #C9A96E!important;background:transparent!important;color:#8B5E3C!important;font-weight:800;min-height:46px;padding:0 22px;transition:.25s}
+body .cx-more button:hover{background:#FFF7E0!important;transform:translateY(-2px)}
+body .cx-bar{border-radius:22px!important;background:linear-gradient(135deg,#1A0F07,#4A2C17)!important;border:1px solid rgba(231,207,152,.45)!important;box-shadow:0 18px 38px rgba(26,15,7,.35)!important;padding:12px 14px!important}
+body .cx-bar .tot small{color:rgba(244,227,182,.8)}
+body .cx-bar .tot b{color:#fff;font-weight:900}
+body .cx-go,body .ck-next,body #confirmOrder{background:linear-gradient(135deg,#F4E3B6,#C9A96E)!important;color:#1A0F07!important;border:0!important;border-radius:16px!important;font-weight:900!important;min-height:52px;box-shadow:0 10px 24px rgba(201,169,110,.5)!important;transition:transform .3s cubic-bezier(.22,.8,.24,1),box-shadow .3s!important;position:relative;overflow:hidden}
+body .cx-go:hover,body .ck-next:hover,body #confirmOrder:hover{transform:translateY(-3px);box-shadow:0 16px 34px rgba(201,169,110,.65)!important}
+body .cx-go i,body .ck-next i{transition:transform .3s}
+body .cx-go:hover i,body .ck-next:hover i{transform:translateX(-6px)}
+body .cx-empty{padding:40px 20px;border-radius:26px;background:rgba(255,255,255,.8);border:1px dashed rgba(201,169,110,.6)}
+/* نافذة إتمام الطلب */
+body #checkoutModalOverlay .modal-card{padding:0!important;overflow:hidden;display:flex;flex-direction:column;max-width:560px!important}
+body .ck-top{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:linear-gradient(135deg,#1A0F07,#4A2C17);border-bottom:1px solid rgba(231,207,152,.4)}
+body .ck-top h3{margin:0!important;color:#F4E3B6!important;-webkit-text-fill-color:#F4E3B6!important;background:none!important;font-size:18px!important}
+body .ck-x{width:40px;height:40px;border-radius:50%;border:1px solid rgba(231,207,152,.4);background:rgba(255,255,255,.1);color:#F4E3B6;cursor:pointer;transition:.25s}
+body .ck-x:hover{background:#dc2626;color:#fff;transform:rotate(90deg)}
+body .ck-steps{background:#FBF3E4!important;padding:14px 18px!important;gap:8px!important}
+body .ck-steps .s{font-size:12.5px!important}
+body .ck-steps .s i{width:28px!important;height:28px!important;transition:transform .4s cubic-bezier(.22,.8,.24,1),background .3s}
+body .ck-steps .s.on i{background:linear-gradient(135deg,#C9A96E,#A6864B)!important;color:#fff;transform:scale(1.18);box-shadow:0 0 0 5px rgba(201,169,110,.25)}
+body .ck-steps .s.ok i{background:#059669!important}
+body .ck-steps .l{height:3px!important;border-radius:3px;background:rgba(201,169,110,.3)}
+body .ck-steps .l.ok{background:linear-gradient(90deg,#059669,#34d399)!important}
+body .ck-body{padding:18px!important;overflow-y:auto;flex:1}
+body .ck-pane.on{display:block;animation:luxPane .45s cubic-bezier(.22,.8,.24,1)}
+@keyframes luxPane{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+body .ck-pane h4{font-weight:900;font-size:19px;color:#1A0F07}
+body .ck-pane .sub{color:#8B7A68;margin-bottom:14px;font-size:13px}
+body .form-group label{font-weight:800;color:#4A2C17}
+body .ck-box{border-radius:20px!important;background:#fff!important;border:1px solid rgba(201,169,110,.4)!important;box-shadow:0 6px 16px rgba(26,15,7,.06);margin-bottom:12px;overflow:hidden}
+body .ck-box .hd{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#FBF3E4;font-weight:900}
+body .ck-box .hd button{border:0;background:#fff;color:#A6864B;border-radius:999px;padding:6px 14px;font-weight:800;cursor:pointer;min-height:34px;border:1px solid rgba(201,169,110,.5)}
+/* الدفع */
+body .pay-due{display:flex;justify-content:space-between;align-items:center;padding:16px;border-radius:20px;background:linear-gradient(135deg,#1A0F07,#5A3620);color:#F4E3B6;margin-bottom:12px;box-shadow:0 12px 26px rgba(26,15,7,.28)}
+body .pay-due b{display:block;font-size:26px;color:#fff;font-weight:900}
+body .pay-secure{background:rgba(231,207,152,.18);border:1px solid rgba(231,207,152,.45);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:800}
+body .payment-methods-grid{display:grid;gap:10px}
+body .pm-gh{font-weight:900;color:#8B5E3C;font-size:13px;margin-top:6px}
+body .payment-method-option{display:flex!important;align-items:center;gap:12px;padding:14px!important;border-radius:18px!important;background:#fff!important;border:1.5px solid rgba(201,169,110,.4)!important;cursor:pointer;min-height:64px}
+body .payment-method-option .pm-ico{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:#FBF3E4;font-size:20px;flex:0 0 auto}
+body .payment-method-option .pm-radio{width:22px;height:22px;border-radius:50%;border:2px solid #C9A96E;margin-inline-start:auto;flex:0 0 auto;position:relative;transition:.25s}
+body .payment-method-option.selected{border-color:#C9A96E!important;background:linear-gradient(135deg,#FFFBEF,#fff)!important;box-shadow:0 0 0 3px rgba(201,169,110,.3),0 12px 24px rgba(166,134,75,.22)!important}
+body .payment-method-option.selected .pm-radio{background:#C9A96E;box-shadow:inset 0 0 0 4px #fff}
+body .pm-tag{background:#FEF3C7;color:#92400E;border-radius:999px;padding:2px 10px;font-size:11px;font-weight:800}
+body .wallet-info-box{border-radius:20px!important;border:1.5px dashed #C9A96E!important;background:#FFFBEF!important}
+body .wallet-number{font-size:22px;font-weight:900;letter-spacing:1px;color:#4A2C17}
+body .wallet-copy-btn,body .apply-coupon-btn{background:linear-gradient(135deg,#2A180C,#6B3A2A)!important;color:#F4E3B6!important;border:0!important;border-radius:12px!important;min-height:44px;font-weight:800;cursor:pointer;transition:.25s}
+body .wallet-copy-btn:hover,body .apply-coupon-btn:hover{transform:translateY(-2px)}
+body .pm-coupon{border-radius:18px;background:#fff;border:1px solid rgba(201,169,110,.4);padding:10px 14px;margin-bottom:12px}
+body .pm-coupon summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:center;gap:8px}
+body .deposit-notice{border-radius:20px!important;background:linear-gradient(135deg,#F5F3FF,#fff)!important;border:1px solid #c4b5fd!important}
+body .total-summary{border-radius:22px;background:linear-gradient(180deg,#fff,#FBF3E4);border:1px solid rgba(201,169,110,.45);padding:14px;box-shadow:0 10px 24px rgba(26,15,7,.08)}
+body .total-summary-row{display:flex;justify-content:space-between;padding:8px 0;font-weight:700;border-bottom:1px dashed rgba(201,169,110,.4)}
+body .total-summary-row.grand-total{border:0;font-size:19px;font-weight:900;padding-top:12px;color:#1A0F07}
+body .total-summary-row.delivery-row .delivery-amount{color:#7c3aed;font-weight:900}
+/* التذييل ثابت وواضح */
+body .ck-foot{display:flex;align-items:center;gap:10px;padding:12px 14px calc(12px + env(safe-area-inset-bottom));background:rgba(255,255,255,.92);backdrop-filter:blur(16px);border-top:1px solid rgba(201,169,110,.4);box-shadow:0 -10px 24px rgba(26,15,7,.08)}
+body .ck-foot .tot{display:flex;flex-direction:column;line-height:1.2}
+body .ck-foot .tot b{font-size:18px;font-weight:900;color:#4A2C17}
+body .ck-back{width:48px;height:48px;border-radius:14px;border:1px solid rgba(201,169,110,.5);background:#fff;color:#4A2C17;cursor:pointer;transition:.25s}
+body .ck-back:hover{background:#FBF3E4;transform:translateX(3px)}
+body .ck-next,body #confirmOrder{flex:1}
+/* نبضة عند تغيّر الإجمالي */
+.lux-flash{animation:luxFlash .7s ease}
+@keyframes luxFlash{30%{transform:scale(1.12);color:#C9A96E}}
+@media(max-width:680px){
+  body .cx-card{grid-template-columns:84px 1fr!important;padding:12px!important}
+  body .cx-img{width:84px;height:84px}
+  body .cx-qty button{width:40px;height:40px}
+  body #checkoutModalOverlay .modal-card{max-height:94dvh!important;border-radius:26px 26px 0 0!important}
+  body .cx-bar{position:static}
+}

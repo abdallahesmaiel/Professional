@@ -1,0 +1,29 @@
+.store-bottom-panel{position:relative;overflow:hidden;margin:22px 0 28px;padding:26px 14px 16px;border-radius:30px;color:#fff;background:linear-gradient(150deg,#2a1810 0%,#4A2C17 55%,#6B3A2A 100%);border:1px solid rgba(201,169,110,.35);box-shadow:0 18px 44px rgba(26,15,7,.28)}
+.store-bottom-panel::before{content:"";position:absolute;top:-70px;left:-60px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(201,169,110,.28),transparent 70%);pointer-events:none}
+.store-bottom-panel::after{content:"";position:absolute;bottom:-90px;right:-70px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(201,169,110,.14),transparent 70%);pointer-events:none}
+.store-bottom-panel>*{position:relative;z-index:1}
+.sbp-head{text-align:center;margin-bottom:16px}
+.sbp-eyebrow{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;background:rgba(201,169,110,.16);border:1px solid rgba(201,169,110,.4);color:#E8D2A6;font-size:11px;font-weight:800}
+.sbp-head h3{margin:10px 0 0;font:900 18px Cairo,sans-serif;color:#fff}
+.store-bottom-panel .trust-strip{grid-template-columns:1fr 1fr;gap:10px;margin:0;max-width:none;padding:0}
+.store-bottom-panel .trust-strip .trust-item{background:rgba(255,255,255,.07);border:1px solid rgba(201,169,110,.25);border-radius:18px;padding:12px 10px;gap:10px;color:#fff;box-shadow:none;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);transition:transform .25s,background .25s}
+.store-bottom-panel .trust-strip .trust-item:active{transform:scale(.97);background:rgba(255,255,255,.12)}
+.store-bottom-panel .trust-strip .trust-item:last-child{grid-column:1/-1;justify-content:center}
+.store-bottom-panel .trust-strip .trust-item>i{width:40px;height:40px;font-size:16px;color:#2a1810;background:linear-gradient(135deg,#F3DFA8,#C9A96E);box-shadow:0 4px 12px rgba(0,0,0,.25)}
+.store-bottom-panel .trust-item span{display:block;font-size:12px;font-weight:800;line-height:1.5;color:#fff}
+.store-bottom-panel .trust-item small{display:block;font-size:10.5px;font-weight:600;color:#E0CBA0;margin-top:1px}
+.sbp-contact{margin-top:18px;padding-top:16px;border-top:1px solid transparent;border-image:linear-gradient(90deg,transparent,rgba(201,169,110,.6),transparent) 1}
+.sbp-contact-head{text-align:center;margin-bottom:12px}
+.store-bottom-panel .store-social-title{display:block;margin:0;font-size:15px;font-weight:900;color:#fff}
+.sbp-contact-head small{color:#E0CBA0;font-size:11px;font-weight:600}
+.store-bottom-panel .store-social-links{display:flex;justify-content:center;gap:6px;margin:0;padding:0;border:0;flex-wrap:nowrap}
+.store-bottom-panel .store-social-links a{flex:1;max-width:70px;width:auto;height:auto;border-radius:16px;flex-direction:column;gap:6px;padding:8px 2px;background:none;border:0;color:#E8D9BE;font-size:10.5px;font-weight:700;text-decoration:none;transition:transform .25s}
+.store-bottom-panel .store-social-links a:hover,.store-bottom-panel .store-social-links a:active{transform:translateY(-3px);background:none;color:#fff}
+.store-bottom-panel .store-social-links a i{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;color:#fff;box-shadow:0 6px 14px rgba(0,0,0,.3);border:2px solid rgba(255,255,255,.25)}
+.store-bottom-panel [data-social=phone] i{background:linear-gradient(135deg,#C9A96E,#8B5E3C)}
+.store-bottom-panel [data-social=whatsapp] i{background:linear-gradient(135deg,#34d57a,#128C4A)}
+.store-bottom-panel [data-social=facebook] i{background:linear-gradient(135deg,#3b8bff,#1456c4)}
+.store-bottom-panel [data-social=instagram] i{background:linear-gradient(45deg,#f9a03f,#e1306c 55%,#7b3fe4)}
+.store-bottom-panel [data-social=email] i{background:linear-gradient(135deg,#ef6b5a,#c0392b)}
+.sbp-copy{margin-top:14px;text-align:center;font-size:10.5px;font-weight:600;color:rgba(232,217,190,.7)}
+@media(min-width:700px){.store-bottom-panel .trust-strip{grid-template-columns:repeat(5,1fr)}.store-bottom-panel .trust-strip .trust-item:last-child{grid-column:auto}.store-bottom-panel .store-social-links a{max-width:90px}}

@@ -1,0 +1,27 @@
+/* ===== إصلاح الأيقونات: إعادة تثبيت خطوط FontAwesome فوق أي قاعدة خط عامة ===== */
+.fa-solid,.fas,.fa{font-family:"Font Awesome 6 Free"!important;font-weight:900!important}
+.fa-regular,.far{font-family:"Font Awesome 6 Free"!important;font-weight:400!important}
+.fa-brands,.fab{font-family:"Font Awesome 6 Brands"!important;font-weight:400!important}
+.fa-solid,.fa-regular,.fa-brands,.fas,.far,.fab{font-style:normal;font-variant:normal;text-rendering:auto;line-height:1;display:inline-block}
+body .store-social-links a i{display:inline-flex!important;align-items:center;justify-content:center;width:56px;height:56px;border-radius:50%;font-size:24px!important;color:#fff}
+body .store-social-links a[data-social="phone"] i{background:linear-gradient(135deg,#B8864F,#8B5E3C)}
+body .store-social-links a[data-social="whatsapp"] i{background:linear-gradient(135deg,#25D366,#128C4A)}
+body .store-social-links a[data-social="facebook"] i{background:linear-gradient(135deg,#3b82f6,#1d4ed8)}
+body .store-social-links a[data-social="instagram"] i{background:linear-gradient(135deg,#f58529,#dd2a7b 55%,#8134af)}
+body .store-social-links a[data-social="email"] i{background:linear-gradient(135deg,#ef6a5a,#c0392b)}
+/* ===== منع خروج نص الزر من حدوده ===== */
+body .btn,body .discovery-btn,body .hero-btn,body .load-more-btn,body .filter-apply-btn,body .add-btn,body .cx-go,body .ck-next,body .returns-tab{max-width:100%;box-sizing:border-box}
+body .price-row .add-btn{padding:0 8px!important;gap:5px!important;font-size:clamp(11.5px,3.4vw,13.5px)!important;overflow:hidden}
+body .price-row .add-btn i{font-size:clamp(12px,3.4vw,14px)!important;flex:none}
+body .discovery-btn,body .load-more-btn{white-space:nowrap}
+/* صف السعر في الفلاتر: يلتف بدل أن يتمدد خارج الشاشة */
+body .filter-bar .price-inline{flex-wrap:wrap}
+body .filter-bar .price-range-input{flex:1 1 84px}
+body .filter-bar .filter-apply-btn{flex:1 1 90px}
+body .filter-bar #resetFilters{flex:0 0 auto}
+@media(max-width:420px){body .filter-bar #resetFilters::after{content:none}body .filter-bar #resetFilters{width:46px;padding:0;justify-content:center}}
+/* صف التقييم + المقارنة داخل الكارت: يلتف على الشاشات الضيقة */
+body .product-meta{flex-wrap:wrap;row-gap:6px}
+body .product-meta .product-rating{flex:1 1 auto;min-width:0}
+body .product-card .compare-btn-mini{max-width:100%;overflow:hidden;white-space:nowrap}
+@media(max-width:420px){body .product-card .compare-btn-mini span{display:none}body .product-card .compare-btn-mini{width:32px!important;padding:0!important;justify-content:center}}

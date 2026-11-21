@@ -1,0 +1,58 @@
+/* ===== شريط إعلاني متحرك ===== */
+.mk-annc{display:block!important;overflow:hidden;padding:0!important;gap:0!important;direction:ltr;white-space:nowrap;background:linear-gradient(90deg,#b8924a,var(--accent),#b8924a)}
+.mk-track{display:flex;width:max-content;animation:mkMarq 60s linear infinite;will-change:transform}
+.mk-annc:hover .mk-track{animation-play-state:paused}
+.mk-set{display:flex;flex:none}
+.mk-set span{direction:rtl;padding:8px 34px;font:800 12.5px Cairo,sans-serif;color:var(--primary-dark);position:relative}
+.mk-set span:after{content:"✦";position:absolute;left:-6px;opacity:.5;font-size:9px;top:50%;transform:translateY(-50%)}
+@keyframes mkMarq{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+@media(prefers-reduced-motion:reduce){.mk-track{animation:none}}
+
+/* ===== بار علوي متناسق ===== */
+.top-bar .top-container{display:flex!important;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:10px 14px;padding:10px 16px 8px!important;max-width:1320px}
+.top-bar .top-left{order:1!important;display:flex;align-items:center;gap:10px;flex:none;position:static!important;transform:none!important}
+.top-bar .logo-area{order:0!important;position:static!important;transform:none!important;margin:0!important;flex:none;display:flex;align-items:center;cursor:pointer}
+.top-bar .logo-img{width:40px!important;height:40px!important;border-radius:50%!important;background:rgba(255,255,255,.1)!important;border:2px solid var(--accent)!important;box-shadow:none!important;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.top-bar .logo-img img{width:100%;height:100%;object-fit:cover}
+.top-bar .brand-name{display:flex;flex-direction:column;line-height:1.15;gap:0}
+.top-bar .brand-name .main{font-size:17px!important;font-weight:900;color:#fff!important}
+.top-bar .brand-name .sub{font-size:10.5px!important;letter-spacing:.5px}
+.top-bar .brand-name .sub-en{display:none!important}
+.top-bar .hamburger-btn,.top-bar .top-action-btn{width:40px!important;height:40px!important;border-radius:12px!important;font-size:17px!important;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.1)!important;color:#fff!important;border:0!important;transition:background .2s,transform .15s}
+.top-bar .hamburger-btn:hover,.top-bar .top-action-btn:hover{background:rgba(255,255,255,.2)!important}
+.top-bar .top-actions{gap:8px!important}
+.top-bar .lang-switcher{height:40px;align-items:center;border-radius:12px!important;background:rgba(255,255,255,.1)!important;padding:3px!important}
+.top-bar .lang-btn{height:32px;border-radius:9px!important;padding:0 10px!important;font-size:12px!important;color:#f1e3c4!important}
+.top-bar .lang-btn.active{background:var(--accent)!important;color:var(--primary-dark)!important}
+.top-bar .cart-widget-top{height:40px;border-radius:12px!important;padding:0 14px!important;background:var(--accent)!important;color:var(--primary-dark)!important;gap:8px!important;border:0!important}
+.top-bar .top-action-btn .badge{border-color:#2a190c!important;top:-5px!important;right:-5px!important}
+.top-bar .top-right{order:3!important;margin-inline-start:auto;position:static!important}
+.top-bar .search-container{order:2!important;flex:1 1 320px!important;min-width:0;max-width:640px!important;margin:0 auto!important}
+.top-bar .search-wrapper{height:44px;border-radius:12px!important;background:#fff}
+.top-bar .search-input{padding:0 14px!important;height:100%;font-size:14px!important}
+.top-bar .barcode-search-camera-btn{border-radius:10px}
+.mk-cats{border-top:1px solid rgba(255,255,255,.08);padding-top:6px!important;margin-top:2px}
+.mk-cats button{transition:background .2s,color .2s}
+@media(max-width:899px){
+ .top-bar .top-container{gap:8px 10px;padding:9px 12px 6px!important}
+ .top-bar .top-right{order:2!important}
+ .top-bar .search-container{order:3!important;flex:1 1 100%!important;max-width:none!important}
+ .top-bar .brand-name .main{font-size:15px!important}
+ .top-bar .cart-widget-top{padding:0 12px!important}.top-bar .cart-widget-top .cart-label{display:none}
+ .top-bar .lang-switcher{display:none}
+ .top-bar .top-action-btn,.top-bar .hamburger-btn{width:38px!important;height:38px!important}
+}
+@media(max-width:380px){.top-bar .brand-name .sub{display:none}}
+
+/* ===== انسيابية ===== */
+html{-webkit-text-size-adjust:100%}
+body{-webkit-tap-highlight-color:transparent}
+.page.active-page{animation:mkFadeIn .25s ease-out}
+@keyframes mkFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes mkPage{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.mk-card,.mk-tile i,.sim-card,.add-btn,.top-action-btn,.nav-item,.dl-tabs button,.mk-chips button{transition:transform .2s ease,background .2s,color .2s!important}
+.product-card:active,.mk-card:active,.sim-card:active{transform:scale(.98)!important}
+.mk-row,.sim-row,.mk-tiles{overscroll-behavior-x:contain}
+.search-suggestions:not([hidden]){animation:mkDrop .18s ease-out}
+@keyframes mkDrop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation-duration:.01ms!important;transition-duration:.01ms!important}}

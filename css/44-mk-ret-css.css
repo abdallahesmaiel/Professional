@@ -1,0 +1,8 @@
+#mkAlerts{margin:10px 12px}
+.mk-al{display:flex;align-items:center;gap:10px;background:#fffaf2;border:1px solid #eadfcb;border-inline-start:4px solid #c9972b;border-radius:12px;padding:10px 12px;margin-bottom:8px;font-size:13px;cursor:pointer}
+.mk-al.price{border-inline-start-color:#2e7d32}.mk-al.stock{border-inline-start-color:#1565c0}
+.mk-al .t{flex:1;line-height:1.5}.mk-al b{color:#8a5a1f}
+.mk-al button{border:0;background:#f4f0ea;border-radius:50%;width:26px;height:26px;cursor:pointer}
+.mk-watch{display:block;width:100%;margin:8px 0;padding:10px;border:1px dashed #c9972b;border-radius:10px;background:#fff;color:#8a5a1f;font-weight:700;cursor:pointer}
+.mk-watch.on{background:#fffaf2;border-style:solid}
+.mk-badge{display:inline-flex;align-items:center;gap:6px;background:#fffaf2;border:1px solid #eadfcb;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:800;color:#8a5a1f;margin:8px 12px}

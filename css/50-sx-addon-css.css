@@ -1,0 +1,11 @@
+/* ===== SmartStore add-on: لمسات تصميم وسهولة استخدام ===== */
+html{scroll-behavior:smooth;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:3px solid var(--accent,#C9A96E);outline-offset:2px;border-radius:8px}
+@media(max-width:768px){input,select,textarea{font-size:16px!important}} /* يمنع تكبير iOS التلقائي عند الكتابة */
+.product-card{transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease}
+@media(hover:hover){.product-card:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(74,44,23,.18);border-color:var(--accent,#C9A96E)}}
+.product-card:active{transform:scale(.985)}
+.bottom-nav{-webkit-backdrop-filter:saturate(1.4) blur(14px);backdrop-filter:saturate(1.4) blur(14px)}
+button:active{transform:scale(.97)}
+img{-webkit-user-drag:none}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}

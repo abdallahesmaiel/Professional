@@ -1,0 +1,7 @@
+.promo-carousel-section.promo-static .promo-carousel-wrapper{overflow-x:hidden;scroll-snap-type:none;scroll-behavior:auto;padding-bottom:10px}
+.promo-carousel-section.promo-static .promo-carousel-item{flex:1 1 0;min-width:0;scroll-snap-align:none}
+.promo-carousel-section.promo-static .promo-carousel-wrapper[data-count="1"] .promo-carousel-item{flex:0 1 100%;max-width:1000px;margin-inline:auto}
+.promo-carousel-section.promo-static .promo-carousel-btn{display:none!important}
+@media(min-width:768px){.promo-carousel-section.promo-static .promo-carousel-item{aspect-ratio:21/9}.promo-carousel-section.promo-static .promo-carousel-wrapper[data-count="1"] .promo-carousel-item{aspect-ratio:21/9}}
+.promo-carousel-wrapper{overscroll-behavior-x:contain}
+.promo-carousel-item{will-change:auto}

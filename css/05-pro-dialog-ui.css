@@ -1,0 +1,18 @@
+.pro-dlg-overlay{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(26,15,7,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;transition:opacity .25s}
+.pro-dlg-overlay.show{opacity:1}
+.pro-dlg{width:100%;max-width:370px;background:linear-gradient(180deg,#fff,#FDF8F3);border-radius:28px;padding:28px 22px 20px;text-align:center;box-shadow:0 30px 70px rgba(26,15,7,.35);border:1px solid rgba(201,169,110,.3);transform:translateY(24px) scale(.92);transition:transform .35s cubic-bezier(.34,1.56,.64,1);font-family:'Cairo',sans-serif;direction:rtl}
+.pro-dlg-overlay.show .pro-dlg{transform:none}
+.pro-dlg-icon{width:72px;height:72px;margin:-62px auto 14px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;color:#fff;border:5px solid #fff;box-shadow:0 10px 24px rgba(26,15,7,.25)}
+.pro-dlg.danger .pro-dlg-icon{background:linear-gradient(135deg,#ef4444,#b91c1c)}
+.pro-dlg.warning .pro-dlg-icon{background:linear-gradient(135deg,#f59e0b,#d97706)}
+.pro-dlg.info .pro-dlg-icon{background:linear-gradient(135deg,#C9A96E,#8B5E3C)}
+.pro-dlg-title{font-size:19px;font-weight:900;color:var(--primary-dark,#1A0F07);margin-bottom:8px}
+.pro-dlg-msg{font-size:14px;line-height:1.9;color:var(--gray-600,#4b5563);margin-bottom:22px;white-space:pre-line}
+.pro-dlg-actions{display:flex;gap:10px}
+.pro-dlg-actions button{flex:1;padding:13px 10px;border:0;border-radius:16px;font:800 14px 'Cairo',sans-serif;cursor:pointer;transition:transform .15s,box-shadow .2s}
+.pro-dlg-actions button:active{transform:scale(.96)}
+.pro-dlg-cancel{background:var(--foam,#E8DCD0);color:var(--primary,#4A2C17)}
+.pro-dlg-ok{color:#fff;box-shadow:0 8px 20px rgba(26,15,7,.2)}
+.pro-dlg.danger .pro-dlg-ok{background:linear-gradient(135deg,#ef4444,#b91c1c)}
+.pro-dlg.warning .pro-dlg-ok{background:linear-gradient(135deg,#f59e0b,#d97706)}
+.pro-dlg.info .pro-dlg-ok{background:linear-gradient(135deg,var(--primary,#4A2C17),var(--primary-medium,#6B3A2A))}

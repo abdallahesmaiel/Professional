@@ -1,0 +1,34 @@
+/* ===== اللوحة السفلية: خلفية بنفس لون الشريط العلوي + نص واضح وخط أنيق ===== */
+body .store-bottom-panel{position:relative;overflow:hidden;margin-top:26px;padding:26px 16px 22px!important;border-radius:28px!important;
+  background:radial-gradient(420px 200px at 85% 0%,rgba(231,207,152,.20),transparent 65%),linear-gradient(160deg,#1A0F07 0%,#3A2212 55%,#4A2C17 100%)!important;
+  border:1px solid rgba(231,207,152,.38)!important;box-shadow:0 22px 50px rgba(26,15,7,.35)!important;backdrop-filter:none!important;color:#F4E8CF!important;font-family:'Cairo','Tajawal',sans-serif}
+body .store-bottom-panel *:not(i){font-family:inherit}
+body .sbp-head{text-align:center;margin-bottom:18px}
+body .sbp-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:999px;background:rgba(231,207,152,.14)!important;color:#F4E3B6!important;border:1px solid rgba(231,207,152,.45)!important;font-size:12.5px;font-weight:800;letter-spacing:.3px}
+body .sbp-eyebrow i{color:#E7CF98}
+body .sbp-head h3{margin:12px 0 0;font-size:clamp(20px,5.6vw,27px);font-weight:900;line-height:1.4;color:#fff!important;-webkit-text-fill-color:#fff!important;background:none!important;text-shadow:0 2px 10px rgba(0,0,0,.35)}
+body .sbp-head h3::after{content:"";display:block;width:64px;height:3px;margin:10px auto 0;border-radius:3px;background:linear-gradient(90deg,transparent,#E7CF98,transparent)}
+/* بطاقات المميزات */
+body .trust-strip{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+body .trust-strip .trust-item:last-child:nth-child(odd){grid-column:1/-1}
+body .trust-item{display:flex;align-items:center;gap:12px;padding:14px 14px!important;min-height:78px;border-radius:20px!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.10),rgba(255,255,255,.04))!important;border:1px solid rgba(231,207,152,.30)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 18px rgba(0,0,0,.22);
+  transition:transform .3s ease,border-color .3s,background .3s}
+@media(hover:hover){body .trust-item:hover{transform:translateY(-3px);border-color:rgba(231,207,152,.7)!important;background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,.06))!important}}
+body .trust-item>i{flex:0 0 44px;width:44px!important;height:44px!important;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-size:18px;
+  background:linear-gradient(135deg,#F4E3B6,#C9A96E)!important;color:#2A180C!important;box-shadow:0 6px 14px rgba(0,0,0,.35)}
+body .trust-item>div{min-width:0;display:flex;flex-direction:column;gap:3px}
+body .trust-item span{color:#FFF6DF!important;font-size:14px;font-weight:800;line-height:1.35;-webkit-text-fill-color:#FFF6DF!important}
+body .trust-item small{color:#D9C28F!important;font-size:12px;font-weight:600;line-height:1.4;opacity:1}
+/* التواصل */
+body .sbp-contact{margin-top:22px;padding-top:20px;border-top:1px solid rgba(231,207,152,.28)!important;text-align:center}
+body .sbp-contact-head{display:flex;flex-direction:column;gap:4px;margin-bottom:14px}
+body .store-social-title{font-size:19px;font-weight:900;color:#F4E3B6!important;-webkit-text-fill-color:#F4E3B6!important;background:none!important}
+body .sbp-contact-head small{color:#D9C28F!important;font-size:12.5px;font-weight:600;opacity:1}
+body .store-social-links{display:flex;flex-wrap:wrap;justify-content:center;gap:14px}
+body .store-social-links a{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:62px;text-decoration:none}
+body .store-social-links a span{color:#F4E8CF!important;font-size:12.5px;font-weight:700;-webkit-text-fill-color:#F4E8CF!important}
+body .store-social-links a i{box-shadow:0 8px 16px rgba(0,0,0,.35);border:2px solid rgba(255,255,255,.22);transition:transform .25s ease}
+@media(hover:hover){body .store-social-links a:hover i{transform:translateY(-4px) scale(1.06)}}
+body .sbp-copy{margin-top:20px;padding-top:14px;border-top:1px dashed rgba(231,207,152,.25);text-align:center;color:#CDB885!important;font-size:12px;font-weight:600}
+@media(min-width:900px){body .trust-strip{grid-template-columns:repeat(5,minmax(0,1fr))}body .trust-strip .trust-item:last-child:nth-child(odd){grid-column:auto}body .trust-item{flex-direction:column;text-align:center;padding:18px 12px!important}}

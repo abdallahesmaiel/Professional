@@ -1,0 +1,25 @@
+/* إزالة شارة الخصم الحمراء نهائياً (الخصم ظاهر تحت السعر) */
+body .product-card .discount-badge,body .discount-badge{display:none!important}
+/* زر المقارنة: ظاهر دائماً في صف التقييم، بدون أي تغطية للصورة */
+body .product-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:30px}
+body .product-meta .product-rating{flex:1;min-width:0;flex-wrap:nowrap;white-space:nowrap}
+body .product-card .compare-btn-mini{position:static!important;inset:auto!important;opacity:1!important;transform:none!important;display:inline-flex!important;
+  align-items:center;gap:5px;flex:0 0 auto;width:auto!important;height:28px!important;min-width:0;padding:0 10px!important;border-radius:999px!important;
+  background:#FBF6EA!important;border:1px solid #E6D6B0!important;color:#6B4A1E!important;font:800 11.5px Cairo,sans-serif;line-height:1;box-shadow:none!important;cursor:pointer;transition:background .2s,border-color .2s}
+body .product-card .compare-btn-mini i{font-size:11px}
+body .product-card .compare-btn-mini:active{background:#F3E6C6!important}
+@media(hover:hover){body .product-card .compare-btn-mini:hover{background:#F6EBCB!important;border-color:#CFA24A!important}}
+body .product-card .compare-btn-mini.active,body .product-card .compare-btn-mini.selected,body .product-card .compare-btn-mini.on{background:#2A180C!important;color:#F4E3B6!important;border-color:#2A180C!important}
+/* ترتيب أنظف */
+body .product-info{gap:6px}
+body .product-name{height:auto;min-height:2.9em}
+body .product-info>.stock-badge{display:inline-flex!important;align-items:center;gap:4px;font-size:11.5px!important;font-weight:800}
+body .product-info>.stock-badge.stock-available{color:#047857!important}
+body .price-container{padding:2px 0}
+body .price-container .discount-label{display:inline-flex;align-items:center;gap:4px;width:fit-content;flex-basis:auto;padding:3px 10px;border-radius:999px;background:#ECFDF5;color:#047857;font-size:11.5px;font-weight:800;margin-top:4px}
+body .product-info:after{display:flex!important;align-items:center;gap:6px;margin:8px -12px 0!important;padding:8px 12px 0;border-top:1px dashed #EADFCB;font-size:11px!important;font-weight:700!important;color:#7a6a58!important}
+@media(max-width:680px){
+  body .product-info:after{margin:6px -10px 0!important;padding:7px 10px 0}
+  body .product-card .compare-btn-mini{height:26px!important;padding:0 8px!important;font-size:11px}
+  body .product-card .compare-btn-mini span{display:inline}
+}

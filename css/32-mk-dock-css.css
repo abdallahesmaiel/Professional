@@ -1,0 +1,14 @@
+#mkCheckoutDock{position:fixed;left:0;right:0;bottom:calc(var(--nav-h,72px) + 8px + env(safe-area-inset-bottom));z-index:900;padding:0 12px;pointer-events:none;animation:mkDockUp .28s cubic-bezier(.2,.7,.2,1)}
+#mkCheckoutDock[hidden]{display:none}
+@keyframes mkDockUp{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+.mk-dock-in{pointer-events:auto;max-width:640px;margin:0 auto;display:flex;align-items:center;gap:12px;background:#fff;border:1px solid rgba(201,169,110,.45);border-radius:20px;padding:10px 12px 10px 14px;box-shadow:0 12px 34px rgba(26,15,7,.28)}
+.mk-dock-tot{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+.mk-dock-tot small{font-size:11px;font-weight:700;color:var(--gray-500)}
+.mk-dock-tot b{font-size:19px;font-weight:900;color:var(--primary-dark)}
+.mk-dock-tot span{font-size:11px;font-weight:800;color:var(--accent-dark)}
+#mkDockBtn{flex:1;min-height:50px;border:0;border-radius:15px;background:linear-gradient(135deg,#c9a96e,#a8864a);color:var(--primary-dark);font:900 15.5px Cairo,sans-serif;display:flex;align-items:center;justify-content:center;gap:9px;cursor:pointer;transition:transform .15s}
+#mkDockBtn:active{transform:scale(.97)}
+body.mk-dock-on #cartPage{padding-bottom:96px}
+#mkDockWa{flex:0 0 50px;height:50px;border:0;border-radius:15px;background:#1fa855;color:#fff;font-size:22px;cursor:pointer}
+@media(min-width:900px){#mkCheckoutDock{display:none!important}body.mk-dock-on #cartPage{padding-bottom:0}}
+.cx-wrap>.cx-bar{position:static!important}

@@ -1,0 +1,41 @@
+/* أيقونات السلة */
+.mk-ico{display:block;flex:none;stroke:currentColor}
+.top-bar .cart-widget-top{position:relative;gap:8px!important;padding:0 14px 0 12px!important}
+.top-bar .cart-widget-top .mk-ico{width:22px;height:22px}
+.top-bar .cart-count-badge-top{order:3;position:static;min-width:22px;height:22px;border-radius:99px;background:var(--primary-dark)!important;color:#fff!important;font:900 12px Cairo,sans-serif!important;display:inline-flex;align-items:center;justify-content:center;padding:0 6px}
+.top-bar .cart-widget-top .cart-label{font-weight:900;font-size:13.5px}
+.bottom-nav .nav-item{position:relative}
+.bottom-nav .nav-item .mk-ico,.bottom-nav .nav-item i{width:24px;height:24px;font-size:20px;margin:0 auto 2px}
+.bottom-nav .nav-item.active .mk-ico{color:var(--primary)}
+.nav-cart-badge{min-width:19px!important;height:19px!important;font:900 11px Cairo,sans-serif!important;border:2px solid #fff;box-sizing:content-box;line-height:19px}
+.cart-page h2,#cartPage .page-title{display:flex;align-items:center;justify-content:center;gap:10px}
+#notificationCenter{top:calc(env(safe-area-inset-top) + 10px)!important;gap:6px!important;max-width:380px!important}
+.notification{padding:9px 12px!important;gap:10px!important;border-radius:14px!important;align-items:center!important}
+.notification .notification-icon{width:32px!important;height:32px!important;font-size:15px!important}
+.notification .notification-title{font-size:13px!important}
+.notification .notification-message{font-size:12px!important;line-height:1.35}
+/* صفحة السلة */
+.cx-wrap{max-width:760px}
+.cx-card{grid-template-columns:96px 1fr!important;padding:14px!important;border-radius:18px!important;box-shadow:0 2px 10px rgba(26,15,7,.05)}
+.cx-img{width:96px!important;height:96px!important;border:1px solid rgba(74,44,23,.06)}
+.cx-del{width:36px!important;height:36px!important;color:var(--danger)!important;background:var(--danger-light)!important;display:flex;align-items:center;justify-content:center}
+.cx-del:hover{background:var(--danger)!important;color:#fff!important}
+.cx-qty{background:var(--gray-100,#f4efe8);border:1px solid rgba(74,44,23,.08)}
+.cx-qty button{width:36px!important;height:36px!important;font-size:19px!important;color:var(--primary)}
+.cx-qty button:hover:not(:disabled){background:var(--accent);color:var(--primary-dark)}
+.cx-head h3 svg{color:var(--accent-dark)}
+.cx-clear{border:1px solid rgba(220,38,38,.25)!important;border-radius:10px!important}
+.cx-sum{border-radius:20px!important}
+.cx-bar{box-shadow:0 8px 26px rgba(26,15,7,.18)}
+.cx-go{background:linear-gradient(135deg,#c9a96e,#a8864a)!important;color:var(--primary-dark)!important;font-weight:900}
+@media(min-width:900px){
+ .cx-wrap{max-width:1120px;display:grid;grid-template-columns:minmax(0,1fr) 380px;column-gap:22px;align-items:start}
+ .cx-wrap>.cx-head,.cx-wrap>.free-ship-hint{grid-column:1/-1}
+ .cx-wrap>.cx-list{grid-column:1;grid-row:3/span 3}
+ .cx-wrap>.cx-sum{grid-column:2;grid-row:3;margin-top:0;position:sticky;top:150px}
+ .cx-wrap>.cx-trust{grid-column:2;grid-row:4}
+ .cx-wrap>.cx-bar{grid-column:2;grid-row:5;position:static;margin-top:14px;padding:0;background:none;box-shadow:none;border:0;flex-direction:column;align-items:stretch}
+ .cx-wrap>.cx-bar .tot{display:none}
+ .cx-wrap>.cx-sug{grid-column:1;grid-row:6}
+ .cx-wrap>.cx-more{grid-column:1;grid-row:7}
+}

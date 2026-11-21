@@ -1,0 +1,5 @@
+/* إصلاح: حلقة زر الكاميرا كانت تمتد على شريط البحث كله وتلتقط ضغطة الميكروفون */
+body .barcode-search-camera-btn::after{pointer-events:none!important}
+body .top-bar .barcode-search-camera-btn::after,body .top-bar #barcodeSearchCameraBtn::after{display:none!important;content:none!important}
+body .top-bar #mkMic{position:relative;z-index:6;pointer-events:auto;touch-action:manipulation;order:3}
+body .top-bar .barcode-search-camera-btn{position:static!important;z-index:5}

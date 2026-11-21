@@ -1,0 +1,4 @@
+.phone-notification-btn{position:relative;}
+.phone-notification-btn .notification-state{font-size:10px;font-weight:800;margin-right:auto;opacity:.85;}
+.phone-notification-btn.enabled .notification-state{color:var(--success,#059669);}
+.phone-notification-btn.denied .notification-state{color:var(--danger,#dc2626);}

@@ -1,0 +1,63 @@
+/* ===== الخطوة 3: البحث والباركود ===== */
+body .search-container{position:relative;z-index:30}
+body .search-wrapper{display:flex;align-items:center;gap:6px;padding:6px 8px 6px 14px!important;min-height:58px;border-radius:999px!important;background:rgba(255,255,255,.9)!important;backdrop-filter:blur(16px);border:1.5px solid rgba(201,169,110,.5)!important;box-shadow:0 12px 30px rgba(26,15,7,.1)!important;transition:box-shadow .35s var(--e2,ease),border-color .3s,transform .35s var(--e2,ease)!important}
+body .search-wrapper:focus-within{border-color:#C9A96E!important;transform:translateY(-2px);box-shadow:0 0 0 5px rgba(201,169,110,.25),0 20px 44px rgba(166,134,75,.3)!important}
+body .search-icon{color:#A6864B!important;font-size:18px;transition:transform .4s var(--e2,ease)}
+body .search-wrapper:focus-within .search-icon{transform:scale(1.2) rotate(-10deg)}
+body .search-input{flex:1;min-width:0;border:0!important;background:transparent!important;box-shadow:none!important;font-size:16px!important;font-weight:700;color:#1A0F07;min-height:46px}
+body .search-input::placeholder{color:#9a8b7a;font-weight:600}
+body .search-clear{width:40px;height:40px;border-radius:50%;border:0;background:rgba(190,18,60,.1);color:#be123c;transition:transform .3s var(--e2,ease),background .25s}
+body .search-clear:hover{background:#be123c;color:#fff;transform:rotate(90deg)}
+body .barcode-search-camera-btn{flex:0 0 auto;width:46px;height:46px;border-radius:50%!important;border:0!important;background:linear-gradient(135deg,#2A180C,#6B3A2A)!important;color:#F4E3B6!important;font-size:18px;box-shadow:0 8px 18px rgba(74,44,23,.35);position:relative;transition:transform .3s var(--e2,ease),box-shadow .3s}
+body .barcode-search-camera-btn::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid rgba(201,169,110,.55);animation:luxRing 2.4s ease-out infinite}
+@keyframes luxRing{from{transform:scale(.9);opacity:.9}to{transform:scale(1.4);opacity:0}}
+body .barcode-search-camera-btn:hover{transform:translateY(-2px) scale(1.07);box-shadow:0 12px 24px rgba(74,44,23,.5)}
+body .barcode-search-camera-btn:active{transform:scale(.92)}
+body .barcode-scan-status{min-height:0;margin-top:8px;padding:0 14px;font-weight:800;font-size:13px;text-align:center}
+body .barcode-scan-status:not(:empty){padding:9px 14px;border-radius:14px;background:rgba(255,255,255,.85);border:1px solid rgba(201,169,110,.4);animation:luxIn .35s var(--e2,ease) both}
+/* الاقتراحات */
+body .search-suggestions{position:absolute;inset-inline:0;top:calc(100% + 10px);max-height:min(62vh,440px);overflow:auto;padding:8px;border-radius:24px;background:rgba(255,252,247,.96)!important;backdrop-filter:blur(20px) saturate(160%);border:1px solid rgba(201,169,110,.5)!important;box-shadow:0 30px 70px rgba(26,15,7,.3)!important;transform-origin:top center;animation:luxDrop .3s var(--e2,ease) both;overscroll-behavior:contain}
+@keyframes luxDrop{from{opacity:0;transform:translateY(-10px) scaleY(.94)}to{opacity:1;transform:none}}
+body .search-suggestion-item,body .search-suggestion-category,body .search-suggestion-all{display:flex;align-items:center;gap:12px;width:100%;min-height:62px;padding:8px 10px;border:0;border-radius:16px;background:transparent;text-align:start;cursor:pointer;transition:background .2s,transform .25s var(--e2,ease)}
+body .search-suggestion-item:hover,body .search-suggestion-item:focus-visible,body .search-suggestion-category:hover,body .search-suggestion-all:hover{background:linear-gradient(135deg,#FFF6DD,#FDEBC0);transform:translateX(-4px);outline:none}
+body .suggestion-thumb{flex:0 0 50px;width:50px;height:50px;border-radius:14px;overflow:hidden;background:radial-gradient(circle,#fff,#F3E8D6);display:flex;align-items:center;justify-content:center;border:1px solid rgba(201,169,110,.35)}
+body .suggestion-thumb img{width:100%;height:100%;object-fit:contain}
+body .suggestion-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+body .suggestion-info strong{font-weight:900;color:#1A0F07;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body .suggestion-info small{color:#8B5E3C;font-weight:800}
+body .suggestion-info mark{background:linear-gradient(transparent 55%,rgba(233,179,32,.55) 55%);color:inherit;padding:0 1px;border-radius:3px}
+body .suggestion-icon{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#2A180C,#6B3A2A);color:#F4E3B6}
+body .suggestion-arrow{color:#C9A96E}
+body .search-suggestion-all{justify-content:space-between;font-weight:900;color:#4A2C17;background:#FFF7E0;border:1px dashed rgba(201,169,110,.7);margin-top:4px}
+body .search-suggestion-empty,body .search-no-results{text-align:center;padding:26px 16px;border-radius:20px;color:#6B4A1E;font-weight:800;background:rgba(255,247,224,.7)}
+body .search-no-results{border:1.5px dashed rgba(201,169,110,.6);animation:luxIn .5s var(--e2,ease) both}
+body .search-results-heading{font-weight:900;color:#4A2C17;padding:10px 4px}
+/* قارئ الباركود */
+body .barcode-reader-modal{background:rgba(14,8,3,.78)!important;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+body .barcode-reader-card{width:min(94vw,460px);padding:18px!important;border-radius:30px!important;background:linear-gradient(180deg,#fff,#FBF7F1)!important;border:1px solid rgba(201,169,110,.55)!important;box-shadow:0 40px 90px rgba(0,0,0,.55)!important;animation:luxModal .45s var(--e2,ease) both}
+body .barcode-reader-video-wrap{position:relative;overflow:hidden;border-radius:24px!important;background:#000;aspect-ratio:4/3;border:2px solid rgba(201,169,110,.6);box-shadow:inset 0 0 40px rgba(0,0,0,.6)}
+body .barcode-reader-video-wrap video{width:100%;height:100%;object-fit:cover}
+body .barcode-reader-frame{position:absolute!important;inset:18% 10%!important;border:0!important;border-radius:18px;pointer-events:none;
+  background:
+   linear-gradient(#E7CF98,#E7CF98) top left/28px 4px no-repeat,linear-gradient(#E7CF98,#E7CF98) top left/4px 28px no-repeat,
+   linear-gradient(#E7CF98,#E7CF98) top right/28px 4px no-repeat,linear-gradient(#E7CF98,#E7CF98) top right/4px 28px no-repeat,
+   linear-gradient(#E7CF98,#E7CF98) bottom left/28px 4px no-repeat,linear-gradient(#E7CF98,#E7CF98) bottom left/4px 28px no-repeat,
+   linear-gradient(#E7CF98,#E7CF98) bottom right/28px 4px no-repeat,linear-gradient(#E7CF98,#E7CF98) bottom right/4px 28px no-repeat;
+  box-shadow:0 0 0 999px rgba(0,0,0,.38)}
+body .barcode-reader-frame::after{content:"";position:absolute;inset-inline:6px;height:3px;border-radius:3px;background:linear-gradient(90deg,transparent,#f43f5e,transparent);box-shadow:0 0 14px #f43f5e;animation:luxScan 2s ease-in-out infinite}
+@keyframes luxScan{0%,100%{top:8%}50%{top:90%}}
+body .barcode-reader-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+body .barcode-reader-actions .btn{min-height:50px;justify-content:center;font-weight:900;border-radius:16px!important}
+body #uploadStoreBarcodeImage{border:1.5px solid rgba(201,169,110,.7)!important;color:#4A2C17!important;background:#FFF7E0!important}
+body #luxTorchBtn{position:absolute;top:10px;inset-inline-end:10px;z-index:5;width:44px;height:44px;border-radius:50%;border:1px solid rgba(231,207,152,.6);background:rgba(26,15,7,.65);color:#F4E3B6;font-size:18px;backdrop-filter:blur(8px);cursor:pointer;transition:transform .25s,background .25s}
+body #luxTorchBtn.on{background:#E9B320;color:#1A0F07;box-shadow:0 0 18px rgba(233,179,32,.8)}
+body #luxTorchBtn:active{transform:scale(.88)}
+body .barcode-reader-card.lux-drag{outline:3px dashed #C9A96E;outline-offset:-8px}
+body .barcode-reader-card.lux-hit{animation:luxHit .6s var(--e2,ease)}
+@keyframes luxHit{30%{box-shadow:0 0 0 8px rgba(16,185,129,.5),0 40px 90px rgba(0,0,0,.55)}}
+body .barcode-detail{border-radius:16px;background:#FFF7E0;border:1px solid rgba(201,169,110,.5)}
+@media(max-width:680px){
+  body .search-wrapper{min-height:54px}
+  body .search-suggestions{position:fixed;inset-inline:10px;top:128px;max-height:58dvh}
+  body .barcode-reader-card{border-radius:30px 30px 0 0!important;position:fixed;bottom:0;width:100%;max-width:none}
+}

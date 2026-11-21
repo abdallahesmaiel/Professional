@@ -1,0 +1,6 @@
+.free-ship-hint{align-items:center;gap:8px;margin:12px 0;padding:11px 14px;border-radius:14px;background:linear-gradient(135deg,#fff7e6,#fdf0d5);border:1px solid rgba(201,169,110,.45);color:var(--primary-dark);font-size:12.5px;font-weight:800;line-height:1.7}
+.free-ship-hint i{color:var(--accent-dark);font-size:16px;flex:none}
+.free-ship-hint.reached{background:linear-gradient(135deg,#ecfdf5,#f0fdf4);border-color:#a7f3d0;color:#065f46}
+.free-ship-hint.reached i{color:#059669}
+.free-ship-bar{height:7px;border-radius:99px;background:rgba(74,44,23,.12);margin-top:8px;overflow:hidden}
+.free-ship-bar span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent-dark));transition:width .4s ease}

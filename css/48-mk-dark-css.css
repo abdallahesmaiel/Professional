@@ -1,0 +1,5 @@
+html[data-theme=dark]{background:#fff;filter:invert(.93) hue-rotate(180deg)}
+html[data-theme=dark] img,html[data-theme=dark] video,html[data-theme=dark] canvas,html[data-theme=dark] iframe,html[data-theme=dark] .mk-wa,html[data-theme=dark] .promo-slide,html[data-theme=dark] [style*="background-image"]{filter:invert(1) hue-rotate(180deg)}
+.menu-theme{display:flex;align-items:center;gap:10px}
+.mk-wa{position:fixed;bottom:calc(84px + env(safe-area-inset-bottom));inset-inline-start:14px;z-index:900;width:52px;height:52px;border-radius:50%;background:#25d366;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.3);text-decoration:none;font-size:26px}
+@media (min-width:900px){.mk-wa{bottom:24px}}

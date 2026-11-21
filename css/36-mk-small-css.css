@@ -1,0 +1,24 @@
+@media(max-width:899px){
+ .top-bar .top-container{flex-wrap:wrap}
+ .top-bar .top-left{flex:1 1 0!important;min-width:0;gap:8px}
+ .top-bar .top-right{flex:none!important;margin-inline-start:0!important}
+ .top-bar .brand-name{min-width:0;overflow:hidden}
+ .top-bar .brand-name .main,.top-bar .brand-name .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .top-bar .top-actions{gap:6px!important}
+}
+@media(max-width:400px){
+ .top-bar .top-container{padding:8px 10px 6px!important;gap:8px}
+ .top-bar .brand-name .sub{display:none}
+ .top-bar .brand-name .main{font-size:14px!important}
+ .top-bar .hamburger-btn,.top-bar .top-action-btn{width:36px!important;height:36px!important;border-radius:10px!important}
+ .top-bar .logo-img{width:34px!important;height:34px!important}
+ .top-bar .cart-widget-top{height:36px;padding:0 10px!important;gap:6px!important}
+ .top-bar .cart-widget-top .mk-ico{width:20px;height:20px}
+ .top-bar .search-wrapper{height:42px}
+ .top-bar #mkMic,.top-bar .barcode-search-camera-btn{width:32px!important;height:32px!important}
+ .mk-cats button{padding:6px 10px;font-size:12.5px}
+}
+@media(max-width:340px){.top-bar .brand-name{display:none}}
+.top-bar #barcodeSearchCameraBtn{position:static!important;left:auto!important;right:auto!important;top:auto!important;transform:none!important;order:4;flex:none;margin:0!important;width:34px!important;height:34px!important;min-width:34px!important;z-index:auto!important}
+@media(max-width:400px){.top-bar #barcodeSearchCameraBtn{width:32px!important;height:32px!important;min-width:32px!important}}
+.top-bar #searchClear{width:28px!important;min-width:28px!important;height:28px!important}

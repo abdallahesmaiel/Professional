@@ -1,0 +1,10 @@
+.product-info > .stock-badge {
+  position: static !important;
+  display: inline-flex !important;
+  align-items: center;
+  width: fit-content;
+  margin: 8px 0 6px;
+}
+.product-info > .stock-badge.stock-low {
+  color: #b7791f;
+}

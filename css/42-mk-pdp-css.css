@@ -1,0 +1,24 @@
+.mk-thumbs{display:flex;gap:6px;padding:8px 10px;overflow-x:auto;direction:rtl;scrollbar-width:none}
+.mk-thumbs::-webkit-scrollbar{display:none}
+.mk-thumbs button{flex:0 0 52px;height:52px;border:2px solid transparent;border-radius:8px;padding:0;background:#f4f0ea;cursor:pointer;overflow:hidden}
+.mk-thumbs button.on{border-color:#c9972b}
+.mk-thumbs img{width:100%;height:100%;object-fit:cover}
+.mk-wish{position:absolute;top:10px;inset-inline-start:96px;width:38px;height:38px;border-radius:50%;border:0;background:rgba(255,255,255,.92);box-shadow:0 2px 8px rgba(0,0,0,.18);cursor:pointer;z-index:3;font-size:18px;line-height:1}
+.mk-wish.on{color:#d32f2f}
+.mk-zoomhint{position:absolute;bottom:10px;inset-inline-end:10px;background:rgba(0,0,0,.55);color:#fff;border-radius:14px;padding:3px 9px;font-size:11px;pointer-events:none}
+#detailImage{cursor:zoom-in}
+.mk-lb{position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;touch-action:none;overflow:hidden}
+.mk-lb img{max-width:100%;max-height:100%;transform-origin:center;user-select:none;-webkit-user-drag:none;will-change:transform}
+.mk-lb button{position:absolute;border:0;background:rgba(255,255,255,.18);color:#fff;width:42px;height:42px;border-radius:50%;font-size:20px;cursor:pointer}
+.mk-lb .c{top:14px;inset-inline-start:14px}.mk-lb .pv{top:50%;right:12px}.mk-lb .nx{top:50%;left:12px}
+.mk-bundle{margin:14px 0;border:1px solid #eadfcb;border-radius:14px;padding:12px;background:#fffaf2}
+.mk-bundle h4{margin:0 0 8px;font-size:14px}
+.mk-bi{display:flex;gap:10px;align-items:center;padding:6px 0;font-size:13px}
+.mk-bi img{width:46px;height:46px;border-radius:8px;object-fit:cover;background:#f4f0ea}
+.mk-bi label{flex:1;display:flex;gap:8px;align-items:center;cursor:pointer}
+.mk-bi b{color:#8a5a1f;white-space:nowrap}
+.mk-bsum{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-weight:800}
+.mk-bbtn{border:0;border-radius:10px;background:linear-gradient(135deg,#8a5a1f,#c9972b);color:#fff;font-weight:800;padding:10px 14px;cursor:pointer}
+.mk-rv{margin:14px 0}.mk-rv h4{margin:0 0 8px;font-size:14px}
+.mk-rv .row{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px}
+#detailRating{cursor:pointer}

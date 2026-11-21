@@ -1,0 +1,10 @@
+/* شريط المقارنة فوق الأزرار العائمة (واتساب + للأعلى) كي يظهر العدّاد والأزرار كاملة */
+body .compare-floating{bottom:calc(160px + env(safe-area-inset-bottom,0px))!important;z-index:1000!important;max-width:calc(100% - 20px)}
+body.mk-dock-on .compare-floating{bottom:calc(var(--nav-h,72px) + 170px + env(safe-area-inset-bottom,0px))!important}
+body .compare-floating .count{min-width:26px;height:26px;font-size:12.5px}
+/* زر رجوع في إتمام الطلب: سهم فقط، مربع ثابت */
+body .ck-back{flex:0 0 54px!important;width:54px!important;min-width:54px!important;height:54px!important;min-height:54px!important;padding:0!important;
+  display:inline-flex!important;align-items:center;justify-content:center;font-size:18px;line-height:1}
+body .ck-back i{margin:0!important;font-size:18px}
+body .ck-foot{align-items:center}
+body .ck-foot .ck-next{min-width:0}

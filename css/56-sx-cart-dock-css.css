@@ -1,0 +1,14 @@
+/* السلة (هاتف/تابلت): أثناء التصفح أزرار عائمة، وبعد نهاية المنتجات تتحول لأزرار ثابتة فوق بعضها (واتساب ثم إتمام الطلب) */
+@media(max-width:899px){
+  .mk-sumcta .mk-btn[data-sum-co],
+  .mk-sumcta .mk-btn.wa{display:none!important}           /* منع تكرار الأزرار داخل الملخص */
+  .cx-wrap>.cx-bar{flex-wrap:wrap}
+  .cx-bar .sx-wa{order:-1;flex:1 0 100%;min-height:50px;border:0;border-radius:16px;background:#1fa855;color:#fff;font:900 15px Cairo,sans-serif;
+    display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-shadow:0 6px 16px rgba(31,168,85,.3)}
+  .cx-bar .sx-wa:active{transform:scale(.97)}
+  /* الأزرار العائمة (واتساب + للأعلى) تطلع فوق الشريط العائم عند ظهوره */
+  body.mk-dock-on .mk-wa,
+  body.mk-dock-on #backToTop{bottom:calc(var(--nav-h,72px) + 92px + env(safe-area-inset-bottom,0px))!important}
+  body.mk-dock-on #cartPage{padding-bottom:110px}
+}
+@media(min-width:900px){.cx-bar .sx-wa{display:none!important}}

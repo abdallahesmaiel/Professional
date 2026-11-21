@@ -1,0 +1,92 @@
+/* ===== Luxury Final Layer: Gold & Pearl + Glassmorphism ===== */
+:root{
+  --lux-gold:#C9A96E;--lux-gold-2:#E7CF98;--lux-gold-3:#A6864B;
+  --lux-ink:#1A0F07;--lux-pearl:#FBF7F1;--lux-glass:rgba(255,255,255,.72);
+  --lux-line:rgba(201,169,110,.28);
+  --lux-shadow:0 10px 30px rgba(26,15,7,.10);--lux-shadow-hi:0 22px 50px rgba(166,134,75,.28);
+  --lux-ease:cubic-bezier(.22,.8,.24,1);
+}
+html{-webkit-tap-highlight-color:transparent}
+body{
+  background:
+   radial-gradient(900px 480px at 85% -8%,rgba(231,207,152,.38),transparent 60%),
+   radial-gradient(700px 420px at 5% 12%,rgba(201,169,110,.18),transparent 60%),
+   linear-gradient(180deg,#FFFCF7 0%,#F8F1E7 45%,#F2E8DA 100%)!important;
+  background-attachment:fixed!important;
+}
+/* Top bar glass */
+.top-bar{
+  background:linear-gradient(135deg,rgba(26,15,7,.92),rgba(58,34,18,.88))!important;
+  backdrop-filter:saturate(160%) blur(18px)!important;-webkit-backdrop-filter:saturate(160%) blur(18px)!important;
+  border-bottom:1px solid rgba(231,207,152,.35)!important;
+  box-shadow:0 8px 28px rgba(26,15,7,.28)!important;
+}
+.top-bar .brand-name .main,.top-bar .brand-name .sub,.top-bar .brand-name .sub-en,.top-bar .top-action-btn,.top-bar .hamburger-btn,.top-bar .cart-label{color:var(--lux-gold-2)!important}
+.top-bar .brand-name .main{background:linear-gradient(90deg,#F4E3B6,#C9A96E,#F4E3B6);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:luxShine 6s linear infinite}
+@keyframes luxShine{to{background-position:200% center}}
+.top-bar .top-action-btn,.top-bar .hamburger-btn,.top-bar .cart-widget-top{
+  background:rgba(255,255,255,.08)!important;border:1px solid rgba(231,207,152,.3)!important;border-radius:14px!important;
+  transition:transform .25s var(--lux-ease),background .25s,box-shadow .25s}
+.top-bar .top-action-btn:hover,.top-bar .hamburger-btn:hover,.top-bar .cart-widget-top:hover{background:rgba(231,207,152,.2)!important;transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,.3)}
+.top-bar .cart-widget-top{color:var(--lux-gold-2)!important}
+.top-bar .cart-widget-top.lux-bump{animation:luxBump .5s var(--lux-ease)}
+@keyframes luxBump{30%{transform:scale(1.18) rotate(-4deg)}60%{transform:scale(.95)}100%{transform:none}}
+/* Buttons */
+.add-btn,.btn-primary,#mkDockBtn{
+  background:linear-gradient(135deg,#2A180C 0%,#5A3620 55%,#8B5E3C 100%)!important;color:var(--lux-gold-2)!important;
+  border:1px solid rgba(231,207,152,.4)!important;border-radius:14px!important;font-weight:800!important;position:relative;overflow:hidden;
+  transition:transform .25s var(--lux-ease),box-shadow .3s!important}
+.add-btn:hover:not(:disabled),.btn-primary:hover{transform:translateY(-3px)!important;box-shadow:0 12px 24px rgba(74,44,23,.38),0 0 0 2px rgba(231,207,152,.35)!important}
+.add-btn:active,.btn-primary:active{transform:scale(.95)!important}
+.add-btn.added{background:linear-gradient(135deg,#047857,#10b981)!important;color:#fff!important}
+.add-btn:disabled{background:#cfc7bd!important;color:#fff!important}
+.btn,.btn-outline{border-radius:14px!important;transition:transform .25s var(--lux-ease),box-shadow .25s!important}
+.btn-outline:hover{transform:translateY(-2px);box-shadow:var(--lux-shadow)}
+/* Ripple */
+.lux-ripple{position:absolute;border-radius:50%;background:rgba(231,207,152,.55);transform:scale(0);animation:luxRip .6s ease-out;pointer-events:none}
+@keyframes luxRip{to{transform:scale(4);opacity:0}}
+/* Chips & search */
+.category-chip{border-radius:999px!important;background:var(--lux-glass)!important;border:1px solid var(--lux-line)!important;backdrop-filter:blur(8px);transition:transform .25s var(--lux-ease),box-shadow .25s!important}
+.category-chip:hover{transform:translateY(-2px);box-shadow:var(--lux-shadow)}
+.category-chip.active{background:linear-gradient(135deg,#2A180C,#6B3A2A)!important;color:var(--lux-gold-2)!important;border-color:var(--lux-gold)!important;box-shadow:0 8px 20px rgba(74,44,23,.35)!important}
+.search-wrapper{background:var(--lux-glass)!important;backdrop-filter:blur(14px);border:1.5px solid var(--lux-line)!important;border-radius:999px!important;box-shadow:var(--lux-shadow)!important;transition:box-shadow .3s,border-color .3s,transform .3s!important}
+.search-wrapper:focus-within{border-color:var(--lux-gold)!important;box-shadow:0 0 0 4px rgba(201,169,110,.25),var(--lux-shadow-hi)!important;transform:translateY(-1px)}
+/* Modals / checkout / returns / reviews */
+.modal-overlay{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);background:rgba(26,15,7,.55)!important}
+.modal-card{background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(251,247,241,.97))!important;border:1px solid var(--lux-line);border-radius:28px!important;box-shadow:0 30px 80px rgba(26,15,7,.4)!important;animation:luxModal .45s var(--lux-ease)}
+@keyframes luxModal{from{opacity:0;transform:translateY(30px) scale(.96)}to{opacity:1;transform:none}}
+.modal-card h3{background:linear-gradient(90deg,#6B3A2A,#C9A96E,#6B3A2A);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.payment-method-option,.pm-opt,.cart-item,.return-card,.return-head,.breakdown-row{transition:transform .25s var(--lux-ease),box-shadow .25s,border-color .25s}
+.payment-method-option{border-radius:16px!important;border:1.5px solid var(--lux-line)!important;background:var(--lux-glass)!important}
+.payment-method-option:hover{transform:translateY(-2px);box-shadow:var(--lux-shadow);border-color:var(--lux-gold)!important}
+.payment-method-option.selected,.payment-method-option.active,.payment-method-option:has(input:checked){border-color:var(--lux-gold)!important;box-shadow:0 0 0 3px rgba(201,169,110,.28),var(--lux-shadow)!important;background:linear-gradient(135deg,#FFF9EC,#FFF)!important}
+.cart-item{background:var(--lux-glass)!important;backdrop-filter:blur(10px);border:1px solid var(--lux-line)!important;border-radius:20px!important}
+.cart-item:hover{transform:translateX(-3px);box-shadow:var(--lux-shadow)}
+input:not([type=checkbox]):not([type=radio]),select,textarea{border-radius:14px!important;transition:box-shadow .25s,border-color .25s!important}
+input:focus,select:focus,textarea:focus{border-color:var(--lux-gold)!important;box-shadow:0 0 0 4px rgba(201,169,110,.22)!important;outline:none!important}
+/* Bottom nav glass */
+.bottom-nav{background:rgba(255,252,247,.78)!important;backdrop-filter:saturate(170%) blur(20px)!important;-webkit-backdrop-filter:saturate(170%) blur(20px)!important;border-top:1px solid var(--lux-line)!important;box-shadow:0 -10px 30px rgba(26,15,7,.12)!important;border-radius:22px 22px 0 0}
+.nav-item{transition:transform .25s var(--lux-ease),color .25s!important}
+.nav-item:active{transform:scale(.88)}
+.nav-item.active{color:var(--lux-gold-3)!important}
+.nav-item.active i,.nav-item.active svg{transform:translateY(-3px) scale(1.12);filter:drop-shadow(0 4px 6px rgba(201,169,110,.55))}
+#mkCheckoutDock .mk-dock-in{background:var(--lux-glass)!important;backdrop-filter:blur(18px);border-radius:22px!important}
+/* Side menu */
+.side-menu{background:linear-gradient(180deg,#1A0F07,#3A2212)!important;border-inline-start:1px solid rgba(231,207,152,.3)}
+.side-menu .menu-item{color:#F2E4C4!important;border-radius:14px;transition:transform .25s var(--lux-ease),background .25s}
+.side-menu .menu-item:hover,.side-menu .menu-item.active{background:rgba(231,207,152,.16)!important;transform:translateX(-4px)}
+.side-menu .menu-brand{color:var(--lux-gold-2)!important}
+/* Scroll reveal */
+.lux-reveal{opacity:0;transform:translateY(22px);transition:opacity .7s var(--lux-ease),transform .7s var(--lux-ease)}
+.lux-reveal.in{opacity:1;transform:none}
+/* Mobile */
+@media(max-width:680px){
+  .top-bar{height:60px}
+  .product-card{border-radius:18px!important}
+  .product-card:hover{transform:none!important}
+  .add-btn,.btn,.btn-primary,.nav-item,.category-chip,.top-action-btn{min-height:44px}
+  .modal-card{border-radius:28px 28px 0 0!important}
+  input,select,textarea{font-size:16px!important}
+}
+@media(hover:none){.product-card::after{display:none}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.lux-reveal{opacity:1;transform:none}}

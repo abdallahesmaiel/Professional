@@ -1,0 +1,27 @@
+/* ===== تجاوب كامل: هواتف صغيرة ← تابلت ← لابتوب ← شاشات كبيرة ===== */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{max-width:100%;overflow-x:clip} /* clip لا ينشئ منطقة تمرير فلا يعطّل السحب للتحديث */
+img,video,iframe,canvas{max-width:100%}
+.menu-item,.nav-item{min-height:44px}
+@media(max-width:340px){
+  .main-content{padding:10px 8px}
+  .product-name{font-size:11.5px}
+  .products-grid{gap:6px}
+  .section-title{font-size:18px}
+}
+@media(min-width:601px) and (max-width:1023px){
+  .main-content{padding-inline:20px}
+}
+@media(min-width:1280px){
+  .main-content{max-width:1380px;margin-inline:auto}
+  .products-grid{grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:24px}
+}
+@media(min-width:1700px){
+  .main-content{max-width:1620px}
+  .products-grid{grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:28px}
+}
+@media(min-width:2200px){
+  html{font-size:112%}
+  .main-content{max-width:1900px}
+}
+@media(hover:none){.product-card:hover{transform:none}}

@@ -1,0 +1,3 @@
+/* قسم واحد من كل نوع: الأقسام = دوائر على الموبايل / شريط الهيدر على الكمبيوتر */
+@media(min-width:900px){.mk-tiles-sec{display:none}}
+@media(max-width:899px){.mk-cats button:not(.mk-all):not(.mk-hot){display:none}.mk-cats{padding-bottom:6px!important}}

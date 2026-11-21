@@ -1,0 +1,49 @@
+/* ===== SmartStore polish: ألوان وتنسيق موحّد لكل الصفحات ===== */
+:root{--sx-grad:linear-gradient(135deg,#C9A96E 0%,#A6864B 100%);--sx-dark:linear-gradient(135deg,#2a1810 0%,#4A2C17 100%);--sx-ring:0 0 0 4px rgba(201,169,110,.25)}
+body{background:radial-gradient(1200px 500px at 50% -120px,rgba(201,169,110,.14),transparent 70%),var(--bg,#FDF8F3)}
+/* عناوين الأقسام: خط ذهبي مميز */
+.section-title,.promo-carousel-title,.sim-title{position:relative;letter-spacing:.2px}
+.section-title::after{content:"";display:block;width:46px;height:4px;border-radius:4px;margin-top:8px;background:var(--sx-grad)}
+/* الأزرار الرئيسية */
+.btn-primary,.btn-gold,.hero-btn,.filter-apply-btn,.load-more-btn,.add-btn{background:var(--sx-grad)!important;color:#fff!important;border:0!important;
+  box-shadow:0 6px 16px rgba(166,134,75,.32);transition:transform .2s,box-shadow .2s,filter .2s}
+.btn-primary:hover,.btn-gold:hover,.hero-btn:hover,.filter-apply-btn:hover,.load-more-btn:hover,.add-btn:hover{filter:brightness(1.06);box-shadow:0 10px 22px rgba(166,134,75,.42)}
+.btn-outline,.filter-reset-btn,.discovery-btn{border-color:var(--accent,#C9A96E)!important;transition:background .2s,color .2s,transform .2s}
+.btn-outline:hover,.discovery-btn:hover{background:var(--milk,#F5EDE4)}
+.btn-danger{box-shadow:0 6px 16px rgba(220,38,38,.25)}
+/* بطاقات المنتجات */
+.product-card{border:1px solid rgba(201,169,110,.22);border-radius:var(--radius-lg,24px);background:#fff;overflow:hidden}
+.product-card .discounted-price,.product-card .price{color:var(--primary,#4A2C17);font-weight:900}
+.product-card .original-price{color:var(--gray-400,#9ca3af)}
+.discount-badge{background:linear-gradient(135deg,#e11d48,#be123c)!important;color:#fff!important;box-shadow:0 4px 10px rgba(225,29,72,.35);border-radius:999px}
+.category-badge{background:var(--gold-light,#FDF0D5)!important;color:var(--accent-dark,#A6864B)!important;border-radius:999px}
+.stock-badge{border-radius:999px;font-weight:800}
+.wishlist-btn,.wl-btn,.compare-btn-mini{transition:transform .2s,background .2s}
+.wishlist-btn:hover,.wl-btn:hover{transform:scale(1.12)}
+/* الهيرو والبانر */
+.hero-banner{border-radius:var(--radius-xl,32px);box-shadow:0 18px 40px rgba(26,15,7,.22);overflow:hidden}
+.hero-badge{background:var(--sx-grad)!important;color:#fff!important;box-shadow:0 4px 12px rgba(166,134,75,.4)}
+.promo-carousel-item{border-radius:var(--radius-lg,24px);box-shadow:0 8px 22px rgba(26,15,7,.14)}
+/* القائمة الجانبية والتنقل */
+.side-menu{background:linear-gradient(180deg,#fff 0%,var(--milk,#F5EDE4) 100%)}
+.menu-item{border-radius:14px;transition:background .2s,transform .2s,padding .2s}
+.menu-item:hover{background:rgba(201,169,110,.16);transform:translateX(-4px)}
+.menu-brand{background:var(--sx-dark)}
+.nav-item{transition:color .2s,transform .2s}
+.nav-item.active{color:var(--accent-dark,#A6864B)}
+.nav-item.active i{transform:translateY(-2px) scale(1.12)}
+.cart-count-badge-top,.badge{background:linear-gradient(135deg,#e11d48,#be123c);color:#fff;box-shadow:0 2px 8px rgba(225,29,72,.4)}
+/* النوافذ المنبثقة والحقول */
+.modal-card,.mk-modal{border-radius:var(--radius-xl,32px)!important;box-shadow:0 30px 70px rgba(26,15,7,.35)}
+.modal-overlay{-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+input:not([type=checkbox]):not([type=radio]),select,textarea{transition:border-color .2s,box-shadow .2s}
+input:not([type=checkbox]):not([type=radio]):focus,select:focus,textarea:focus{border-color:var(--accent,#C9A96E)!important;box-shadow:var(--sx-ring)!important;outline:none}
+/* السلة والدفع والصفحات الثابتة */
+#cartPage .btn-primary,#cartPage .cx-go{border-radius:16px}
+.return-request-card{border-radius:20px;border:1px solid rgba(201,169,110,.25);box-shadow:0 8px 22px rgba(26,15,7,.08)}
+.return-success-badge{background:var(--success-light,#d1fae5);color:var(--success,#059669);border-radius:999px}
+#aboutPage,#contactPage,#returnsPage,#dealsPage,#wishlistPage,#searchPage,#cartPage{animation:sxFade .35s ease both}
+@keyframes sxFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+::selection{background:rgba(201,169,110,.35)}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:linear-gradient(var(--accent,#C9A96E),var(--accent-dark,#A6864B));border-radius:10px}
+::-webkit-scrollbar-track{background:rgba(201,169,110,.1)}

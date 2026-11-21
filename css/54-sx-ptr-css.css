@@ -1,0 +1,5 @@
+html,body{overscroll-behavior-y:auto!important}
+#sxPtr{position:fixed;top:0;left:50%;transform:translate(-50%,-70px);width:44px;height:44px;border-radius:50%;background:#fff;color:var(--accent-dark,#A6864B);
+  display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 8px 22px rgba(26,15,7,.28);z-index:100001;pointer-events:none;opacity:0;margin-top:env(safe-area-inset-top,0px)}
+#sxPtr.spin i{animation:sxSpin .7s linear infinite}
+@keyframes sxSpin{to{transform:rotate(360deg)}}
