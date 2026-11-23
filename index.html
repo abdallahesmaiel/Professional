@@ -4312,6 +4312,39 @@ html body #paymentMethodsGrid .pm-radio{position:absolute!important;top:8px;inse
 html body #paymentMethodsGrid .payment-method-option.selected{border-color:#C9A96E!important;background:linear-gradient(135deg,#FFFBEF,#fff)!important;box-shadow:0 0 0 3px rgba(201,169,110,.35)!important}
 html body #paymentMethodsGrid .payment-method-option.selected .pm-radio{background:#C9A96E;border-color:#C9A96E;box-shadow:inset 0 0 0 3px #fff}
 @media(max-width:340px){html body #paymentMethodsGrid{gap:8px!important}html body #paymentMethodsGrid .payment-method-option{padding:12px 5px 10px!important}html body #paymentMethodsGrid .method-name{font-size:12px}html body .cx-card{grid-template-columns:64px minmax(0,1fr)!important}html body .cx-card .cx-img{width:64px!important;height:64px!important}}
+
+/* ==== souq-final-3: البار العلوي + كروت المنتجات ==== */
+/* اسم المتجر يظهر كاملاً: يلتف على سطرين بدل الاختصار بنقاط */
+html body .top-bar .top-left{flex:1 1 0!important;min-width:0!important;gap:8px!important}
+html body .top-bar .brand-name{display:flex!important;flex:1 1 auto;min-width:0;max-width:none!important;overflow:visible!important}
+html body .top-bar .brand-name .main{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;line-height:1.25!important;font-size:clamp(13px,4.4vw,17px)!important;overflow-wrap:normal;word-break:keep-all;display:block}
+html body .top-bar .brand-name .sub,html body .top-bar .brand-name .sub-en{display:none!important}
+@media(max-width:340px){
+ html body .top-bar .brand-name{display:flex!important}
+ html body .top-bar .brand-name .main{font-size:12.5px!important}
+ html body .top-bar .top-container{gap:5px!important;padding-inline:8px!important}
+ html body .top-bar .cart-widget-top .cart-label{display:none!important}
+}
+@media(max-width:290px){
+ html body .top-bar .brand-name .main{font-size:11.5px!important}
+ html body .top-bar .logo-img{width:30px!important;height:30px!important}
+}
+/* عرض القائمة: صورة بحجم مناسب ثابتة في الأعلى، والاسم بمحاذاة الصورة */
+html body.rx-list .products-grid{min-height:0!important;align-content:start!important;grid-auto-rows:auto!important}
+html body.rx-list .products-grid .product-card{display:flex!important;flex-direction:row!important;align-items:flex-start!important;gap:12px!important;min-height:0!important;padding:12px!important}
+html body.rx-list .products-grid .product-img-wrap{flex:0 0 112px!important;width:112px!important;max-width:112px!important;min-height:0!important;height:auto!important;aspect-ratio:1/1!important;align-self:flex-start!important;padding:6px!important;margin:0!important}
+html body.rx-list .products-grid .product-img-wrap img{width:100%!important;height:100%!important;object-fit:contain!important}
+html body.rx-list .products-grid .product-info{flex:1 1 0!important;min-width:0!important;display:flex!important;flex-direction:column!important;justify-content:flex-start!important;gap:4px!important;padding:2px 0 0!important;align-self:stretch}
+html body.rx-list .products-grid .product-name{margin:0!important;padding:0 0 0 38px!important;min-height:0!important;height:auto!important;font-size:14.5px!important;line-height:1.45!important;-webkit-line-clamp:2}
+html body.rx-list .products-grid .product-meta{margin:0!important;padding:0!important;min-height:0!important}
+html body.rx-list .products-grid .product-desc{margin:0!important;min-height:0!important}
+html body.rx-list .products-grid .product-desc:empty{display:none!important}
+html body.rx-list .products-grid .stock-badge{margin:0!important;align-self:flex-start}
+html body.rx-list .products-grid .price-row{margin:2px 0 0!important;padding:0!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:8px!important}
+html body.rx-list .products-grid .price-row .add-btn{width:100%!important}
+html body.rx-list .products-grid .wishlist-btn{top:4px!important;left:8px!important;right:auto!important}
+@media(max-width:360px){html body.rx-list .products-grid .product-img-wrap{flex-basis:92px!important;width:92px!important;max-width:92px!important}html body.rx-list .products-grid .product-name{font-size:13.5px!important}}
+@media(max-width:300px){html body.rx-list .products-grid .product-card{flex-direction:column!important;align-items:stretch!important}html body.rx-list .products-grid .product-img-wrap{flex:none!important;width:100%!important;max-width:100%!important}html body.rx-list .products-grid .product-name{padding:0!important}}
 </style>
 
 <script>setTimeout(function(){document.documentElement.classList.add("mk-built")},1200)</script>
