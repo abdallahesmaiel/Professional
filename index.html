@@ -3323,8 +3323,7 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline-offset:0
 .close-menu,.notification-close,.mk-lnk{min-width:28px;min-height:28px}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 /* ==== mk-dark-css ==== */
-html[data-theme=dark]{background:#fff;filter:invert(.93) hue-rotate(180deg)}
-html[data-theme=dark] img,html[data-theme=dark] video,html[data-theme=dark] canvas,html[data-theme=dark] iframe,html[data-theme=dark] .mk-wa,html[data-theme=dark] .promo-slide,html[data-theme=dark] [style*="background-image"]{filter:invert(1) hue-rotate(180deg)}
+/* الوضع الداكن القديم (انعكاس الألوان) اتشال — الوضع الداكن الحقيقي هو sx-dark في طبقة التحسين */
 .menu-theme{display:flex;align-items:center;gap:10px}
 .mk-wa{position:fixed;bottom:calc(84px + env(safe-area-inset-bottom));inset-inline-start:14px;z-index:900;width:52px;height:52px;border-radius:50%;background:#25d366;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.3);text-decoration:none;font-size:26px}
 @media (min-width:900px){.mk-wa{bottom:24px}}
@@ -4267,7 +4266,6 @@ html body .product-card .product-name,html body .product-name{
   height:auto!important;min-height:3em;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
   text-shadow:none!important;opacity:1!important}
-html[data-theme=dark] body .product-name,html[data-theme=dark] .product-name{color:#F8EBCB!important}
 @media(max-width:680px){html body .product-card .product-name,html body .product-name{font-size:14px!important;font-weight:800!important}}
 @media(max-width:390px){html body .product-card .product-name,html body .product-name{font-size:13px!important;font-weight:800!important;min-height:2.9em}}
 @media(max-width:340px){html body .product-card .product-name,html body .product-name{font-size:12.5px!important}}
@@ -4366,11 +4364,16 @@ html body.rx-list .products-grid .wishlist-btn{top:4px!important;left:8px!import
 <meta name="professional-store-build" content="v5-marketplace-upgrade">
 <meta name="description" content="سوق بروفيشنال (Professional Souq) — متجر إلكتروني يجمع البقالة ومنتجات التجميل والعناية الطبيعية والأجهزة الكهربائية والملابس في مكان واحد، مع عروض وتوصيل سريع.">
 <meta name="keywords" content="سوق بروفيشنال, Professional Souq, بروفيشنال سوق, متجر إلكتروني, بقالة, منتجات تجميل, عناية طبيعية, أجهزة كهربائية, ملابس, عروض, مصر">
-<meta name="robots" content="index,follow">
 <meta property="og:type" content="website">
 <meta property="og:title" content="سوق بروفيشنال | Professional Souq">
 <meta property="og:description" content="تسوق البقالة والتجميل والعناية الطبيعية والأجهزة الكهربائية والملابس في مكان واحد بأسعار مناسبة وتوصيل سريع.">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="سوق بروفيشنال | Professional Souq">
+<meta name="twitter:description" content="تسوق البقالة والتجميل والعناية الطبيعية والأجهزة الكهربائية والملابس في مكان واحد بأسعار مناسبة وتوصيل سريع.">
+<meta property="og:locale" content="ar_EG">
+<meta property="og:site_name" content="سوق بروفيشنال">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<!-- SEO-TODO: بعد ربط دومين المتجر، ضع هنا: <link rel="canonical" href="https://YOUR-DOMAIN/"> (السكربت يضيفه تلقائياً من عنوان الصفحة الحالي) -->
 <title>سوق بروفيشنال | Professional Souq — بقالة وتجميل وأجهزة وملابس</title>
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4449572474961813" crossorigin="anonymous"></script>
 <link rel="manifest" href="./manifest.json">
@@ -14375,19 +14378,20 @@ patch();
 (function(){
 'use strict';
 var KEY='mk_theme';
-var stored=function(){try{return localStorage.getItem(KEY)}catch(e){return null}};
+var stored=function(){try{return localStorage.getItem(KEY)||localStorage.getItem('sx_theme')}catch(e){return null}};
 function apply(t){
-  document.documentElement.setAttribute('data-theme',t);
+  document.documentElement.classList.toggle('sx-dark',t==='dark');
+  document.documentElement.removeAttribute('data-theme');
   var m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='dark'?'#14100c':'#1A0F07';
-  var b=document.getElementById('mkThemeBtn');if(b){b.querySelector('span').textContent=t==='dark'?'الوضع الفاتح':'الوضع الداكن (تجريبي)';b.querySelector('i').className='fa-solid '+(t==='dark'?'fa-sun':'fa-moon');b.setAttribute('aria-pressed',t==='dark')}
+  var b=document.getElementById('mkThemeBtn');if(b){b.querySelector('span').textContent=t==='dark'?'الوضع الفاتح':'الوضع الداكن';b.querySelector('i').className='fa-solid '+(t==='dark'?'fa-sun':'fa-moon');b.setAttribute('aria-pressed',t==='dark')}
 }
-var init=stored()||'light';
+var init=stored()||((window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light');
 apply(init);
 var menu=document.getElementById('sideMenu');
 if(menu&&!document.getElementById('mkThemeBtn')){
-  var b=document.createElement('button');b.type='button';b.id='mkThemeBtn';b.className='menu-item menu-theme';b.innerHTML='<i class="fa-solid fa-moon"></i><span>الوضع الداكن (تجريبي)</span>';
+  var b=document.createElement('button');b.type='button';b.id='mkThemeBtn';b.className='menu-item menu-theme';b.innerHTML='<i class="fa-solid fa-moon"></i><span>الوضع الداكن</span>';
   var div=menu.querySelector('.menu-divider');menu.insertBefore(b,div||null);
-  b.onclick=function(){var t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';try{localStorage.setItem(KEY,t)}catch(e){}apply(t)};
+  b.onclick=function(){var t=document.documentElement.classList.contains('sx-dark')?'light':'dark';try{localStorage.setItem(KEY,t)}catch(e){}apply(t)};
   apply(init);
 }
 /* واتساب: يظهر فقط لو رقم المتجر محدد في الإعدادات */
@@ -14536,7 +14540,7 @@ setInterval(function(){
   last=v;
 },700);
 /* Always-visible zoom-friendly header colour */
-var m=document.querySelector('meta[name=theme-color]');if(m&&document.documentElement.getAttribute('data-theme')!=='dark')m.content='#1A0F07';
+var m=document.querySelector('meta[name=theme-color]');if(m&&!document.documentElement.classList.contains('sx-dark'))m.content='#1A0F07';
 })();
 </script>
 
@@ -14808,5 +14812,906 @@ g.addEventListener('click',function(e){var o=e.target.closest('.payment-method-o
 g.addEventListener('keydown',function(e){var k=e.key;if(k!=='ArrowRight'&&k!=='ArrowLeft'&&k!=='ArrowDown'&&k!=='ArrowUp')return;var all=[].slice.call(g.querySelectorAll('.payment-method-option'));var i=all.indexOf(document.activeElement);if(i<0)return;e.preventDefault();var d=(k==='ArrowLeft'||k==='ArrowDown')?1:-1;var n=all[(i+d+all.length)%all.length];n.focus();n.click();});
 new MutationObserver(sync).observe(g,{attributes:true,subtree:true,attributeFilter:['class']});sync();
 }catch(e){}})();</script>
+
+<style id="sx2026-enhance-css">
+/* ============================================================
+   SX 2026 Enhancement Layer — تحسينات التصميم والميزات الجديدة
+   Appended layer: overrides only, original styles untouched.
+   ============================================================ */
+
+/* ---------- 1) خلفية أدفأ وأنعم ---------- */
+body {
+  background:
+    radial-gradient(1200px 500px at 85% -5%, rgba(201,169,110,.14), transparent 60%),
+    radial-gradient(900px 420px at 8% 12%, rgba(139,94,60,.10), transparent 55%),
+    linear-gradient(180deg, #FDF9F4 0%, #F6EEE3 35%, #EFE3D3 65%, #F6EEE3 100%) !important;
+  background-attachment: fixed !important;
+}
+
+/* ---------- 2) الهيدر: عمق ولمعان ---------- */
+.top-bar {
+  box-shadow: 0 6px 24px rgba(26,15,7,.28), inset 0 -1px 0 rgba(201,169,110,.18) !important;
+  backdrop-filter: blur(10px);
+}
+body.sx-scrolled .top-bar { box-shadow: 0 10px 30px rgba(26,15,7,.4) !important; }
+.brand-name .main { letter-spacing: .2px; text-shadow: 0 2px 10px rgba(0,0,0,.25); }
+
+/* ---------- 3) الهيرو: فخامة حقيقية ---------- */
+.hero-banner {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(700px 340px at 12% 0%, rgba(201,169,110,.30), transparent 60%),
+    radial-gradient(600px 300px at 95% 110%, rgba(224,199,138,.18), transparent 55%),
+    linear-gradient(135deg, #2A1608 0%, #4A2C17 55%, #31200F 100%) !important;
+  border: 1px solid rgba(201,169,110,.35) !important;
+  box-shadow: 0 24px 60px rgba(26,15,7,.35), inset 0 1px 0 rgba(255,255,255,.06) !important;
+}
+.hero-banner::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: radial-gradient(rgba(201,169,110,.28) 1px, transparent 1.6px);
+  background-size: 26px 26px;
+  opacity: .25; pointer-events: none;
+}
+.hero-banner::after {
+  content: '';
+  position: absolute; inset-inline-start: -80px; top: -80px;
+  width: 260px; height: 260px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(224,199,138,.35), transparent 70%);
+  filter: blur(10px); pointer-events: none;
+}
+.hero-badge {
+  background: rgba(201,169,110,.16) !important;
+  border: 1px solid rgba(201,169,110,.45) !important;
+  color: var(--accent-light) !important;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 14px rgba(0,0,0,.2);
+}
+.hero-title { text-shadow: 0 3px 18px rgba(0,0,0,.35); }
+.hero-title .highlight {
+  background: linear-gradient(120deg, #E8CE8F, #C9A96E 60%, #E8CE8F);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.hero-perks li {
+  background: rgba(255,255,255,.07) !important;
+  border: 1px solid rgba(201,169,110,.28) !important;
+  backdrop-filter: blur(6px);
+}
+.hero-btn {
+  background: linear-gradient(135deg, #E8CE8F, #C9A96E 70%) !important;
+  color: #2A1608 !important;
+  box-shadow: 0 10px 26px rgba(201,169,110,.35), inset 0 1px 0 rgba(255,255,255,.5) !important;
+  transition: transform .25s ease, box-shadow .25s ease !important;
+}
+.hero-btn:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 16px 34px rgba(201,169,110,.45) !important; }
+.hero-image {
+  animation: sxFloat 5s ease-in-out infinite;
+  text-shadow: 0 0 40px rgba(224,199,138,.6);
+}
+@keyframes sxFloat { 0%,100%{ transform: translateY(0) rotate(0deg);} 50%{ transform: translateY(-12px) rotate(8deg);} }
+
+/* ---------- 4) عناوين الأقسام بخط ذهبي ---------- */
+.section-title, .promo-carousel-title, .cart-section-title {
+  position: relative;
+}
+.section-title::after, .cart-section-title::after {
+  content: '';
+  display: block;
+  width: 64px; height: 4px;
+  margin-top: 8px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+}
+
+/* ---------- 5) بطاقات المنتجات: بلا فراغات + حركة ---------- */
+.products-grid { align-items: start !important; }
+.product-card {
+  height: auto !important;
+  border: 1px solid rgba(74,44,23,.07) !important;
+  box-shadow: 0 2px 10px rgba(26,15,7,.05) !important;
+  transition: transform .3s cubic-bezier(.2,.7,.3,1), box-shadow .3s ease, border-color .3s ease !important;
+}
+.product-card:hover {
+  transform: translateY(-7px) !important;
+  box-shadow: 0 18px 40px rgba(26,15,7,.16) !important;
+  border-color: rgba(201,169,110,.55) !important;
+}
+.product-img-wrap img, .product-img-wrap .product-img-placeholder {
+  transition: transform .45s cubic-bezier(.2,.7,.3,1) !important;
+}
+.product-card:hover .product-img-wrap img,
+.product-card:hover .product-img-wrap .product-img-placeholder { transform: scale(1.07); }
+.product-img-wrap { background: linear-gradient(180deg,#fff, #FBF6EE) !important; }
+.product-card .add-btn, button.add-btn {
+  background: linear-gradient(135deg, #E0C78A, #C9A96E) !important;
+  color: #2A1608 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 6px 16px rgba(201,169,110,.30) !important;
+  transition: transform .2s ease, box-shadow .2s ease, filter .2s ease !important;
+}
+.product-card .add-btn:hover, button.add-btn:hover { filter: brightness(1.06); transform: translateY(-2px); box-shadow: 0 10px 22px rgba(201,169,110,.4) !important; }
+.product-card .add-btn:active { transform: scale(.97); }
+
+/* ---------- 6) أزرار الاكتشاف والفلاتر ---------- */
+.discovery-btn {
+  border: 1px solid rgba(74,44,23,.14) !important;
+  background: #fff !important;
+  box-shadow: 0 2px 8px rgba(26,15,7,.05) !important;
+  transition: all .25s ease !important;
+}
+.discovery-btn:hover, .discovery-btn.active {
+  background: linear-gradient(135deg, #4A2C17, #6B3A2A) !important;
+  color: #F5EDE4 !important;
+  border-color: transparent !important;
+  box-shadow: 0 8px 20px rgba(74,44,23,.30) !important;
+  transform: translateY(-2px);
+}
+.filter-bar {
+  border: 1px solid rgba(74,44,23,.08) !important;
+  box-shadow: 0 4px 18px rgba(26,15,7,.06) !important;
+}
+.filter-select:focus, .filter-bar input:focus, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid rgba(201,169,110,.65) !important;
+  outline-offset: 1px;
+  border-color: var(--accent) !important;
+}
+.pretty-select-trigger:hover { border-color: var(--accent) !important; }
+
+/* ---------- 7) كاروسيل العروض ---------- */
+.promo-carousel-wrapper > * { transition: transform .35s ease, box-shadow .35s ease; }
+.promo-carousel-wrapper > *:hover { transform: translateY(-5px) scale(1.015); box-shadow: 0 18px 40px rgba(26,15,7,.18); }
+.promo-carousel-btn { box-shadow: 0 6px 18px rgba(26,15,7,.18) !important; }
+
+/* ---------- 8) شريط التنقل السفلي: كبسولة عائمة على الشاشات الكبيرة ---------- */
+@media (min-width: 900px) {
+  .bottom-nav {
+    inset-inline: 0 !important;
+    left: 50% !important; right: auto !important;
+    transform: translateX(-50%);
+    width: min(560px, 92vw) !important;
+    bottom: 16px !important;
+    border-radius: 60px !important;
+    box-shadow: 0 16px 44px rgba(26,15,7,.30), 0 0 0 1px rgba(201,169,110,.25) !important;
+    padding: 6px !important;
+  }
+  .bottom-nav .nav-item { border-radius: 40px; }
+}
+
+/* ---------- 9) سكرول بار أنيق ---------- */
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: #EFE5D8; }
+::-webkit-scrollbar-thumb { background: linear-gradient(180deg,#C9A96E,#8B5E3C); border-radius: 8px; border: 2px solid #EFE5D8; }
+::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg,#E0C78A,#6B3A2A); }
+
+/* ---------- 10) ميزة: شريط تقدم القراءة ---------- */
+#sxProgress {
+  position: fixed; top: 0; inset-inline-start: 0;
+  height: 3.5px; width: 0%;
+  background: linear-gradient(90deg, #8B5E3C, #E0C78A);
+  z-index: 99999; border-radius: 0 4px 4px 0;
+  box-shadow: 0 1px 6px rgba(201,169,110,.5);
+  transition: width .12s linear;
+  pointer-events: none;
+}
+
+/* ---------- 12) ميزة: أنيميشن الظهور عند التمرير ---------- */
+.sx-reveal { opacity: 0; transform: translateY(22px); transition: opacity .55s ease, transform .55s cubic-bezier(.2,.7,.3,1); will-change: opacity, transform; }
+.sx-reveal.sx-in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .sx-reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .hero-image { animation: none !important; }
+}
+
+/* ---------- 13) ميزة: الوضع الليلي ---------- */
+html.sx-dark body {
+  background:
+    radial-gradient(1100px 480px at 85% -5%, rgba(201,169,110,.10), transparent 60%),
+    linear-gradient(180deg, #170F09 0%, #1D130B 40%, #160D07 100%) !important;
+  color: #F0E6D6 !important;
+}
+html.sx-dark .top-bar { background: linear-gradient(135deg, #20130A, #170D06) !important; box-shadow: 0 8px 26px rgba(0,0,0,.55), inset 0 -1px 0 rgba(201,169,110,.22) !important; }
+html.sx-dark .hero-banner { background: linear-gradient(135deg, #1D1108, #33200F 60%, #1A0F07) !important; box-shadow: 0 24px 60px rgba(0,0,0,.6) !important; }
+html.sx-dark .product-card,
+html.sx-dark .filter-bar,
+html.sx-dark .modal-card,
+html.sx-dark .contact-card,
+html.sx-dark .empty-state,
+html.sx-dark [class*="empty"],
+html.sx-dark .pretty-select-menu,
+html.sx-dark .return-request-card,
+html.sx-dark .completed-return-card {
+  background: #241710 !important;
+  border-color: rgba(201,169,110,.16) !important;
+  color: #F0E6D6 !important;
+}
+html.sx-dark .product-card { box-shadow: 0 2px 12px rgba(0,0,0,.4) !important; }
+html.sx-dark .product-card:hover { box-shadow: 0 18px 42px rgba(0,0,0,.6) !important; }
+html.sx-dark .product-img-wrap { background: #fff !important; } /* الصور تفضل بخلفية بيضاء */
+html.sx-dark .product-name, html.sx-dark .product-desc, html.sx-dark .product-info,
+html.sx-dark .section-title, html.sx-dark .cart-section-title,
+html.sx-dark h1, html.sx-dark h2, html.sx-dark h3, html.sx-dark h4,
+html.sx-dark p, html.sx-dark label, html.sx-dark .filter-label { color: #F0E6D6 !important; }
+html.sx-dark .product-meta, html.sx-dark small, html.sx-dark .sub-text { color: #C9B79C !important; }
+html.sx-dark .discovery-btn { background: #241710 !important; color: #EBDFCB !important; border-color: rgba(201,169,110,.25) !important; }
+html.sx-dark .discovery-btn:hover, html.sx-dark .discovery-btn.active { background: linear-gradient(135deg,#6B3A2A,#4A2C17) !important; color: #F5EDE4 !important; }
+html.sx-dark input, html.sx-dark select, html.sx-dark textarea,
+html.sx-dark .filter-select, html.sx-dark .pretty-select-trigger {
+  background: #1B110A !important; color: #F0E6D6 !important;
+  border-color: rgba(201,169,110,.28) !important;
+}
+html.sx-dark input::placeholder, html.sx-dark textarea::placeholder { color: #9B8667 !important; }
+html.sx-dark .bottom-nav { background: rgba(30,19,11,.96) !important; box-shadow: 0 -8px 30px rgba(0,0,0,.5), 0 0 0 1px rgba(201,169,110,.18) !important; }
+html.sx-dark .bottom-nav .nav-item { color: #C9B79C !important; }
+html.sx-dark .bottom-nav .nav-item.active { color: #E8CE8F !important; }
+html.sx-dark .side-menu { background: #1D130B !important; color: #F0E6D6 !important; }
+html.sx-dark .side-menu .menu-item { color: #EBDFCB !important; }
+html.sx-dark ::-webkit-scrollbar-track { background: #170F09; }
+html.sx-dark ::-webkit-scrollbar-thumb { border-color: #170F09; }
+
+/* ---------- 14) إصلاح: زر إعادة الضبط كان النص يتجاوز حدوده ---------- */
+body .filter-bar #resetFilters,
+body .filter-bar #searchPageResetFilters {
+  width: auto !important;
+  min-width: 44px;
+  height: 44px !important;
+  padding: 0 14px !important;
+  border-radius: 12px !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+body .filter-bar #resetFilters::after,
+body .filter-bar #searchPageResetFilters::after { position: static !important; }
+
+/* ---------- 15) الوضع الليلي: البطاقات الأفقية وباقي الأسطح ---------- */
+html.sx-dark .mk-card,
+html.sx-dark .recent-card,
+html.sx-dark .cx-card,
+html.sx-dark .sim-card,
+html.sx-dark .sk-card,
+html.sx-dark .flash-sale-section,
+html.sx-dark .search-suggestions,
+html.sx-dark .search-suggestion-item,
+html.sx-dark .legal-page,
+html.sx-dark .store-bottom-panel,
+html.sx-dark .auth-modal-card,
+html.sx-dark .compare-modal-wrap,
+html.sx-dark .barcode-reader-card,
+html.sx-dark .wallet-info-box,
+html.sx-dark .review-summary,
+html.sx-dark .notification-center,
+html.sx-dark table {
+  background: #241710 !important;
+  border-color: rgba(201,169,110,.16) !important;
+  color: #F0E6D6 !important;
+}
+html.sx-dark .mk-card *, html.sx-dark .recent-card *, html.sx-dark .cx-card *,
+html.sx-dark .sim-card *, html.sx-dark .flash-sale-section * { color: #F0E6D6 !important; }
+html.sx-dark .mk-card img, html.sx-dark .recent-card img, html.sx-dark .cx-card img, html.sx-dark .sim-card img { background: #fff; }
+html.sx-dark .pretty-select-option { color: #F0E6D6 !important; }
+html.sx-dark .pretty-select-option:hover, html.sx-dark .pretty-select-option.active { background: rgba(201,169,110,.14) !important; }
+html.sx-dark .results-count { background: #1B110A !important; color: #E8CE8F !important; border-color: rgba(201,169,110,.4) !important; }
+html.sx-dark .price-range-input, html.sx-dark .filter-apply-btn { color: #2A1608; }
+html.sx-dark td, html.sx-dark th { border-color: rgba(201,169,110,.2) !important; color: #F0E6D6 !important; }
+html.sx-dark th { background: #1B110A !important; }
+
+/* ---------- 16) إصلاح v2: تغطية ألوان الوضع الليلي ---------- */
+html.sx-dark .search-wrapper { background: rgba(27,17,10,.92) !important; border-color: rgba(201,169,110,.3) !important; box-shadow: 0 2px 10px rgba(0,0,0,.4) !important; }
+html.sx-dark .search-wrapper .search-input { color: #F0E6D6 !important; background: transparent !important; }
+html.sx-dark .search-wrapper .search-input::placeholder { color: #9B8667 !important; }
+html.sx-dark body .discovery-btn { background: #241710 !important; color: #EBDFCB !important; border-color: rgba(201,169,110,.25) !important; }
+html.sx-dark body .discovery-btn:hover, html.sx-dark body .discovery-btn.active { background: linear-gradient(135deg,#6B3A2A,#4A2C17) !important; color: #F5EDE4 !important; border-color: transparent !important; }
+html.sx-dark .mk-chips button { background: #241710 !important; color: #EBDFCB !important; border-color: rgba(201,169,110,.3) !important; }
+html.sx-dark .mk-chips button.active, html.sx-dark .mk-chips button:hover { background: linear-gradient(135deg,#6B3A2A,#4A2C17) !important; color: #F5EDE4 !important; border-color: transparent !important; }
+html.sx-dark .fc-open { background: #241710 !important; color: #E8CE8F !important; border-color: rgba(201,169,110,.35) !important; }
+html.sx-dark .fc-open.on { background: linear-gradient(135deg,#6B3A2A,#4A2C17) !important; color: #F5EDE4 !important; border-color: transparent !important; }
+html.sx-dark .filter-group, html.sx-dark .filter-bar .filter-group { background: #1B110A !important; border-color: rgba(201,169,110,.18) !important; }
+html.sx-dark #mkSkel .sk-row, html.sx-dark #mkSkel i { background: linear-gradient(90deg,#2A1B10 25%,#382512 50%,#2A1B10 75%) !important; background-size: 200% 100% !important; }
+html.sx-dark .sk-img, html.sx-dark .sk-line, html.sx-dark body .sk-img, html.sx-dark body .sk-line { background: linear-gradient(100deg,#2A1B10 30%,#3A2613 50%,#2A1B10 70%) !important; background-size: 200% 100% !important; }
+html.sx-dark #sxPtr { background: #241710 !important; color: #E8CE8F !important; border: 1px solid rgba(201,169,110,.4) !important; box-shadow: 0 6px 18px rgba(0,0,0,.5) !important; }
+html.sx-dark .search-results-heading { background: #241710 !important; border-color: rgba(201,169,110,.2) !important; }
+html.sx-dark .search-results-heading > div { color: #F0E6D6 !important; }
+html.sx-dark .search-results-heading button { background: rgba(201,169,110,.14) !important; color: #E8CE8F !important; }
+
+
+/* ---------- 16) الوضع الداكن v3: أقسام الرئيسية (الأعلى تقييماً / وصل حديثاً / ينفد قريباً ...) ---------- */
+html.sx-dark .mk-sec { background: linear-gradient(180deg,#241710,#1B110A) !important; border: 1px solid rgba(201,169,110,.22) !important; box-shadow: 0 10px 30px rgba(0,0,0,.45) !important; }
+html.sx-dark .mk-sec-h h3 { color: #E8CE8F !important; text-shadow: 0 1px 0 rgba(0,0,0,.4); }
+html.sx-dark .mk-sec-h button { color: #E8CE8F !important; }
+html.sx-dark .mk-sec-h [data-clear-recent] { color: #C9B79C !important; }
+html.sx-dark .mk-sec-h .cd { background: #e11d48 !important; color: #fff !important; }
+html.sx-dark .mk-card { background: #2B1C12 !important; border: 1px solid rgba(201,169,110,.22) !important; border-radius: 16px !important; padding: 8px 8px 10px !important; box-shadow: 0 4px 14px rgba(0,0,0,.4) !important; transition: transform .2s, border-color .2s !important; }
+html.sx-dark .mk-card:hover { transform: translateY(-3px); border-color: rgba(232,206,143,.55) !important; }
+html.sx-dark .mk-card .im { background: #fff !important; border-radius: 12px !important; }
+html.sx-dark .mk-card .nm { color: #F5EDE4 !important; }
+html.sx-dark .mk-card .pr { color: #E8CE8F !important; }
+html.sx-dark .mk-card .pr.d { color: #FF8FA3 !important; }
+html.sx-dark .mk-card .pr s { color: #B9A88C !important; }
+html.sx-dark .mk-card .st { color: #F2C94C !important; }
+html.sx-dark .mk-card .st small { color: #C9B79C !important; }
+html.sx-dark .mk-card .sl { color: #D9C7A6 !important; }
+html.sx-dark .mk-card .sold { background: #3A2615 !important; }
+html.sx-dark .mk-card .add { background: linear-gradient(135deg,#C9A96E,#A6864B) !important; color: #1A0F07 !important; }
+html.sx-dark .mk-card .mk-pct { color: #fff !important; }
+html.sx-dark .mk-card .im i { color: #A6864B !important; }
+html.sx-dark .mk-tile { color: #F0E6D6 !important; }
+html.sx-dark .mk-row { scrollbar-color: #6B4A2A #1B110A; }
+
+/* ---------- 17) الوضع الداكن v3: مراجعة التباين لكل المكونات ---------- */
+html.sx-dark .product-card .product-name { color: #F5EDE4 !important; }
+html.sx-dark .product-card .price, html.sx-dark .product-card .discounted-price, html.sx-dark .product-card .current-price { color: #E8CE8F !important; }
+html.sx-dark .product-card .original-price, html.sx-dark .product-card s { color: #B9A88C !important; }
+html.sx-dark .product-rating, html.sx-dark .product-rating * { color: #D9C7A6 !important; }
+html.sx-dark .product-rating .fa-star, html.sx-dark .product-rating .fas { color: #F2C94C !important; }
+html.sx-dark .stock-badge.stock-available { color: #5FE3A8 !important; background: rgba(16,185,129,.14) !important; }
+html.sx-dark .stock-badge.stock-low { color: #FFC857 !important; background: rgba(245,158,11,.14) !important; }
+html.sx-dark .stock-badge.stock-out { color: #FF9AA9 !important; background: rgba(225,29,72,.16) !important; }
+html.sx-dark .discount-label { background: rgba(16,185,129,.16) !important; color: #5FE3A8 !important; }
+html.sx-dark .price-separator { color: #C9B79C !important; }
+html.sx-dark .filter-apply-btn { color: #1A0F07 !important; background: linear-gradient(135deg,#E8CE8F,#C9A96E) !important; font-weight: 800; }
+html.sx-dark .loading-spinner { color: #E8CE8F !important; }
+html.sx-dark #searchPageTitle, html.sx-dark .page-title, html.sx-dark .search-results-title { color: #F0E6D6 !important; }
+html.sx-dark .search-page-header, html.sx-dark #searchPage .page-header { background: transparent !important; }
+html.sx-dark .icon-big, html.sx-dark .flash-sale-section .icon-big { color: #E8CE8F !important; }
+html.sx-dark .flash-sale-header *, html.sx-dark .flash-sale-title, html.sx-dark .flash-sale-title * { color: #F5EDE4 !important; }
+html.sx-dark .flash-sale-section { background: linear-gradient(135deg,#2A1A0E,#1B110A) !important; border: 1px solid rgba(201,169,110,.25) !important; }
+html.sx-dark .gray-text, html.sx-dark .text-muted, html.sx-dark .muted { color: #C9B79C !important; }
+html.sx-dark [style*="color:#6b7280"], html.sx-dark [style*="color: #6b7280"], html.sx-dark [style*="color:#9ca3af"], html.sx-dark [style*="color:#4b5563"], html.sx-dark [style*="color:#374151"], html.sx-dark [style*="color:#1A0F07"], html.sx-dark [style*="color:#4A2C17"] { color: #D9C7A6 !important; }
+
+/* ---------- 18) الوضع الداكن v3: شريط العروض وصفحة البحث ---------- */
+html.sx-dark .promo-carousel-title { color: #F5EDE4 !important; }
+html.sx-dark .promo-carousel-title .sub-text { color: #D9C7A6 !important; }
+html.sx-dark .promo-carousel-title .icon-big { color: #E8CE8F !important; filter: none !important; }
+html.sx-dark .search-page-top, html.sx-dark .search-page-title { background: linear-gradient(135deg,#2A1A0E,#1B110A) !important; border: 1px solid rgba(201,169,110,.22) !important; box-shadow: 0 8px 24px rgba(0,0,0,.4) !important; }
+html.sx-dark .search-page-top .search-page-title { border: 0 !important; box-shadow: none !important; background: transparent !important; }
+html.sx-dark .search-page-title h2, html.sx-dark #searchPageTitle { color: #F5EDE4 !important; }
+html.sx-dark #searchPageSubtitle { color: #D9C7A6 !important; }
+html.sx-dark .search-page-title i { color: #E8CE8F !important; background: rgba(201,169,110,.15) !important; }
+html.sx-dark .search-page-results-head, html.sx-dark .search-page-results-head * { color: #E8CE8F !important; background: transparent !important; }
+html.sx-dark #searchPageResultHint { color: #C9B79C !important; }
+html.sx-dark .add-btn:disabled { background: #3A2A1C !important; color: #B9A88C !important; }
+html.sx-dark .add-btn:not(:disabled) { background: linear-gradient(135deg,#E8CE8F,#C9A96E) !important; color: #1A0F07 !important; }
+
+/* ---------- 19) الوضع الداكن v3: صفحة من نحن ---------- */
+html.sx-dark .about-content, html.sx-dark .about-content > div, html.sx-dark .about-container, html.sx-dark #aboutPage .about-card { background: linear-gradient(180deg,#241710,#1B110A) !important; color: #F0E6D6 !important; border-color: rgba(201,169,110,.22) !important; }
+html.sx-dark .about-content *, html.sx-dark #aboutPage p, html.sx-dark #aboutPage li { color: #F0E6D6 !important; }
+html.sx-dark .about-content h1, html.sx-dark .about-content h2, html.sx-dark .about-content h3 { color: #E8CE8F !important; }
+
+/* ---------- 20) v4: الوضع الداكن — وضوح الأسعار + ترتيب القلب والمقارنة في عرض القائمة ---------- */
+/* السعر: كان -webkit-text-fill-color غامق بيغلب لون الخط فيبان غامق على غامق */
+html.sx-dark body .price,
+html.sx-dark body .discounted-price,
+html.sx-dark body .price-container .discounted-price,
+html.sx-dark body .product-card .price,
+html.sx-dark body .product-card .discounted-price,
+html.sx-dark body .product-card .price-container .discounted-price { color: #F4DC9E !important; -webkit-text-fill-color: #F4DC9E !important; background: none !important; text-shadow: 0 1px 0 rgba(0,0,0,.35); }
+html.sx-dark body .price small, html.sx-dark body .discounted-price small { color: inherit !important; -webkit-text-fill-color: currentColor !important; }
+html.sx-dark body .price-container .original-price,
+html.sx-dark body .product-card .original-price { color: #B9A88C !important; -webkit-text-fill-color: #B9A88C !important; }
+html.sx-dark body .price-container .discount-label { color: #5FE3A8 !important; -webkit-text-fill-color: #5FE3A8 !important; }
+/* القلب والمقارنة بألوان الوضع الداكن */
+html.sx-dark body .wishlist-btn { background: #2A1B10 !important; color: #E8CE8F !important; border: 1px solid rgba(201,169,110,.45) !important; }
+html.sx-dark body .wishlist-btn.active { background: rgba(225,29,72,.2) !important; color: #FF8FA3 !important; border-color: rgba(255,143,163,.5) !important; }
+html.sx-dark body .product-card .compare-btn-mini { background: #2A1B10 !important; color: #E8CE8F !important; border: 1px solid rgba(201,169,110,.45) !important; }
+html.sx-dark body .product-card .compare-btn-mini:active { background: #3A2615 !important; }
+html.sx-dark body .product-card .compare-btn-mini.active,
+html.sx-dark body .product-card .compare-btn-mini.selected,
+html.sx-dark body .product-card .compare-btn-mini.on { background: linear-gradient(135deg,#E8CE8F,#C9A96E) !important; color: #1A0F07 !important; border-color: #E8CE8F !important; }
+html.sx-dark body .product-card .product-info:after { color: #BBA98C !important; border-top-color: rgba(201,169,110,.28) !important; }
+html.sx-dark body .product-rating .stars { color: #F2C94C !important; }
+html.sx-dark body .category-badge { background: rgba(27,17,10,.88) !important; color: #E8CE8F !important; }
+/* عنوان الصفحات والإجمالي المتدرج كان بنّي غامق في الداكن */
+html.sx-dark body #cartPage .page-title,
+html.sx-dark body .cx-sum .r.t span:last-child,
+html.sx-dark body .modal-card h3 { background: linear-gradient(90deg,#F4E3B6,#C9A96E,#F4E3B6) !important; -webkit-background-clip: text !important; background-clip: text !important; -webkit-text-fill-color: transparent !important; }
+
+/* عرض القائمة (الفاتح والداكن): القلب والمقارنة دايرتين بنفس الحجم تحت بعض في ركن الكارت */
+html body.rx-list .products-grid .product-card .wishlist-btn { top: 12px !important; left: 12px !important; right: auto !important; width: 34px !important; height: 34px !important; min-width: 34px !important; min-height: 34px !important; }
+html body.rx-list .products-grid .product-card .product-meta { position: static !important; display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; justify-content: space-between !important; gap: 8px !important; min-height: 34px !important; margin-top: 10px !important; }
+html body.rx-list .products-grid .product-card .product-meta .product-rating { flex: 1 1 auto !important; min-width: 0 !important; }
+html body.rx-list .products-grid .product-card .compare-btn-mini { position: static !important; inset: auto !important; flex: 0 0 34px !important; width: 34px !important; height: 34px !important; min-width: 34px !important; padding: 0 !important; margin: 0 !important; border-radius: 50% !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; order: 2; }
+html body.rx-list .products-grid .product-card .compare-btn-mini span { display: none !important; }
+html body.rx-list .products-grid .product-card .compare-btn-mini i { font-size: 13px !important; margin: 0 !important; }
+html body.rx-list .products-grid .product-card .product-name { padding: 0 0 0 46px !important; }
+html body.rx-list .products-grid .product-card .price-container { display: flex !important; flex-wrap: wrap !important; align-items: baseline !important; gap: 2px 8px !important; }
+</style>
+<script id="sx2026-enhance-js">
+/* SX 2026 Enhancement Layer — ميزات جديدة */
+(function () {
+  'use strict';
+
+  /* الوضع الليلي: مفتاح واحد في القائمة الجانبية (mkThemeBtn) يبدّل كلاس sx-dark — الأزرار العائمة اتشالت بطلب المستخدم */
+
+  /* ---------- 3) شريط تقدم القراءة + ظل الهيدر ---------- */
+  function buildProgress() {
+    if (document.getElementById('sxProgress')) return;
+    var bar = document.createElement('div');
+    bar.id = 'sxProgress';
+    document.body.appendChild(bar);
+    var ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () {
+        var h = document.documentElement;
+        var max = h.scrollHeight - h.clientHeight;
+        var pct = max > 0 ? Math.min(100, (h.scrollTop || window.scrollY) / max * 100) : 0;
+        bar.style.width = pct + '%';
+        document.body.classList.toggle('sx-scrolled', (h.scrollTop || window.scrollY) > 12);
+        ticking = false;
+      });
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+
+  /* ---------- 4) أنيميشن الظهور عند التمرير ---------- */
+  var revealObserver = null;
+  function setupReveal() {
+    if (!('IntersectionObserver' in window)) return;
+    revealObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          en.target.classList.add('sx-in');
+          revealObserver.unobserve(en.target);
+        }
+      });
+    }, { threshold: 0.06, rootMargin: '0px 0px -20px 0px' });
+
+    function tag(root) {
+      var sel = '.product-card, .promo-carousel-wrapper > *, .section-title, .discovery-btn, .hero-banner, .contact-card, .return-request-card, .completed-return-card, .filter-bar';
+      (root || document).querySelectorAll(sel).forEach(function (el, i) {
+        if (el.classList.contains('sx-reveal') || el.classList.contains('sx-in')) return;
+        el.classList.add('sx-reveal');
+        el.style.transitionDelay = Math.min((i % 8) * 45, 320) + 'ms';
+        revealObserver.observe(el);
+      });
+    }
+    tag(document);
+
+    // المنتجات بتترندر بشكل ديناميكي — راقب الإضافات الجديدة
+    var mo = new MutationObserver(function (muts) {
+      muts.forEach(function (m) {
+        m.addedNodes && m.addedNodes.forEach(function (n) {
+          if (n.nodeType === 1) {
+            if (n.matches && n.matches('.product-card')) {
+              n.classList.add('sx-reveal');
+              revealObserver.observe(n);
+            }
+            if (n.querySelector) tag(n);
+          }
+        });
+      });
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
+  }
+
+  function init() {
+    buildProgress();
+    setupReveal();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+
+</script>
+<style id="sx-dark-v5">
+/* ===== v5: الوضع الداكن للسلة وباقي الشاشات (الفاتح لا يتغير) ===== */
+html.sx-dark{--sx5-surface:#241710;--sx5-surface2:#2E1E13;--sx5-line:rgba(201,169,110,.28);--sx5-text:#F5EBDA;--sx5-muted:#CDBB9E;--sx5-gold:#E8CE8F}
+/* السلة */
+html.sx-dark .cx-head{background:linear-gradient(135deg,#2E1E13,#241710)}
+html.sx-dark .cx-card,html.sx-dark .cx-sum,html.sx-dark .cx-sug,html.sx-dark .cx-empty,html.sx-dark .mk-later{background:var(--sx5-surface)!important;border:1px solid var(--sx5-line)!important;box-shadow:0 6px 18px rgba(0,0,0,.45)!important;color:var(--sx5-text)!important}
+html.sx-dark .cx-name,html.sx-dark .cx-line,html.sx-dark .cx-qty b,html.sx-dark .cx-sum h4,html.sx-dark .cx-sug h4,html.sx-dark .cx-sug-card .n,html.sx-dark .cx-empty h3,html.sx-dark .mk-later h4,html.sx-dark .cx-sum .r.t{color:var(--sx5-text)!important;-webkit-text-fill-color:var(--sx5-text)!important}
+html.sx-dark .cx-sum .r.t span:last-child{-webkit-text-fill-color:transparent!important}
+html.sx-dark .cx-price,html.sx-dark .cx-price>span:not(.cx-off),html.sx-dark .cx-sum .r,html.sx-dark .cx-line small,html.sx-dark .cx-empty p,html.sx-dark .cx-sug-card .p{color:var(--sx5-gold)!important;-webkit-text-fill-color:currentColor!important}
+html.sx-dark .cx-price>span:not(.cx-off):after,html.sx-dark .cx-line:before,html.sx-dark .cx-sum .muted,html.sx-dark .cx-price s{color:var(--sx5-muted)!important}
+html.sx-dark .cx-off{background:rgba(255,95,125,.2)!important;color:#FFB3C1!important;border:1px solid rgba(255,143,163,.45)}
+html.sx-dark .cx-low{background:rgba(245,158,11,.2)!important;color:#FFD58A!important}
+html.sx-dark .cx-note{background:rgba(201,169,110,.18)!important;color:var(--sx5-gold)!important}
+html.sx-dark .cx-note button{color:#FFE7A8!important}
+html.sx-dark .cx-img,html.sx-dark .cx-sug-card img{background:#fff!important;border-color:transparent!important}
+html.sx-dark .cx-row{background:var(--sx5-surface2)!important;border:1px solid var(--sx5-line)}
+html.sx-dark .cx-qty{background:#1A0F07!important;border:1px solid var(--sx5-line)!important}
+html.sx-dark .cx-qty button{background:linear-gradient(135deg,#E8CE8F,#C9A96E)!important;color:#1A0F07!important;box-shadow:none!important;opacity:1!important}
+html.sx-dark .cx-qty button:disabled{background:#3A2A1C!important;color:#8E7C60!important}
+html.sx-dark .cx-qty b{min-width:38px}
+html.sx-dark .cx-del{background:rgba(255,95,125,.18)!important;color:#FF9DB0!important;border:1px solid rgba(255,143,163,.4)!important}
+html.sx-dark .cx-fav,html.sx-dark .mk-acts>*,html.sx-dark .mk-acts>.mk-lnk,html.sx-dark .cx-card .mk-lnk{background:var(--sx5-surface2)!important;color:var(--sx5-gold)!important;border:1px solid var(--sx5-line)!important;-webkit-text-fill-color:currentColor!important;opacity:1!important}
+html.sx-dark .cx-fav i,html.sx-dark .cx-fav.on,html.sx-dark .cx-fav.on i{color:#FF8FA3!important}
+html.sx-dark .mk-acts{border-top-color:var(--sx5-line)!important}
+html.sx-dark .cx-clear{color:#FF9DB0!important;background:rgba(255,95,125,.14)!important;border:1px solid rgba(255,143,163,.35)!important}
+html.sx-dark .cx-chip{background:var(--sx5-gold)!important;color:#1A0F07!important}
+html.sx-dark .cx-head h3{color:var(--sx5-text)!important;-webkit-text-fill-color:var(--sx5-text)!important}
+html.sx-dark .cx-trust div{background:var(--sx5-surface)!important;color:var(--sx5-text)!important;border:1px solid var(--sx5-line)}
+html.sx-dark .cx-sug-card{background:var(--sx5-surface2)!important}
+html.sx-dark .cx-sug-card button,html.sx-dark .cx-more button{background:linear-gradient(135deg,#E8CE8F,#C9A96E)!important;color:#1A0F07!important;border:0!important}
+html.sx-dark .cx-bar{background:rgba(36,23,16,.97)!important;border:1px solid rgba(201,169,110,.5)!important;box-shadow:0 10px 30px rgba(0,0,0,.65)!important}
+html.sx-dark .cx-bar .tot small{color:var(--sx5-muted)!important}
+html.sx-dark .cx-bar .tot b{color:var(--sx5-text)!important}
+html.sx-dark .cx-go,html.sx-dark .mk-btn{background:linear-gradient(135deg,#E8CE8F,#C9A96E)!important;color:#1A0F07!important}
+html.sx-dark .mk-btn.o{background:transparent!important;color:var(--sx5-gold)!important;border:1px solid var(--sx5-gold)!important}
+html.sx-dark .mk-btn.wa{background:#1fa855!important;color:#fff!important}
+html.sx-dark .mk-fsb{color:var(--sx5-text)!important}
+html.sx-dark #cartPage .page-title{-webkit-text-fill-color:transparent!important}
+html.sx-dark body .cx-bar{background:#241710!important;backdrop-filter:none!important;border:1px solid rgba(201,169,110,.55)!important;box-shadow:0 -6px 24px rgba(0,0,0,.7)!important}
+html.sx-dark body .cx-bar .tot small{color:#CDBB9E!important}
+html.sx-dark body .cx-bar .tot b{color:#F5EBDA!important}
+html.sx-dark .cx-fav,html.sx-dark .mk-acts>*{border-radius:12px!important;min-height:40px}
+html.sx-dark .cx-del{background:#3A1620!important;color:#FF9DB0!important}
+html.sx-dark #mkCheckoutDock .mk-dock-in{background:#241710!important;backdrop-filter:none!important;border:1px solid rgba(201,169,110,.55)!important;box-shadow:0 -6px 24px rgba(0,0,0,.7)!important}
+html.sx-dark .mk-dock-tot small{color:#CDBB9E!important}
+html.sx-dark .mk-dock-tot b{color:#F5EBDA!important}
+html.sx-dark .mk-dock-tot span{color:#E8CE8F!important}
+html.sx-dark #mkDockBtn{background:linear-gradient(135deg,#E8CE8F,#C9A96E)!important;color:#1A0F07!important}
+html.sx-dark .cx-row{padding:8px 14px!important}
+/* المفضلة */
+html.sx-dark .wl-count{background:rgba(232,206,143,.18)!important;color:#F4E3B6!important;border:1px solid rgba(232,206,143,.4)}
+html.sx-dark .wl-tools select,html.sx-dark .wl-btn{background:#2E1E13!important;color:#F5EBDA!important;border:1.5px solid rgba(201,169,110,.4)!important}
+html.sx-dark .wl-btn.main{background:linear-gradient(135deg,#E8CE8F,#C9A96E)!important;color:#1A0F07!important;border:0!important}
+html.sx-dark .wl-btn:last-child:not(.main){color:#FF9DB0!important;border-color:rgba(255,143,163,.45)!important;background:rgba(255,95,125,.12)!important}
+/* المرتجعات */
+html.sx-dark #returnsPage div[style*="linear-gradient(135deg,#"][style*="text-align:center"]{background:#2E1E13!important;border-color:rgba(201,169,110,.35)!important}
+html.sx-dark #returnsPage div[style*="text-align:center"] div[style*="font-size:12px"]{color:#CDBB9E!important}
+html.sx-dark #returnsPage div[style*="text-align:center"] div[style*="font-size:24px"]{color:#E8CE8F!important}
+html.sx-dark body .returns-tabs{background:#241710!important;border:1px solid rgba(201,169,110,.3)!important}
+html.sx-dark .returns-tab{background:transparent!important;color:#CDBB9E!important}
+html.sx-dark .returns-tab .count-badge{background:rgba(232,206,143,.2)!important;color:#F4E3B6!important}
+html.sx-dark .returns-tab.active{background:linear-gradient(135deg,#E8CE8F,#C9A96E)!important;color:#1A0F07!important}
+html.sx-dark .returns-tab.active .count-badge{background:rgba(26,15,7,.2)!important;color:#1A0F07!important}
+/* العروض */
+html.sx-dark .dl-bar{background:#1D130B!important;border:1px solid rgba(201,169,110,.25)!important;border-radius:16px}
+html.sx-dark .dl-tabs button{background:#2E1E13!important;color:#F5EBDA!important;border-color:rgba(201,169,110,.35)!important}
+html.sx-dark .dl-tabs button em{background:rgba(232,206,143,.2)!important;color:#F4E3B6!important}
+html.sx-dark .dl-tabs button.on{background:#E11D48!important;color:#fff!important;border-color:#E11D48!important}
+html.sx-dark .dl-note{background:rgba(52,211,153,.12)!important;border-color:rgba(52,211,153,.4)!important;color:#7FE8BC!important}
+/* تواصل */
+html.sx-dark #contactPage button[type=submit],html.sx-dark #contactPage .btn-primary,html.sx-dark .contact-card .btn{background:linear-gradient(135deg,#E8CE8F,#C9A96E)!important;color:#1A0F07!important}
+/* تفاصيل المنتج */
+html.sx-dark #productDetailModal .price-detail{color:#E8CE8F!important;-webkit-text-fill-color:#E8CE8F!important;background:none!important}
+html.sx-dark #productDetailModal .stock-info.in-stock{color:#5FE3A8!important}
+html.sx-dark #productDetailModal .rating-text,html.sx-dark #productDetailModal .review-count{color:#CDBB9E!important}
+html.sx-dark #productDetailModal .mk-watch{background:#2E1E13!important;color:#E8CE8F!important;border:1px dashed rgba(232,206,143,.6)!important}
+html.sx-dark #productDetailModal .mk-pd-extra,html.sx-dark #productDetailModal .mk-bundle,html.sx-dark #productDetailModal .review-form,html.sx-dark #productDetailModal .star-picker{background:#241710!important;border-color:rgba(201,169,110,.3)!important;color:#F0E6D6!important}
+html.sx-dark #productDetailModal .mk-pd-extra div,html.sx-dark #productDetailModal .mk-pd-extra span,html.sx-dark #productDetailModal .mk-bundle div,html.sx-dark #productDetailModal .mk-bundle label,html.sx-dark #productDetailModal .mk-bundle span,html.sx-dark #productDetailModal .review-form label,html.sx-dark #productDetailModal .review-form div{color:#F0E6D6!important}
+html.sx-dark #productDetailModal .mk-pd-extra b{color:#7FE8BC!important}
+html.sx-dark #productDetailModal .mk-pd-extra div{border-color:rgba(201,169,110,.2)!important}
+html.sx-dark #productDetailModal .mk-share{background:#2E1E13!important;color:#E8CE8F!important;border:1px solid rgba(201,169,110,.4)!important}
+html.sx-dark #productDetailModal .sim-title,html.sx-dark #productDetailModal .review-score-number,html.sx-dark #productDetailModal .rating-bar-row{color:#F5EBDA!important}
+html.sx-dark #productDetailModal .mobile-review-title{background:#2E1E13!important;color:#F5EBDA!important}
+html.sx-dark #productDetailModal .mobile-review-title i{color:#E8CE8F!important}
+html.sx-dark #productDetailModal .rating-bar{background:#3A2A1C!important}
+html.sx-dark #productDetailModal .review-input{background:#1A0F07!important;color:#F5EBDA!important;border:1px solid rgba(201,169,110,.4)!important}
+html.sx-dark #productDetailModal .action-buttons{background:#1D130B!important;border-top:1px solid rgba(201,169,110,.3)!important;box-shadow:0 -8px 24px rgba(0,0,0,.6)!important}
+html.sx-dark #productDetailModal .action-buttons .btn-primary,html.sx-dark #productDetailModal .mk-bbtn{background:linear-gradient(135deg,#E8CE8F,#C9A96E)!important;color:#1A0F07!important;border:0!important}
+html.sx-dark #productDetailModal .action-buttons .btn-primary i,html.sx-dark #productDetailModal .action-buttons .btn-primary span{color:#1A0F07!important}
+html.sx-dark #productDetailModal .quick-buy-btn{background:#2E1E13!important;color:#F5EBDA!important;border:1.5px solid #E8CE8F!important}
+html.sx-dark #productDetailModal .quick-buy-btn i{color:#E8CE8F!important}
+/* تسجيل الدخول / الموافقة */
+html.sx-dark .auth-close-btn{color:#F0E6D6!important;background:rgba(201,169,110,.2)!important}
+html.sx-dark .auth-consent-box{background:#2E1E13!important;border:1px solid rgba(201,169,110,.4)!important}
+html.sx-dark .auth-consent-box span,html.sx-dark .auth-consent-row{color:#F5EBDA!important}
+html.sx-dark .auth-policy-link{color:#E8CE8F!important;text-decoration:underline}
+html.sx-dark .auth-primary-btn{background:linear-gradient(135deg,#E8CE8F,#C9A96E)!important;color:#1A0F07!important}
+html.sx-dark .auth-primary-btn i{color:#1A0F07!important}
+html.sx-dark .auth-primary-btn:disabled{background:#3A2A1C!important;color:#A8967A!important}
+/* الدفع وإتمام الطلب */
+html.sx-dark body .ck-steps{background:#1D130B!important;border-bottom:1px solid rgba(201,169,110,.25)}
+html.sx-dark .ck-steps .s{color:#A8967A!important}
+html.sx-dark .ck-steps .s i{background:#3A2A1C!important;color:#E8D9BF!important}
+html.sx-dark .ck-steps .s.on{color:#F5EBDA!important}
+html.sx-dark .ck-steps .s.on i{background:#E8CE8F!important;color:#1A0F07!important}
+html.sx-dark .ck-steps .s.ok{color:#7FE8BC!important}
+html.sx-dark .ck-steps .s.ok i{background:#10B981!important;color:#04150E!important}
+html.sx-dark .ck-steps .l{background:#3A2A1C!important}
+html.sx-dark .ck-steps .l.ok{background:#10B981!important}
+html.sx-dark .ck-pane .sub,html.sx-dark .phone-hint,html.sx-dark .ck-pane small{color:#CDBB9E!important}
+html.sx-dark .zone-price,html.sx-dark .zone-price span{color:#F4E3B6!important}
+html.sx-dark .ck-foot{background:#1D130B!important;border-top:1px solid rgba(201,169,110,.3)!important;box-shadow:0 -8px 24px rgba(0,0,0,.6)!important}
+html.sx-dark .ck-foot .tot small{color:#CDBB9E!important}
+html.sx-dark .ck-foot .tot b{color:#F5EBDA!important}
+html.sx-dark .ck-back{background:#2E1E13!important;color:#E8CE8F!important;border:1px solid rgba(201,169,110,.4)!important}
+html.sx-dark .ck-next,html.sx-dark #confirmOrder{background:linear-gradient(135deg,#E8CE8F,#C9A96E)!important;color:#1A0F07!important}
+html.sx-dark .ck-x{color:#F4E3B6!important}
+/* القائمة الجانبية */
+html.sx-dark .close-menu{color:#F0E6D6!important;background:rgba(201,169,110,.18)!important}
+html.sx-dark .notification-state{color:#CDBB9E!important}
+/* التنبيهات */
+html.sx-dark .notification{background:#2E1E13!important;border:1px solid rgba(201,169,110,.35)!important;box-shadow:0 10px 28px rgba(0,0,0,.6)!important}
+html.sx-dark .notification .notification-title{color:#F5EBDA!important}
+html.sx-dark .notification .notification-message{color:#DCCDB3!important}
+html.sx-dark .notification-close{color:#CDBB9E!important}
+html.sx-dark .notification.success .notification-title{color:#7FE8BC!important}
+html.sx-dark .notification.error .notification-title{color:#FF9DB0!important}
+html.sx-dark .notification.warning .notification-title{color:#FFD58A!important}
+html.sx-dark .notification.info .notification-title{color:#9CC2FF!important}
+html.sx-dark .pm-coupon,html.sx-dark .pm-guide,html.sx-dark .pm-guide.cod,html.sx-dark .ck-box,html.sx-dark .total-summary,html.sx-dark .wallet-info-box,html.sx-dark .deposit-notice,html.sx-dark .payment-note{background:#2E1E13!important;border:1.5px solid rgba(201,169,110,.35)!important;color:#F0E6D6!important;box-shadow:none!important}
+html.sx-dark .pm-coupon summary{color:#F5EBDA!important}
+html.sx-dark .pm-coupon summary em{color:#E8CE8F!important}
+html.sx-dark .payment-method-option{background:#2E1E13!important;border:1.5px solid rgba(201,169,110,.3)!important}
+html.sx-dark .payment-method-option.selected{background:#3A2615!important;border-color:#E8CE8F!important;box-shadow:0 0 0 3px rgba(232,206,143,.2)!important}
+html.sx-dark .payment-method-option .method-name{color:#F5EBDA!important}
+html.sx-dark .payment-method-option .method-desc{color:#CDBB9E!important}
+html.sx-dark .pm-ico{background:#fff!important}
+html.sx-dark .pm-tag{background:rgba(245,158,11,.2)!important;color:#FFD58A!important}
+html.sx-dark .pm-tag.ok{background:rgba(16,185,129,.2)!important;color:#7FE8BC!important}
+html.sx-dark .cod-fee-badge{background:rgba(245,158,11,.2)!important;color:#FFD58A!important}
+html.sx-dark .pm-radio{background:transparent!important;border-color:#E8CE8F!important}
+html.sx-dark .payment-method-option.selected .pm-radio{background:#E8CE8F!important}
+html.sx-dark .pm-guide h5,html.sx-dark .pm-guide p,html.sx-dark .payment-methods-title,html.sx-dark .total-summary-row,html.sx-dark .total-summary-row span,html.sx-dark .dn-head,html.sx-dark .dn-text,html.sx-dark .dn-numbers-title,html.sx-dark .dn-calc,html.sx-dark .dn-pay,html.sx-dark .dn-rest,html.sx-dark .wallet-label,html.sx-dark .payment-note{color:#F0E6D6!important}
+html.sx-dark .total-summary-row.grand-total,html.sx-dark .total-summary-row.grand-total span,html.sx-dark .wallet-number{color:#E8CE8F!important}
+html.sx-dark .dn-warn{color:#FFD58A!important;background:rgba(245,158,11,.15)!important}
+html.sx-dark .apply-coupon-btn,html.sx-dark .wallet-copy-btn,html.sx-dark .dn-wa{background:linear-gradient(135deg,#E8CE8F,#C9A96E)!important;color:#1A0F07!important}
+html.sx-dark .pay-due b{color:#F5EBDA!important}
+html.sx-dark .payment-method-option,html.sx-dark .payment-method-option.selected{background-image:none!important}
+html.sx-dark .payment-method-option.selected{background-color:#3A2615!important}
+html.sx-dark .pm-guide *:not(i):not(.pm-ico):not(button):not(svg):not(svg *){color:#F0E6D6!important}
+html.sx-dark .pm-guide b,html.sx-dark .pm-guide strong{color:#E8CE8F!important}
+html.sx-dark .pm-guide li:before,html.sx-dark .pm-guide .n,html.sx-dark .pm-guide ol li::marker{color:#1A0F07!important}
+html.sx-dark .deposit-notice *:not(i):not(button){color:#F0E6D6!important}
+html.sx-dark .deposit-notice b{color:#E8CE8F!important}
+html.sx-dark body #paymentMethodsGrid .payment-method-option.selected,html.sx-dark body .payment-method-option.selected{background:#3A2615!important;background-image:none!important;border-color:#E8CE8F!important;box-shadow:0 0 0 3px rgba(232,206,143,.25)!important}
+html.sx-dark body .payment-method-option.selected .pm-radio{background:#E8CE8F!important;box-shadow:inset 0 0 0 4px #3A2615!important}
+html.sx-dark .ck-box .hd{background:#3A2615!important;color:#F5EBDA!important;border-radius:12px}
+html.sx-dark .ck-box .hd *:not(button):not(button *){color:#F5EBDA!important}
+html.sx-dark .ck-box .hd button{background:#2E1E13!important;color:#E8CE8F!important;border:1px solid rgba(232,206,143,.5)!important}
+html.sx-dark .ck-box,html.sx-dark .ck-box div,html.sx-dark .ck-box span{color:#F0E6D6}
+html.sx-dark .delivery-amount,html.sx-dark .fee-amount{background:rgba(232,206,143,.18)!important;color:#F4E3B6!important}
+html.sx-dark #compareModal button,html.sx-dark #compareModal .close-btn,html.sx-dark #compareModal [class*=close]{color:#E8CE8F!important;border-color:rgba(232,206,143,.55)!important;background:#2E1E13!important}
+
+</style>
+<style id="sx-dark-v6">
+/* ===== v6: الوضع الداكن — طلباتي + التتبع + اختيار منطقة الشحن + إرشادات الدفع + باقي الأسطح (الفاتح لا يتغير) ===== */
+
+/* ---------- طلباتي: كارت الطلب ---------- */
+html.sx-dark .current-order-block{background:linear-gradient(135deg,#2A1B10,#22150C)!important;border:1px solid rgba(201,169,110,.4)!important;box-shadow:0 10px 28px rgba(0,0,0,.5)!important;color:#F0E6D6!important}
+html.sx-dark .current-order-block p,html.sx-dark .current-order-block strong,html.sx-dark .current-order-block span{color:#EBDFCB!important}
+html.sx-dark .order-detail-breakdown{background:rgba(23,15,9,.75)!important;border-color:rgba(201,169,110,.32)!important}
+html.sx-dark .order-detail-breakdown .breakdown-row{color:#EBDFCB!important}
+html.sx-dark .order-detail-breakdown .breakdown-row.total{color:#E8CE8F!important;border-top-color:rgba(201,169,110,.38)!important}
+html.sx-dark .order-items-preview{background:rgba(23,15,9,.8)!important;border-color:rgba(201,169,110,.28)!important;color:#F0E6D6!important}
+html.sx-dark .order-items-preview>small{color:#CDBB9E!important}
+html.sx-dark .order-item-mini{color:#EBDFCB!important;border-bottom-color:rgba(201,169,110,.22)!important}
+html.sx-dark .order-item-mini small{color:#E8CE8F!important}
+/* شارات حالة الطلب */
+html.sx-dark .badge-pending{background:rgba(245,158,11,.18)!important;color:#FFD58A!important;border-color:rgba(245,158,11,.5)!important}
+html.sx-dark .badge-accepted{background:rgba(59,130,246,.2)!important;color:#9CC2FF!important;border-color:rgba(156,194,255,.45)!important}
+html.sx-dark .badge-delivering{background:rgba(16,185,129,.18)!important;color:#7FE8BC!important;border-color:rgba(16,185,129,.45)!important}
+html.sx-dark .badge-shipped{background:rgba(96,165,250,.18)!important;color:#9CC2FF!important;border-color:rgba(96,165,250,.45)!important}
+html.sx-dark .badge-delivered{background:rgba(201,169,110,.18)!important;color:#EBDFCB!important;border-color:rgba(201,169,110,.45)!important}
+html.sx-dark .badge-returned{background:rgba(16,185,129,.18)!important;color:#7FE8BC!important;border-color:rgba(52,211,153,.45)!important}
+html.sx-dark .badge-rejected,html.sx-dark .badge-cancelled{background:rgba(225,29,72,.18)!important;color:#FF9DB0!important;border-color:rgba(255,143,163,.5)!important}
+/* عدادات وسبب الرفض */
+html.sx-dark .timer-badge{background:rgba(245,158,11,.16)!important;color:#FFD58A!important;border:1px solid rgba(245,158,11,.4)}
+html.sx-dark .timer-badge.danger{background:rgba(225,29,72,.16)!important;color:#FF9DB0!important;border:1px solid rgba(255,143,163,.4)}
+html.sx-dark .rejection-reason{background:rgba(225,29,72,.14)!important;border-color:rgba(255,143,163,.45)!important;color:#FF9DB0!important}
+/* أزرار كارت الطلب */
+html.sx-dark .btn-outline{color:#E8CE8F!important;border-color:rgba(232,206,143,.6)!important;background:rgba(36,23,16,.55)!important}
+html.sx-dark .btn-outline:hover{background:rgba(201,169,110,.18)!important}
+html.sx-dark .btn-danger{color:#FF9DB0!important;border-color:rgba(255,143,163,.5)!important}
+html.sx-dark .btn-danger:hover{background:#e11d48!important;color:#fff!important}
+html.sx-dark .btn-primary{background:linear-gradient(135deg,#E8CE8F,#C9A96E)!important;color:#1A0F07!important;box-shadow:0 4px 14px rgba(0,0,0,.5)!important}
+html.sx-dark .btn-gold{background:linear-gradient(135deg,#E8CE8F,#C9A96E)!important;color:#1A0F07!important;box-shadow:0 4px 14px rgba(0,0,0,.5)!important}
+
+/* ---------- تتبع الطلب ---------- */
+html.sx-dark .mk-modal{background:#241710!important;color:#F0E6D6!important;border:1px solid rgba(201,169,110,.35)!important;box-shadow:0 30px 70px rgba(0,0,0,.65)!important}
+html.sx-dark .mk-modal b{color:#F5EBDA!important}
+html.sx-dark .mk-tl li{color:#A8967A!important}
+html.sx-dark .mk-tl li:before{background:#4A3423!important}
+html.sx-dark .mk-tl li:after{background:#3A2A1C!important}
+html.sx-dark .mk-tl li.done{color:#EBDFCB!important;font-weight:700}
+html.sx-dark .mk-tl li.done:before{background:#2e9e5b!important}
+html.sx-dark .mk-tl li.cur{color:#E8CE8F!important}
+html.sx-dark .mk-tl li.cur:before{background:#E8CE8F!important;box-shadow:0 0 0 4px rgba(232,206,143,.25)!important}
+html.sx-dark .mk-x{background:#3A2A1C!important;color:#F0E6D6!important}
+
+/* ---------- اختيار منطقة الشحن (القائمة السفلية) ---------- */
+html.sx-dark .zone-sheet{background:#1D130B!important;color:#F0E6D6!important;border:1px solid rgba(201,169,110,.35)!important;box-shadow:0 -12px 40px rgba(0,0,0,.6)!important}
+html.sx-dark .zone-sheet h4{color:#F4E3B6!important}
+html.sx-dark .zone-sheet input{background:#170F09!important;color:#F0E6D6!important;border-color:rgba(201,169,110,.45)!important}
+html.sx-dark .zone-sheet input::placeholder{color:#9B8667!important}
+html.sx-dark .zone-sheet input:focus{border-color:#E8CE8F!important}
+html.sx-dark .zone-grp{color:#CDBB9E!important}
+html.sx-dark .zone-row{color:#F0E6D6!important}
+html.sx-dark .zone-row small{color:#E8CE8F!important}
+html.sx-dark .zone-row:active,html.sx-dark .zone-row.sel{background:rgba(201,169,110,.2)!important}
+html.sx-dark .zone-empty{color:#CDBB9E!important}
+html.sx-dark .zone-select-wrap select:required:invalid{color:#CDBB9E!important}
+html.sx-dark .zone-select-wrap option,html.sx-dark .zone-select-wrap optgroup{background:#1D130B;color:#F0E6D6}
+/* رسوم التوصيل */
+html.sx-dark .zone-price{background:rgba(201,169,110,.14)!important;border-color:rgba(201,169,110,.5)!important}
+html.sx-dark .zone-price i{color:#E8CE8F!important}
+html.sx-dark .zone-price.free{background:rgba(16,185,129,.14)!important;border-color:rgba(16,185,129,.5)!important;color:#7FE8BC!important}
+html.sx-dark .zone-price.free span{color:#7FE8BC!important}
+html.sx-dark .zone-price.free i{color:#5FE3A8!important}
+/* تلميح الهاتف والملاحظات المحفوظة */
+html.sx-dark .phone-hint{color:#CDBB9E!important}
+html.sx-dark .phone-hint.ok{color:#5FE3A8!important}
+html.sx-dark .phone-hint.bad{color:#FF9DB0!important}
+html.sx-dark .checkout-saved-note{background:rgba(16,185,129,.14)!important;color:#7FE8BC!important;border:1px solid rgba(16,185,129,.35)}
+html.sx-dark .checkout-saved-note button{color:#7FE8BC!important}
+html.sx-dark #firstOrderFreeBadge{background:rgba(16,185,129,.14)!important;border-color:rgba(16,185,129,.45)!important;color:#7FE8BC!important}
+html.sx-dark .free-ship-hint{background:rgba(201,169,110,.13)!important;border-color:rgba(201,169,110,.45)!important;color:#F4E3B6!important}
+html.sx-dark .free-ship-hint i{color:#E8CE8F!important}
+html.sx-dark .free-ship-hint.reached{background:rgba(16,185,129,.14)!important;border-color:rgba(16,185,129,.45)!important;color:#7FE8BC!important}
+html.sx-dark .free-ship-hint.reached i{color:#5FE3A8!important}
+html.sx-dark #checkoutFeedback{background:#2E1E13!important;color:#F5EBDA!important;border:1px solid rgba(201,169,110,.4)!important}
+html.sx-dark .ck-box p{color:#DCCDB3!important}
+html.sx-dark #couponDiscountRow{color:#7FE8BC!important}
+html.sx-dark .pay-due{background:linear-gradient(135deg,#170D06,#2A1810)!important;border:1px solid rgba(201,169,110,.4)!important}
+html.sx-dark .pm-gh{color:#CDBB9E!important}
+html.sx-dark .pm-gh small{background:rgba(232,206,143,.16)!important;color:#F4E3B6!important}
+html.sx-dark .pm-tag.last{background:rgba(96,165,250,.18)!important;color:#9CC2FF!important}
+
+/* ---------- إرشادات الدفع (الخطوات والتعليمات) ---------- */
+html.sx-dark .pm-copy{background:#1B110A!important;border:1px solid rgba(201,169,110,.3)!important}
+html.sx-dark .pm-copy small{color:#CDBB9E!important}
+html.sx-dark .pm-copy b{color:#F4E3B6!important}
+html.sx-dark .pm-copy button{background:linear-gradient(135deg,#E8CE8F,#C9A96E)!important;color:#1A0F07!important}
+html.sx-dark .pm-copy button.done{background:#10B981!important;color:#04150E!important}
+html.sx-dark .pm-note{color:#CDBB9E!important}
+html.sx-dark .pm-nudge{background:rgba(245,158,11,.14)!important;color:#FFD58A!important;border:1px solid rgba(245,158,11,.35)}
+html.sx-dark .pm-nudge b{color:#FFE7A8!important}
+html.sx-dark .rv-pay-note{background:rgba(245,158,11,.14)!important;color:#FFD58A!important;border:1px solid rgba(245,158,11,.35)}
+html.sx-dark .rv-pay-note b{color:#FFE7A8!important}
+html.sx-dark .pm-steps li{color:#EBDFCB!important}
+html.sx-dark .pm-steps li::before{background:#E8CE8F!important;color:#1A0F07!important}
+html.sx-dark .deposit-notice .dn-numbers li{background:#1B110A!important;border-color:rgba(201,169,110,.4)!important;color:#F0E6D6!important}
+html.sx-dark .deposit-notice .dn-numbers li b{color:#F4E3B6!important}
+html.sx-dark .deposit-notice .dn-numbers button{background:linear-gradient(135deg,#E8CE8F,#C9A96E)!important;color:#1A0F07!important}
+
+/* ---------- شاشة نجاح الطلب / بيانات الدفع بعد الطلب ---------- */
+html.sx-dark .od-sheet{background:#1D130B!important;color:#F0E6D6!important;border:1px solid rgba(201,169,110,.35)!important}
+html.sx-dark .od-top{background:#1D130B!important}
+html.sx-dark .od-top b{color:#CDBB9E!important}
+html.sx-dark .od-x{background:#2E1E13!important;color:#F0E6D6!important}
+html.sx-dark .od-sheet h3{color:#F4E3B6!important}
+html.sx-dark .od-sub{color:#CDBB9E!important}
+html.sx-dark .od-meta{background:#241710!important;border-color:rgba(201,169,110,.3)!important}
+html.sx-dark .od-meta small{color:#CDBB9E!important}
+html.sx-dark .od-meta b{color:#F5EBDA!important}
+html.sx-dark .od-pay{background:#241710!important;border-color:rgba(201,169,110,.45)!important;color:#F0E6D6!important}
+html.sx-dark .od-pay h5{color:#F4E3B6!important}
+html.sx-dark .od-after{border-top-color:rgba(201,169,110,.4)!important}
+html.sx-dark .od-after label{color:#CDBB9E!important}
+html.sx-dark .od-after input{background:#170F09!important;color:#F0E6D6!important;border-color:rgba(201,169,110,.45)!important}
+html.sx-dark .od-btns button{background:#2E1E13!important;color:#E8CE8F!important;border-color:rgba(201,169,110,.45)!important}
+html.sx-dark .od-btns button.main{background:linear-gradient(135deg,#E8CE8F,#C9A96E)!important;color:#1A0F07!important}
+
+/* ---------- قارئ الباركود ---------- */
+html.sx-dark .barcode-reader-card strong{color:#F4E3B6!important}
+html.sx-dark body .barcode-scan-status:not(:empty){background:#1B110A!important;color:#F0E6D6!important;border-color:rgba(201,169,110,.45)!important}
+html.sx-dark .barcode-detail{background:#1B110A!important;border:1px solid rgba(201,169,110,.35)!important}
+html.sx-dark .barcode-detail-label{color:#CDBB9E!important}
+html.sx-dark .barcode-detail-value{color:#F4E3B6!important}
+
+/* ---------- نافذة استرداد المبلغ ---------- */
+html.sx-dark .refund-success-modal .modal-content{background:#241710!important;color:#F0E6D6!important;border:1px solid rgba(201,169,110,.4)!important}
+html.sx-dark #refundModalTitle{color:#F4E3B6!important}
+html.sx-dark #refundModalMessage{color:#DCCDB3!important}
+html.sx-dark #refundModalAmount{color:#7FE8BC!important}
+html.sx-dark #refundModalClose{background:linear-gradient(135deg,#E8CE8F,#C9A96E)!important;color:#1A0F07!important}
+
+/* ---------- المرتجعات ---------- */
+html.sx-dark .return-item-row{background:#1B110A!important;border-color:rgba(201,169,110,.32)!important;color:#F0E6D6!important}
+html.sx-dark .return-item-row.selected{background:rgba(201,169,110,.16)!important;border-color:#E8CE8F!important;box-shadow:0 0 0 3px rgba(232,206,143,.18)!important}
+html.sx-dark .return-item-row.disabled{opacity:.5}
+html.sx-dark .return-qty-input{background:#170F09!important;color:#F5EBDA!important;border-color:rgba(201,169,110,.5)!important}
+html.sx-dark .return-qty-input::placeholder{color:#E8CE8F!important;opacity:.7}
+html.sx-dark .return-total-box{background:rgba(16,185,129,.12)!important;border-color:rgba(16,185,129,.45)!important;color:#F0E6D6!important}
+html.sx-dark .return-success-badge.pending{background:rgba(245,158,11,.18)!important;color:#FFD58A!important}
+html.sx-dark .return-success-badge.approved{background:rgba(16,185,129,.18)!important;color:#7FE8BC!important}
+html.sx-dark .return-refund-display{background:rgba(16,185,129,.1)!important;border-color:rgba(16,185,129,.4)!important}
+html.sx-dark .return-refund-display .refund-label{color:#F0E6D6!important}
+html.sx-dark .return-refund-display .refund-amount{color:#7FE8BC!important}
+html.sx-dark #returnsPage [style*="text-align:center"] [style*="color:var(--gray-600)"]{color:#CDBB9E!important}
+html.sx-dark .returns-empty-state,html.sx-dark .returns-empty-state p{color:#CDBB9E!important}
+html.sx-dark .returns-empty-state h3{color:#F0E6D6!important}
+
+/* ---------- محفوظ لوقت لاحق + السلة المصغرة ---------- */
+html.sx-dark .mk-later{background:#241710!important;border-color:rgba(201,169,110,.5)!important;color:#F0E6D6!important}
+html.sx-dark .mk-later .mk-it{border-bottom-color:rgba(201,169,110,.22)!important}
+html.sx-dark .mk-later .mk-it .n{color:#F0E6D6!important}
+html.sx-dark .mk-later .mk-it .p{color:#E8CE8F!important}
+html.sx-dark .mk-lnk{color:#E8CE8F!important}
+html.sx-dark .mk-drawer{background:#1D130B!important;color:#F0E6D6!important}
+html.sx-dark .mk-dh{border-bottom-color:rgba(201,169,110,.28)!important;color:#F5EBDA!important}
+html.sx-dark .mk-dh button{background:#3A2A1C!important;color:#F0E6D6!important}
+html.sx-dark .mk-df{background:#241710!important;border-top-color:rgba(201,169,110,.32)!important;color:#F0E6D6!important}
+html.sx-dark .mk-db .mk-it{border-bottom-color:rgba(201,169,110,.2)!important}
+html.sx-dark .mk-db .mk-it .n{color:#F0E6D6!important}
+html.sx-dark .mk-db .mk-it .p{color:#E8CE8F!important}
+html.sx-dark .mk-q button{background:#2E1E13!important;color:#F0E6D6!important;border-color:rgba(201,169,110,.45)!important}
+html.sx-dark .mk-df [style*="background:#eee"]{background:#3A2A1C!important}
+html.sx-dark .mk-df [style*="color:#2e7d32"]{color:#7FE8BC!important}
+
+/* ---------- توست ---------- */
+html.sx-dark .mk-toast{background:#2E1E13!important;color:#F5EBDA!important;border:1px solid rgba(201,169,110,.5)!important}
+html.sx-dark .pm-toast{background:#2E1E13!important;color:#F5EBDA!important;border:1px solid rgba(201,169,110,.5)!important}
+
+/* ---------- التقاط الألوان الفاتحة المكتوبة inline ---------- */
+html.sx-dark [style*="color:#888"],html.sx-dark [style*="color: #888"],
+html.sx-dark [style*="color:#777"],html.sx-dark [style*="color: #777"],
+html.sx-dark [style*="color:#999"],html.sx-dark [style*="color: #999"]{color:#CDBB9E!important}
+html.sx-dark [style*="color:var(--primary-dark)"]{color:#F0E6D6!important}
+html.sx-dark [style*="color:var(--gray-500)"]{color:#CDBB9E!important}
+html.sx-dark [style*="color:var(--gray-600)"]{color:#CDBB9E!important}
+html.sx-dark [style*="color:var(--primary-light)"]{color:#D9C7A6!important}
+html.sx-dark [style*="color:var(--primary-medium)"]{color:#D9C7A6!important}
+html.sx-dark [style*="color:var(--primary)"]{color:#E8CE8F!important}
+html.sx-dark [style*="background:#fff"],html.sx-dark [style*="background: #fff"],
+html.sx-dark [style*="background:white"],html.sx-dark [style*="background: white"],
+html.sx-dark [style*="background-color:#fff"],html.sx-dark [style*="background-color: #fff"]{background-color:#241710!important}
+html.sx-dark .cart-section{background:#1D130B!important;border:1px solid rgba(201,169,110,.3)!important;box-shadow:0 10px 30px rgba(0,0,0,.45)!important}
+html.sx-dark .cart-section-title{color:#F4E3B6!important;border-bottom-color:rgba(201,169,110,.35)!important}
+html.sx-dark .deposit-notice .dn-calc{background:rgba(23,15,9,.85)!important;border-color:rgba(232,206,143,.45)!important}
+html.sx-dark .deposit-notice .dn-calc>div{color:#F0E6D6!important}
+html.sx-dark .deposit-notice .dn-calc .dn-pay{color:#FFD58A!important;border-top-color:rgba(232,206,143,.5)!important}
+html.sx-dark .deposit-notice .dn-calc .dn-rest{border-top-color:rgba(232,206,143,.5)!important;color:#F4E3B6!important}
+
+/* ==== sx-dark v7 residual fixes ==== */
+html.sx-dark .ck-it,html.sx-dark .ck-it span,html.sx-dark .ck-it small{color:#F0E6D6!important}
+html.sx-dark .ck-it b,html.sx-dark #rvItems b,html.sx-dark #rvItems .ck-it>b{color:#F4E3B6!important;-webkit-text-fill-color:#F4E3B6!important;opacity:1!important;text-shadow:none!important}
+html.sx-dark .ck-box b,html.sx-dark .ck-box strong{color:#F4E3B6!important;-webkit-text-fill-color:#F4E3B6!important;opacity:1!important}
+html.sx-dark .pm-guide{animation:none!important;opacity:1!important;filter:none!important;background:#34220F!important;border:1.5px solid rgba(232,206,143,.55)!important}
+html.sx-dark .pm-guide h5,html.sx-dark .pm-guide h5 *:not(i){color:#FFF3D6!important}
+html.sx-dark .pm-guide p,html.sx-dark .pm-guide .pm-note,html.sx-dark .pm-guide .pm-steps li,html.sx-dark .pm-guide .pm-steps li *{color:#F5EBDA!important;opacity:1!important}
+html.sx-dark .pm-guide .pm-steps li b{color:#F4E3B6!important}
+html.sx-dark .pm-guide .pm-copy{background:#1B110A!important;border:1px solid rgba(232,206,143,.45)!important;opacity:1!important}
+html.sx-dark .pm-guide .pm-copy small{color:#E3D3B5!important;opacity:1!important}
+html.sx-dark .pm-guide .pm-copy b{color:#FFE9B0!important;-webkit-text-fill-color:#FFE9B0!important;opacity:1!important}
+html.sx-dark .pm-guide .pm-copy button,html.sx-dark .pm-guide .pm-copy button *{color:#1A0F07!important}
+html.sx-dark .pm-guide .pm-nudge,html.sx-dark .pm-guide .pm-nudge *{color:#FFD58A!important}
+html.sx-dark .pm-guide.cod h5,html.sx-dark .pm-guide.cod p{color:#F5EBDA!important}
+html.sx-dark .pm-guide .pm-ico{background:#fff!important}
+html.sx-dark .pm-guide .pm-ico i{color:var(--c,#4A2C17)!important;-webkit-text-fill-color:var(--c,#4A2C17)!important;opacity:1!important}
+html.sx-dark .pm-guide .pm-ico svg,html.sx-dark .pm-guide .pm-ico svg *{opacity:1!important}
+
+/* ==== v8: تكبير صور المنتجات على الموبايل (لضعاف النظر) ==== */
+/* 1) عرض القائمة: الصورة أكبر بكثير — من 112px إلى نحو نصف عرض الكارت */
+html body.rx-list .products-grid .product-card{gap:14px!important}
+html body.rx-list .products-grid .product-img-wrap{flex:0 0 46%!important;width:46%!important;max-width:200px!important;min-width:150px!important;aspect-ratio:1/1!important;height:auto!important;min-height:0!important;padding:3px!important;margin:0!important;align-self:flex-start!important;border-radius:14px}
+html body.rx-list .products-grid .product-img-wrap img{width:100%!important;height:100%!important;object-fit:contain!important}
+@media(max-width:360px){html body.rx-list .products-grid .product-img-wrap{min-width:124px!important;max-width:150px!important}}
+@media(max-width:300px){html body.rx-list .products-grid .product-img-wrap{flex:none!important;width:100%!important;max-width:100%!important}}
+/* 2) كل الكروت (شبكة وقائمة): حشوة أقل حتى تملأ الصورة مساحتها */
+html body .products-grid .product-img-wrap{padding:4px!important}
+html body .products-grid .product-img-wrap img{padding:2px!important}
+html body.rx-list .products-grid .product-img-wrap{padding:3px!important}
+/* 3) تلميح: الضغط على الصورة يفتح صورة كبيرة مع إمكانية التكبير */
+html body .products-grid .product-img-wrap::after{content:"🔍"!important;position:absolute;bottom:6px;inset-inline-start:6px;width:26px;height:26px;display:flex!important;align-items:center;justify-content:center;border-radius:50%;background:rgba(26,15,7,.55);color:#fff;font-size:13px;line-height:1;pointer-events:none;z-index:2}
+
+/* ==== v9: dark mode for filter sheet and side drawers ==== */
+html.sx-dark .fc-panel{background:#1D130B!important;color:#F0E6D6!important;border:1px solid rgba(201,169,110,.35)!important;box-shadow:0 -12px 40px rgba(0,0,0,.65)!important}
+html.sx-dark .fc-panel header{border-bottom-color:rgba(201,169,110,.25)!important;background:#1D130B!important}
+html.sx-dark .fc-panel h3{color:#F4E3B6!important}
+html.sx-dark .fc-x{background:#2E1F13!important;color:#F4E3B6!important}
+html.sx-dark .fc-body{background:#1D130B!important}
+html.sx-dark .fc-sec{border-bottom-color:rgba(201,169,110,.2)!important}
+html.sx-dark .fc-sec h4{color:#E8CE8F!important}
+html.sx-dark .fc-price input{background:#170F09!important;color:#F5EBDA!important;border-color:rgba(201,169,110,.45)!important}
+html.sx-dark .fc-range:before{background:#7A5A36!important}
+html.sx-dark .fc-range input::-webkit-slider-thumb{border-color:#1D130B!important}
+html.sx-dark .fc-chk,html.sx-dark .fc-switch,html.sx-dark .fc-sorts label{color:#F0E6D6!important}
+html.sx-dark .fc-chk em{color:#D9C08A!important}
+html.sx-dark .fc-chk input,html.sx-dark .fc-switch input,html.sx-dark .fc-sorts input{accent-color:#C9A96E!important;color-scheme:dark}
+html.sx-dark .fc-chips button{background:#2A1B10!important;color:#F0E6D6!important;border-color:rgba(201,169,110,.4)!important}
+html.sx-dark .fc-chips button.on{background:linear-gradient(135deg,#C9A96E,#A6864B)!important;color:#1A0F07!important;border-color:transparent!important}
+html.sx-dark .fc-panel footer{background:#1D130B!important;border-top-color:rgba(201,169,110,.25)!important}
+html.sx-dark .fc-clear{background:#2A1B10!important;color:#F4E3B6!important;border-color:rgba(201,169,110,.45)!important}
+html.sx-dark .fc-apply{color:#1A0F07!important}
+html.sx-dark .mk-mega-panel{background:#1D130B!important;color:#F0E6D6!important}
+html.sx-dark .mk-mega-panel h4{color:#F4E3B6!important}
+html.sx-dark .mk-mega-panel .row{color:#F0E6D6!important;border-bottom-color:rgba(201,169,110,.2)!important}
+html.sx-dark .mk-mega-panel .row small{color:#D9C08A!important}
+html.sx-dark .od-sheet{color:#F0E6D6!important}
+</style>
 </body>
 </html>
